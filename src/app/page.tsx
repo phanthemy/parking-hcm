@@ -40,6 +40,10 @@ export default function HomePage() {
 
       const data = await api.get<{ spots: Spot[] }>(`/api/spots?${params.toString()}`);
       setSpots(data.spots || []);
+      // Auto-expand bottom sheet when search has results
+      if (searchQuery && (data.spots || []).length > 0 && window.innerWidth < 768) {
+        setBottomSheetState('full');
+      }
     } catch {
       setSpots(getMockSpots());
     } finally {
