@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String?
+  email     String   @unique
+  phone     String?
+  password  String
+  role      String   @default("USER") // USER, BUSINESS, ADMIN
+  avatar    String?
+  createdAt DateTime @default(now())
+  reviews   Review[]
+}
+
+model ParkingSpot {
+  id           String           @id @default(cuid())
+  name         String
+  address      String
+  description  String?
+  lat          Float
+  lng          Float
+  type         String // PARKING_LOT, RESTAURANT, CAFE, SERVICE, OTHER
+  carSlots     Int              @default(0)
+  bikeSlots    Int              @default(0)
+  pricePerHour Float
+  openTime     String
+  closeTime    String
+  phone        String?
+  website      String?
+  isPremium    Boolean          @default(false)
+  status       String           @default("ACTIVE") // ACTIVE, PENDING, HIDDEN
+  ownerId      String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  images       ParkingImage[]
+  reviews      Review[]
+  profile      BusinessProfile?
+}
+
+model ParkingImage {
+  id            String      @id @default(cuid())
+  url           String
+  parkingSpotId String
+  parkingSpot   ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  rating        Int // 1-5
+  comment       String?
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parkingSpotId String
+  parkingSpot   ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+}
+
+model BusinessProfile {
+  id              String      @id @default(cuid())
+  parkingSpotId   String      @unique
+  parkingSpot     ParkingSpot @relation(fields: [parkingSpotId], references: [id], onDelete: Cascade)
+  menuDescription String?
+  services        String?
+  specialOffers   String?
+}
