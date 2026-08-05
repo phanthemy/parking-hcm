@@ -1,7 +1,12 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+function getSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET environment variable is required');
+  return secret;
+}
+
+const JWT_SECRET = getSecret();
 
 export function signToken(payload: object): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' } as jwt.SignOptions);
