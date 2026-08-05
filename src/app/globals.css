@@ -415,10 +415,15 @@ a:hover {
 .floating-search .filter-btn { width: 48px; height: 48px; min-width: 48px; border-radius: 50%; background: rgba(19,19,26,0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); color: #a0a0b0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
 
 /* Category chips floating (MOBILE) */
-.floating-chips { position: fixed; top: 64px; left: 0; right: 0; z-index: 100; padding: 4px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.floating-chips { position: fixed; top: 60px; top: calc(max(12px, env(safe-area-inset-top)) + 52px); left: 0; right: 0; z-index: 100; padding: 6px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .floating-chips::-webkit-scrollbar { display: none; }
-.floating-chip { white-space: nowrap; padding: 8px 16px; border-radius: 20px; background: rgba(19,19,26,0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); color: #a0a0b0; font-size: 13px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+.floating-chip { white-space: nowrap; padding: 7px 14px; border-radius: 20px; background: rgba(19,19,26,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); color: #a0a0b0; font-size: 12px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
 .floating-chip.active { background: linear-gradient(135deg, #3B82F6, #8B5CF6); color: #fff; border-color: transparent; }
+
+/* Floating Action Button — Đăng tin */
+.fab-post { position: fixed; bottom: 90px; right: 16px; z-index: 300; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #8B5CF6); border: none; color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(59,130,246,0.4); transition: transform 0.2s, box-shadow 0.2s; }
+.fab-post:active { transform: scale(0.92); }
+.fab-post-label { position: fixed; bottom: 76px; right: 80px; z-index: 300; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; }
 
 /* Full-screen map container */
 .map-fullscreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; z-index: 1; }

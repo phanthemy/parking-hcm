@@ -352,6 +352,13 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+      {/* FAB — Đăng tin (Mobile + Desktop) */}
+      <Link href="/business/post" style={{ textDecoration: 'none' }}>
+        <button className="fab-post" title="Đăng tin địa điểm">
+          ➕
+        </button>
+        <span className="fab-post-label">Đăng tin</span>
+      </Link>
     </div>
   );
 }

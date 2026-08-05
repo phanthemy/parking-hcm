@@ -58,11 +58,15 @@ export default function BusinessPostPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && (!isAuthenticated || user?.role !== 'business')) {
-      router.push('/auth/login');
+  // Auto-fill GPS from browser
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        updateField('latitude', pos.coords.latitude.toString());
+        updateField('longitude', pos.coords.longitude.toString());
+      });
     }
-  }, [authLoading, isAuthenticated, user, router]);
+  };
 
   const updateField = <K extends keyof PostFormData>(field: K, value: PostFormData[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -192,8 +196,8 @@ export default function BusinessPostPage() {
       <Header />
 
       <main className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', flex: 1 }}>
-        <Link href="/business/dashboard" style={{ display: 'inline-flex', fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
-          ← Quay lại Dashboard
+        <Link href="/" style={{ display: 'inline-flex', fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
+          ← Quay lại bản đồ
         </Link>
 
         <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px' }}>➕ Đăng tin mới</h1>
@@ -222,10 +226,11 @@ export default function BusinessPostPage() {
                   onChange={(e) => updateField('type', e.target.value as SpotType)}
                   style={inputStyle}
                 >
-                  <option value="parking">🅿️ Bãi xe</option>
-                  <option value="restaurant">🍜 Quán ăn</option>
-                  <option value="cafe">☕ Café</option>
-                  <option value="service">🔧 Dịch vụ</option>
+                  <option value="PARKING_LOT">🅿️ Bãi xe</option>
+                  <option value="RESTAURANT">🍜 Quán ăn</option>
+                  <option value="CAFE">☕ Café</option>
+                  <option value="RESTROOM">🚻 Nhà vệ sinh</option>
+                  <option value="SERVICE">🔧 Dịch vụ</option>
                 </select>
               </div>
 
@@ -260,6 +265,18 @@ export default function BusinessPostPage() {
                   placeholder="VD: 106.7031"
                   style={inputStyle}
                 />
+              </div>
+
+              <div>
+                <label style={labelStyle}>&nbsp;</label>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={getLocation}
+                  style={{ ...inputStyle, cursor: 'pointer', textAlign: 'center' }}
+                >
+                  📍 Lấy vị trí hiện tại
+                </button>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
