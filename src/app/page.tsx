@@ -110,6 +110,8 @@ export default function HomePage() {
     }
   }, []);
 
+  const [routingDest, setRoutingDest] = useState<Spot | null>(null);
+
   const handleDirections = useCallback((spot: Spot) => {
     if (!latitude || !longitude) {
       alert('Chưa xác định được vị trí của bạn. Vui lòng bật GPS.');
@@ -122,9 +124,17 @@ export default function HomePage() {
         spot.name
       );
       setIsRouting(true);
+      setRoutingDest(spot);
       setBottomSheetState('peek');
     }
   }, [latitude, longitude]);
+
+  // Open Google Maps / native navigation
+  const openGoogleNav = useCallback(() => {
+    if (!routingDest) return;
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${routingDest.latitude},${routingDest.longitude}&travelmode=driving`;
+    window.open(url, '_blank');
+  }, [routingDest]);
 
   const handleClearRoute = useCallback(() => {
     if (mapComponentRef.current) {
@@ -303,6 +313,72 @@ export default function HomePage() {
           style={{ width: '100%', height: '100%', borderRadius: 0 }}
         />
       </div>
+
+      {/* ROUTING NAVIGATION BAR */}
+      {isRouting && routingDest && (
+        <div style={{
+          position: 'fixed',
+          bottom: window.innerWidth >= 768 ? '20px' : '170px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 250,
+          background: 'rgba(13,13,18,0.95)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: '16px',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          maxWidth: '420px',
+          width: 'calc(100% - 32px)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              📍 {routingDest.name}
+            </div>
+            <div style={{ fontSize: '11px', color: '#8b8b9e', marginTop: '2px' }}>
+              {routingDest.distance ? `${routingDest.distance.toFixed(1)} km` : routingDest.address?.substring(0, 30)}
+            </div>
+          </div>
+          <button
+            onClick={openGoogleNav}
+            style={{
+              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              border: 'none',
+              borderRadius: '12px',
+              color: '#fff',
+              padding: '10px 18px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+            }}
+          >
+            🚀 Đi ngay
+          </button>
+          <button
+            onClick={() => { handleClearRoute(); setRoutingDest(null); }}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.15)',
+              borderRadius: '12px',
+              color: '#a0a0b0',
+              padding: '10px 14px',
+              fontSize: '13px',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ✕ Hủy
+          </button>
+        </div>
+      )}
 
       {/* MOBILE BOTTOM SHEET */}
       <div className="bottom-sheet-overlay">
