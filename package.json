@@ -6,7 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:status": "node sync-db.js status",
+    "db:pull": "node sync-db.js pull",
+    "db:push": "node sync-db.js push",
+    "scrape": "node scrape-overpass.js",
+    "scrape:all": "node scrape-overpass.js all 10.7769 106.7009 5",
+    "scrape:parking": "node scrape-overpass.js parking 10.7769 106.7009 5",
+    "scrape:restaurant": "node scrape-overpass.js restaurant 10.7769 106.7009 5",
+    "scrape:cafe": "node scrape-overpass.js cafe 10.7769 106.7009 5",
+    "scrape:toilet": "node scrape-overpass.js toilet 10.7769 106.7009 5",
+    "enrich": "node enrich-full-addresses.js",
+    "fix:districts": "node clean-district-strings.js"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
