@@ -534,13 +534,15 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-      {/* FAB — Đăng tin (Mobile + Desktop) */}
-      <Link href="/business/post" style={{ textDecoration: 'none' }}>
-        <button className="fab-post" title="Đăng tin địa điểm">
-          ➕
-        </button>
-        <span className="fab-post-label">Đăng tin</span>
-      </Link>
+      {/* FAB — Đăng tin (Mobile + Desktop) — hide when detail/full on mobile */}
+      {bottomSheetState === 'peek' && (
+        <Link href="/business/post" style={{ textDecoration: 'none' }}>
+          <button className="fab-post" title="Đăng tin địa điểm">
+            ➕
+          </button>
+          <span className="fab-post-label">Đăng tin</span>
+        </Link>
+      )}
     </div>
   );
 }
