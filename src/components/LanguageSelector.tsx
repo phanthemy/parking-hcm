@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LANGUAGES, LanguageOption } from '@/lib/i18n';
 
@@ -12,40 +13,95 @@ interface LanguageSelectorProps {
 export default function LanguageSelector({ compact = false, align = 'right' }: LanguageSelectorProps) {
   const { locale, setLocale } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<{ top: number; left?: number; right?: number }>({ top: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
   const currentLang = LANGUAGES.find((l) => l.code === locale) || LANGUAGES[0];
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const updatePosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      if (align === 'right') {
+        setCoords({
+          top: rect.bottom + 6,
+          right: Math.max(8, window.innerWidth - rect.right),
+        });
+      } else {
+        setCoords({
+          top: rect.bottom + 6,
+          left: Math.max(8, rect.left),
+        });
+      }
+    }
+  };
+
+  const toggleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isOpen) {
+      updatePosition();
+    }
+    setIsOpen(!isOpen);
+  };
+
+  useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        buttonRef.current && !buttonRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
-  const handleSelect = (lang: LanguageOption) => {
+    function handleScrollOrResize() {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside as any);
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside as any);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [isOpen]);
+
+  const handleSelect = (lang: LanguageOption, e: React.MouseEvent) => {
+    e.stopPropagation();
     setLocale(lang.code);
     setIsOpen(false);
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', display: 'inline-block', zIndex: 99999 }}>
+    <div style={{ display: 'inline-block' }}>
       {/* Trigger Button */}
       <button
+        ref={buttonRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleOpen}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
-          padding: compact ? '5px 10px' : '6px 12px',
-          background: 'rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.15)',
+          padding: compact ? '6px 12px' : '7px 14px',
+          background: 'rgba(30, 30, 45, 0.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,255,255,0.2)',
           borderRadius: '20px',
           color: '#ffffff',
           fontSize: compact ? '12px' : '13px',
@@ -53,41 +109,33 @@ export default function LanguageSelector({ compact = false, align = 'right' }: L
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           outline: 'none',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
+          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
         }}
       >
         <span style={{ fontSize: '15px', lineHeight: 1 }}>{currentLang.flag}</span>
         <span>{compact ? currentLang.short : currentLang.name}</span>
-        <span style={{ fontSize: '10px', opacity: 0.7, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
+        <span style={{ fontSize: '10px', opacity: 0.8, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
       </button>
 
-      {/* Dropdown Menu */}
-      {isOpen && (
+      {/* Portal Dropdown Menu attached directly to document.body */}
+      {isOpen && mounted && createPortal(
         <div
+          ref={dropdownRef}
+          onClick={(e) => e.stopPropagation()}
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 6px)',
-            ...(align === 'right' ? { right: 0 } : { left: 0 }),
-            minWidth: '160px',
-            background: 'rgba(18, 18, 26, 0.96)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
+            position: 'fixed',
+            top: `${coords.top}px`,
+            ...(coords.right !== undefined ? { right: `${coords.right}px` } : { left: `${coords.left}px` }),
+            minWidth: '170px',
+            background: '#14141f',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
             borderRadius: '16px',
             padding: '6px',
-            boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
-            zIndex: 999999,
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255,255,255,0.1)',
+            zIndex: 9999999,
             display: 'flex',
             flexDirection: 'column',
-            gap: '2px',
+            gap: '3px',
           }}
         >
           {LANGUAGES.map((lang) => {
@@ -96,32 +144,22 @@ export default function LanguageSelector({ compact = false, align = 'right' }: L
               <button
                 key={lang.code}
                 type="button"
-                onClick={() => handleSelect(lang)}
+                onClick={(e) => handleSelect(lang, e)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: '10px',
                   width: '100%',
-                  padding: '8px 12px',
+                  padding: '9px 12px',
                   borderRadius: '10px',
-                  background: isSelected ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
-                  border: isSelected ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
-                  color: isSelected ? '#a5b4fc' : '#e2e8f0',
+                  background: isSelected ? 'rgba(99, 102, 241, 0.35)' : 'transparent',
+                  border: isSelected ? '1px solid rgba(99, 102, 241, 0.5)' : '1px solid transparent',
+                  color: isSelected ? '#a5b4fc' : '#ffffff',
                   fontSize: '13px',
                   fontWeight: isSelected ? 600 : 400,
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
                 }}
               >
                 <span style={{ fontSize: '18px' }}>{lang.flag}</span>
@@ -130,7 +168,8 @@ export default function LanguageSelector({ compact = false, align = 'right' }: L
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
