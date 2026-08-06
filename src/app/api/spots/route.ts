@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
 
     // Base query
-    const where: any = {
-      status: 'ACTIVE',
-    };
+    const where: any = {};
+    // Status filter — support both 'active' and 'ACTIVE'
+    where.status = { in: ['active', 'ACTIVE'] };
 
     if (type) where.type = type;
     if (minPrice !== null || maxPrice !== null) {
