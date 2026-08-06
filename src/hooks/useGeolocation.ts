@@ -67,7 +67,7 @@ export function useGeolocation() {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000, // 5 minutes cache
+        maximumAge: 0, // Real-time GPS coords
       }
     );
   }, []);
