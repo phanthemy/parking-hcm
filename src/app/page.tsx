@@ -338,7 +338,16 @@ export default function HomePage() {
       </div>
 
       {/* MAP */}
-      <div className={`map-fullscreen ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <div 
+        className={`map-fullscreen ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
+        onClick={() => {
+          // Close detail panel when tapping on map background
+          if (bottomSheetState === 'detail') {
+            setSelectedSpot(null);
+            setBottomSheetState('full');
+          }
+        }}
+      >
         <MapComponent
           ref={mapComponentRef}
           spots={spots}
@@ -433,7 +442,20 @@ export default function HomePage() {
           
           <div className="bottom-sheet-content">
             {bottomSheetState === 'detail' && selectedSpot ? (
-              <div className="spot-detail-sheet">
+              <div className="spot-detail-sheet" style={{ position: 'relative' }}>
+                {/* X Close button */}
+                <button
+                  onClick={() => { setSelectedSpot(null); setBottomSheetState('full'); }}
+                  style={{
+                    position: 'absolute', top: '10px', right: '10px', zIndex: 10,
+                    width: '32px', height: '32px', borderRadius: '50%',
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+                    border: 'none', color: '#fff', fontSize: '16px',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  ✕
+                </button>
                 <img 
                   src={selectedSpot.images?.[0] || 'https://via.placeholder.com/400x200?text=No+Image'} 
                   className="spot-hero" 
@@ -451,7 +473,6 @@ export default function HomePage() {
                     <button 
                       onClick={() => {
                         handleDirections(selectedSpot);
-                        // Auto-start navigation after route is drawn
                         setTimeout(() => {
                           if (mapComponentRef.current) {
                             mapComponentRef.current.startNavigation(
