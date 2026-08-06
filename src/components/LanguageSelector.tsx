@@ -112,7 +112,7 @@ export default function LanguageSelector({ compact = false, align = 'right' }: L
           boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
         }}
       >
-        <span style={{ fontSize: '15px', lineHeight: 1 }}>{currentLang.flag}</span>
+        <span style={{ fontSize: '13px', lineHeight: 1 }}>🌐</span>
         <span>{compact ? currentLang.short : currentLang.name}</span>
         <span style={{ fontSize: '10px', opacity: 0.8, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▼</span>
       </button>

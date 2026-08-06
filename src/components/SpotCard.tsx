@@ -15,6 +15,7 @@ interface SpotCardProps {
 
 export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardProps) {
   const { t } = useLocale();
+  const [imgError, setImgError] = React.useState(false);
   const handleDirections = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -56,11 +57,12 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
         }}
       >
         {/* Thumbnail 16:9 */}
-        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden' }}>
-          {hasImage ? (
+        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden', background: '#1c1c28' }}>
+          {hasImage && !imgError ? (
             <img
               src={spot.images[0]}
-              alt={spot.name}
+              alt=""
+              onError={() => setImgError(true)}
               style={{
                 position: 'absolute', top: 0, left: 0,
                 width: '100%', height: '100%',
@@ -71,9 +73,9 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
             <div style={{
               position: 'absolute', top: 0, left: 0,
               width: '100%', height: '100%',
-              background: '#252530',
+              background: 'linear-gradient(135deg, #1e1e2d, #12121a)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '32px', opacity: 0.4,
+              fontSize: '32px', opacity: 0.5,
             }}>
               {typeIcon}
             </div>
