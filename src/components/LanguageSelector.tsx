@@ -6,9 +6,10 @@ import { LANGUAGES, LanguageOption } from '@/lib/i18n';
 
 interface LanguageSelectorProps {
   compact?: boolean;
+  align?: 'right' | 'left';
 }
 
-export default function LanguageSelector({ compact = false }: LanguageSelectorProps) {
+export default function LanguageSelector({ compact = false, align = 'right' }: LanguageSelectorProps) {
   const { locale, setLocale } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +75,7 @@ export default function LanguageSelector({ compact = false }: LanguageSelectorPr
           style={{
             position: 'absolute',
             top: 'calc(100% + 6px)',
-            right: 0,
+            ...(align === 'right' ? { right: 0 } : { left: 0 }),
             minWidth: '160px',
             background: 'rgba(18, 18, 26, 0.96)',
             backdropFilter: 'blur(24px)',

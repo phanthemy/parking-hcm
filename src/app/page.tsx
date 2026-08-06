@@ -225,8 +225,14 @@ export default function HomePage() {
     <div className="page-map-layout">
       {/* MOBILE HEADER / SEARCH */}
       <div className="floating-search">
+        <div className="mobile-brand-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', padding: '0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/logo.png" alt="MapGo" style={{ width: '32px', height: '32px', borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }} />
+            <span style={{ fontSize: '17px', fontWeight: 700, color: '#ffffff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', letterSpacing: '-0.3px' }}>MapGo.vn</span>
+          </div>
+          <LanguageSelector compact={true} align="right" />
+        </div>
         <div className="search-input-wrap">
-          <img src="/logo.png" alt="MapGo" style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0 }} />
           <input
             className="search-field"
             type="text"
@@ -237,9 +243,6 @@ export default function HomePage() {
           />
           <div className="filter-btn" onClick={() => doSearch()}>
             🔍
-          </div>
-          <div style={{ flexShrink: 0 }}>
-            <LanguageSelector compact={true} />
           </div>
         </div>
       </div>

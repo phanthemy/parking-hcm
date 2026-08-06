@@ -415,7 +415,7 @@ a:hover {
 .floating-search .filter-btn { width: 48px; height: 48px; min-width: 48px; border-radius: 50%; background: rgba(19,19,26,0.88); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); color: #a0a0b0; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
 
 /* Category chips floating (MOBILE) */
-.floating-chips { position: fixed; top: 60px; top: calc(max(12px, env(safe-area-inset-top)) + 52px); left: 0; right: 0; z-index: 100; padding: 6px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.floating-chips { position: fixed; top: 104px; top: calc(max(12px, env(safe-area-inset-top)) + 98px); left: 0; right: 0; z-index: 100; padding: 6px 16px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .floating-chips::-webkit-scrollbar { display: none; }
 .floating-chip { white-space: nowrap; padding: 7px 14px; border-radius: 20px; background: rgba(19,19,26,0.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); color: #a0a0b0; font-size: 12px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
 .floating-chip.active { background: linear-gradient(135deg, #3B82F6, #8B5CF6); color: #fff; border-color: transparent; }
