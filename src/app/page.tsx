@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import SpotCard from '@/components/SpotCard';
+import LanguageSelector from '@/components/LanguageSelector';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import api from '@/lib/api';
@@ -237,9 +238,8 @@ export default function HomePage() {
           <div className="filter-btn" onClick={() => doSearch()}>
             🔍
           </div>
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
-            <button onClick={() => setLocale('vi')} style={{ padding: '4px 8px', background: locale === 'vi' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>VI</button>
-            <button onClick={() => setLocale('en')} style={{ padding: '4px 8px', background: locale === 'en' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>EN</button>
+          <div style={{ flexShrink: 0 }}>
+            <LanguageSelector compact={true} />
           </div>
         </div>
       </div>
@@ -259,9 +259,12 @@ export default function HomePage() {
       {/* DESKTOP SIDEBAR */}
       <div className={`desktop-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-            <img src="/logo.png" alt="MapGo" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>MapGo.vn</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src="/logo.png" alt="MapGo" style={{ width: '38px', height: '38px', borderRadius: '50%' }} />
+              <span style={{ fontSize: '18px', fontWeight: 700 }}>MapGo.vn</span>
+            </div>
+            <LanguageSelector compact={true} />
           </div>
           <div className="search-bar" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
             <input
@@ -271,12 +274,6 @@ export default function HomePage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && doSearch()}
             />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: '10px' }}>
-            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', fontSize: '11px', fontWeight: 600 }}>
-              <button onClick={() => setLocale('vi')} style={{ padding: '4px 10px', background: locale === 'vi' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>VI</button>
-              <button onClick={() => setLocale('en')} style={{ padding: '4px 10px', background: locale === 'en' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>EN</button>
-            </div>
           </div>
         </div>
 

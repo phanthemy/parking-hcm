@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocale } from '@/contexts/LocaleContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -34,10 +35,10 @@ export default function Header() {
         }}
       >
         {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
-          <span style={{ fontSize: '28px' }}>🅿️</span>
-          <span style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px' }}>
-            ParkingHCM
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+          <img src="/logo.png" alt="MapGo" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
+          <span style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-0.5px', color: '#fff' }}>
+            MapGo.vn
           </span>
         </Link>
 
@@ -46,27 +47,29 @@ export default function Header() {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '24px',
+            gap: '20px',
           }}
           className="nav-desktop"
         >
-          <Link href="/" style={{ fontSize: '14px', opacity: 0.8, transition: 'opacity 0.2s' }}>
+          <Link href="/" style={{ fontSize: '14px', opacity: 0.8, transition: 'opacity 0.2s', color: '#fff' }}>
             {t('map')}
           </Link>
           {isAuthenticated && user?.role === 'business' && (
-            <Link href="/business/dashboard" style={{ fontSize: '14px', opacity: 0.8 }}>
+            <Link href="/business/dashboard" style={{ fontSize: '14px', opacity: 0.8, color: '#fff' }}>
                {t('manage')}
             </Link>
           )}
           {isAuthenticated && user?.role === 'admin' && (
-            <Link href="/admin" style={{ fontSize: '14px', opacity: 0.8 }}>
+            <Link href="/admin" style={{ fontSize: '14px', opacity: 0.8, color: '#fff' }}>
               Admin
             </Link>
           )}
 
+          <LanguageSelector compact={true} />
+
           {isAuthenticated ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <span style={{ fontSize: '14px', opacity: 0.8 }}>
+              <span style={{ fontSize: '14px', opacity: 0.8, color: '#fff' }}>
                 👤 {user?.name}
               </span>
               <button
@@ -149,6 +152,10 @@ export default function Header() {
               ⚙️ Admin
             </Link>
           )}
+          <div style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: '16px', color: '#a0a0b0' }}>🌐 Language</span>
+            <LanguageSelector />
+          </div>
           <div style={{ marginTop: 'auto', paddingTop: '16px' }}>
             {isAuthenticated ? (
               <>

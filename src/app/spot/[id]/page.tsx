@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { formatCurrency, formatHours, formatRelativeTime, formatPhone } from '@/lib/format';
 import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { Spot, Review } from '@/lib/types';
 
 const MapComponent = dynamic(() => import('@/components/Map'), {
@@ -23,6 +24,7 @@ const MapComponent = dynamic(() => import('@/components/Map'), {
 export default function SpotDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const { t } = useLocale();
 
   const [spot, setSpot] = useState<Spot | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -35,7 +37,7 @@ export default function SpotDetailPage() {
       const data = await api.get<Spot>(`/api/spots/${id}`);
       setSpot(data);
     } catch {
-      setError('Không thể tải thông tin. Vui lòng thử lại.');
+      setError(t('load_error'));
       // Mock data for development
       setSpot(getMockSpot(id));
     } finally {
@@ -81,10 +83,10 @@ export default function SpotDetailPage() {
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: '48px', marginBottom: '12px' }}>😔</p>
-            <p style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>Không tìm thấy bãi xe</p>
+            <p style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>{t('not_found')}</p>
             <p style={{ fontSize: '14px', opacity: 0.6, marginBottom: '20px' }}>{error}</p>
             <Link href="/">
-              <button className="btn-primary">← Quay về trang chủ</button>
+              <button className="btn-primary">← {t('back_home')}</button>
             </Link>
           </div>
         </div>
@@ -108,7 +110,7 @@ export default function SpotDetailPage() {
       <main className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', flex: 1 }}>
         {/* Back Link */}
         <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
-          ← Quay lại
+          ← {t('back')}
         </Link>
 
         {/* Image Gallery */}
@@ -123,7 +125,7 @@ export default function SpotDetailPage() {
                 {SPOT_TYPE_ICONS[spot.type]} {SPOT_TYPE_LABELS[spot.type]}
               </span>
               {spot.isPremium && <span className="badge badge-premium">✨ Premium</span>}
-              {spot.isVerified && <span className="badge">✅ Đã xác minh</span>}
+              {spot.isVerified && <span className="badge">✅ {t('verified')}</span>}
             </div>
           </div>
 
@@ -134,7 +136,7 @@ export default function SpotDetailPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <StarRating rating={spot.rating} />
             <span style={{ fontSize: '13px', opacity: 0.6 }}>
-              ({spot.reviewCount} đánh giá)
+              ({spot.reviewCount} {t('reviews')})
             </span>
           </div>
 
@@ -148,7 +150,7 @@ export default function SpotDetailPage() {
                 window.location.href = `/?route_to=${spot.id}&lat=${spot.latitude}&lng=${spot.longitude}&name=${encodeURIComponent(spot.name)}`;
               }}
             >
-              🧭 Chỉ đường
+              🧭 {t('directions')}
             </button>
             {spot.phone && (
               <a href={`tel:${spot.phone}`}>
@@ -168,12 +170,12 @@ export default function SpotDetailPage() {
                   });
                 } else {
                   navigator.clipboard.writeText(window.location.href);
-                  alert('Đã sao chép liên kết!');
+                  alert(t('link_copied'));
                 }
               }}
               style={{ padding: '12px 24px' }}
             >
-              📤 Chia sẻ
+              📤 {t('share')}
             </button>
           </div>
         </div>
@@ -182,20 +184,20 @@ export default function SpotDetailPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
           {/* Parking Slots */}
           <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>Chỗ đỗ xe</h3>
+            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('parking_slots')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {spot.carSlots > 0 && (
-                <span style={{ fontSize: '15px' }}>🚗 {spot.carSlots} chỗ ô tô</span>
+                <span style={{ fontSize: '15px' }}>🚗 {spot.carSlots} {t('car_slots')}</span>
               )}
               {spot.bikeSlots > 0 && (
-                <span style={{ fontSize: '15px' }}>🏍️ {spot.bikeSlots} chỗ xe máy</span>
+                <span style={{ fontSize: '15px' }}>🏍️ {spot.bikeSlots} {t('bike_slots')}</span>
               )}
             </div>
           </div>
 
           {/* Pricing */}
           <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>Giá gửi xe</h3>
+            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('pricing')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {spot.pricePerHourBike != null && (
                 <span style={{ fontSize: '15px', color: 'var(--color-primary, #10b981)', fontWeight: 600 }}>
@@ -212,7 +214,7 @@ export default function SpotDetailPage() {
 
           {/* Hours */}
           <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>Giờ mở cửa</h3>
+            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('opening_hours')}</h3>
             <span style={{ fontSize: '15px' }}>
               🕐 {formatHours(spot.openTime, spot.closeTime)}
             </span>
@@ -222,7 +224,7 @@ export default function SpotDetailPage() {
         {/* Description */}
         {spot.description && (
           <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📝 Mô tả</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📝 {t('description')}</h2>
             <p style={{ fontSize: '14px', lineHeight: 1.7, opacity: 0.85 }}>{spot.description}</p>
           </div>
         )}
@@ -260,7 +262,7 @@ export default function SpotDetailPage() {
 
         {spot.services && spot.services.length > 0 && (
           <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🔧 Dịch vụ</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🔧 {t('services')}</h2>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {spot.services.map((service, i) => (
                 <span key={i} className="badge" style={{ padding: '6px 12px', fontSize: '13px' }}>
@@ -273,7 +275,7 @@ export default function SpotDetailPage() {
 
         {spot.promotions && spot.promotions.length > 0 && (
           <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🎁 Ưu đãi</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🎁 {t('promotions')}</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {spot.promotions.map((promo, i) => (
                 <div key={i} style={{ padding: '12px', background: 'var(--bg-tertiary, rgba(255,255,255,0.05))', borderRadius: '8px' }}>
@@ -281,7 +283,7 @@ export default function SpotDetailPage() {
                   <p style={{ fontSize: '13px', opacity: 0.7 }}>{promo.description}</p>
                   {promo.validUntil && (
                     <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '4px' }}>
-                      HSD: {promo.validUntil}
+                      {t('valid_until')}: {promo.validUntil}
                     </p>
                   )}
                 </div>
@@ -292,7 +294,7 @@ export default function SpotDetailPage() {
 
         {/* Mini Map */}
         <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📍 Vị trí</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📍 {t('location')}</h2>
           <div style={{ height: '250px', borderRadius: '12px', overflow: 'hidden' }}>
             <MapComponent
               spots={[spot]}
@@ -306,7 +308,7 @@ export default function SpotDetailPage() {
         {/* Reviews Section */}
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>
-            ⭐ Đánh giá ({reviews.length})
+            ⭐ {t('reviews_section')} ({reviews.length})
           </h2>
 
           {/* Rating Breakdown */}
@@ -315,7 +317,7 @@ export default function SpotDetailPage() {
               <div style={{ textAlign: 'center', minWidth: '80px' }}>
                 <p style={{ fontSize: '36px', fontWeight: 700 }}>{spot.rating.toFixed(1)}</p>
                 <StarRating rating={spot.rating} size="sm" showValue={false} />
-                <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '4px' }}>{spot.reviewCount} đánh giá</p>
+                <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '4px' }}>{spot.reviewCount} {t('reviews')}</p>
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {ratingBreakdown.map((rb) => (
@@ -348,7 +350,7 @@ export default function SpotDetailPage() {
           {reviews.length === 0 ? (
             <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
               <p style={{ fontSize: '32px', marginBottom: '8px' }}>💬</p>
-              <p style={{ fontSize: '14px', opacity: 0.6 }}>Chưa có đánh giá nào. Hãy là người đầu tiên!</p>
+              <p style={{ fontSize: '14px', opacity: 0.6 }}>{t('no_reviews')}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

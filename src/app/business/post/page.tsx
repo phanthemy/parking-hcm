@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import { useAuth } from '@/hooks/useAuth';
 import api from '@/lib/api';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { SpotType } from '@/lib/types';
 
 interface PostFormData {
@@ -57,6 +58,7 @@ export default function BusinessPostPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const { t } = useLocale();
 
   // Auto-fill GPS from browser
   const getLocation = () => {
@@ -99,7 +101,7 @@ export default function BusinessPostPage() {
     setError('');
 
     if (!form.name || !form.address || !form.phone) {
-      setError('Vui lòng nhập đầy đủ thông tin bắt buộc');
+      setError(t('required_fields_error'));
       return;
     }
 
@@ -140,7 +142,7 @@ export default function BusinessPostPage() {
       setSuccess(true);
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Không thể đăng tin. Vui lòng thử lại.');
+      setError(apiErr.message || t('post_error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -173,16 +175,16 @@ export default function BusinessPostPage() {
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
           <div className="card" style={{ padding: '40px', textAlign: 'center', maxWidth: '400px' }}>
             <p style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</p>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Đăng tin thành công!</h2>
+             <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>{t('post_success')}</h2>
             <p style={{ fontSize: '14px', opacity: 0.6, marginBottom: '24px' }}>
-              Tin đăng của bạn đang chờ quản trị viên duyệt.
+               {t('post_pending')}
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <Link href="/business/dashboard">
-                <button className="btn-primary">📊 Về Dashboard</button>
+                <button className="btn-primary">📊 {t('to_dashboard')}</button>
               </Link>
               <button className="btn-secondary" onClick={() => { setSuccess(false); setForm(initialFormData); }}>
-                ➕ Đăng tin khác
+                ➕ {t('post_another')}
               </button>
             </div>
           </div>
@@ -197,19 +199,19 @@ export default function BusinessPostPage() {
 
       <main className="container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px', flex: 1 }}>
         <Link href="/" style={{ display: 'inline-flex', fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
-          ← Quay lại bản đồ
+          ← {t('back_to_map')}
         </Link>
 
-        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px' }}>➕ Đăng tin mới</h1>
+        <h1 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '24px' }}>➕ {t('post_spot_title')}</h1>
 
         <form onSubmit={handleSubmit}>
           {/* Basic Info */}
           <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>📋 Thông tin cơ bản</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>📋 {t('basic_info')}</h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Tên *</label>
+                <label style={labelStyle}>{t('name_label')}</label>
                 <input
                   type="text"
                   value={form.name}
@@ -220,22 +222,22 @@ export default function BusinessPostPage() {
               </div>
 
               <div>
-                <label style={labelStyle}>Loại *</label>
+                <label style={labelStyle}>{t('type_label')}</label>
                 <select
                   value={form.type}
                   onChange={(e) => updateField('type', e.target.value as SpotType)}
                   style={inputStyle}
                 >
-                  <option value="PARKING_LOT">🅿️ Bãi xe</option>
-                  <option value="RESTAURANT">🍜 Quán ăn</option>
-                  <option value="CAFE">☕ Café</option>
-                  <option value="RESTROOM">🚻 Nhà vệ sinh</option>
-                  <option value="SERVICE">🔧 Dịch vụ</option>
+                  <option value="PARKING_LOT">{t('type_parking')}</option>
+                  <option value="RESTAURANT">{t('type_restaurant')}</option>
+                  <option value="CAFE">{t('type_cafe')}</option>
+                  <option value="RESTROOM">{t('type_restroom')}</option>
+                  <option value="SERVICE">{t('type_service')}</option>
                 </select>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Địa chỉ *</label>
+                <label style={labelStyle}>{t('address_label')}</label>
                 <input
                   type="text"
                   value={form.address}
@@ -246,7 +248,7 @@ export default function BusinessPostPage() {
               </div>
 
               <div>
-                <label style={labelStyle}>Vĩ độ (Latitude)</label>
+                <label style={labelStyle}>{t('latitude')}</label>
                 <input
                   type="text"
                   value={form.latitude}
@@ -257,7 +259,7 @@ export default function BusinessPostPage() {
               </div>
 
               <div>
-                <label style={labelStyle}>Kinh độ (Longitude)</label>
+                <label style={labelStyle}>{t('longitude')}</label>
                 <input
                   type="text"
                   value={form.longitude}
@@ -275,12 +277,12 @@ export default function BusinessPostPage() {
                   onClick={getLocation}
                   style={{ ...inputStyle, cursor: 'pointer', textAlign: 'center' }}
                 >
-                  📍 Lấy vị trí hiện tại
+                  📍 {t('get_location')}
                 </button>
               </div>
 
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Mô tả</label>
+                <label style={labelStyle}>{t('description')}</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => updateField('description', e.target.value)}
@@ -294,11 +296,11 @@ export default function BusinessPostPage() {
 
           {/* Parking Details */}
           <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🚗 Chỗ đỗ xe & Giá</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🚗 {t('parking_and_price')}</h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Số chỗ ô tô</label>
+                <label style={labelStyle}>{t('car_slots_label')}</label>
                 <input
                   type="number"
                   value={form.carSlots}
@@ -309,7 +311,7 @@ export default function BusinessPostPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Số chỗ xe máy</label>
+                <label style={labelStyle}>{t('bike_slots_label')}</label>
                 <input
                   type="number"
                   value={form.bikeSlots}
@@ -320,7 +322,7 @@ export default function BusinessPostPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Giá ô tô (VNĐ/giờ)</label>
+                <label style={labelStyle}>{t('car_price_label')}</label>
                 <input
                   type="number"
                   value={form.pricePerHourCar}
@@ -332,7 +334,7 @@ export default function BusinessPostPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Giá xe máy (VNĐ/giờ)</label>
+                <label style={labelStyle}>{t('bike_price_label')}</label>
                 <input
                   type="number"
                   value={form.pricePerHourBike}
@@ -344,7 +346,7 @@ export default function BusinessPostPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Giờ mở cửa</label>
+                <label style={labelStyle}>{t('open_time')}</label>
                 <input
                   type="time"
                   value={form.openTime}
@@ -353,7 +355,7 @@ export default function BusinessPostPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Giờ đóng cửa</label>
+                <label style={labelStyle}>{t('close_time')}</label>
                 <input
                   type="time"
                   value={form.closeTime}
@@ -366,11 +368,11 @@ export default function BusinessPostPage() {
 
           {/* Contact */}
           <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>📞 Liên hệ</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>📞 {t('contact')}</h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Số điện thoại *</label>
+                <label style={labelStyle}>{t('phone_label')}</label>
                 <input
                   type="tel"
                   value={form.phone}
@@ -394,8 +396,8 @@ export default function BusinessPostPage() {
 
           {/* Services */}
           <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🔧 Dịch vụ</h2>
-            <label style={labelStyle}>Dịch vụ (phân cách bằng dấu phẩy)</label>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🔧 {t('services')}</h2>
+            <label style={labelStyle}>{t('services_hint')}</label>
             <input
               type="text"
               value={form.services}
@@ -408,7 +410,7 @@ export default function BusinessPostPage() {
           {/* Menu (for restaurants/cafes) */}
           {(form.type === 'RESTAURANT' || form.type === 'CAFE') && (
             <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-              <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🍽️ Menu</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🍽️ {t('menu')}</h2>
 
               {form.menuItems.map((item, index) => (
                 <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'flex-end' }}>
@@ -467,18 +469,18 @@ export default function BusinessPostPage() {
                 onClick={addMenuItem}
                 style={{ fontSize: '13px', marginTop: '8px' }}
               >
-                ➕ Thêm món
+                ➕ {t('add_dish')}
               </button>
             </div>
           )}
 
           {/* Promotion */}
           <div className="card" style={{ padding: '24px', marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🎁 Ưu đãi</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '20px' }}>🎁 {t('promotions')}</h2>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Tiêu đề ưu đãi</label>
+                <label style={labelStyle}>{t('promo_title')}</label>
                 <input
                   type="text"
                   value={form.promotionTitle}
@@ -488,7 +490,7 @@ export default function BusinessPostPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Mô tả ưu đãi</label>
+                <label style={labelStyle}>{t('promo_desc')}</label>
                 <textarea
                   value={form.promotionDescription}
                   onChange={(e) => updateField('promotionDescription', e.target.value)}
@@ -511,7 +513,7 @@ export default function BusinessPostPage() {
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginBottom: '40px' }}>
             <Link href="/business/dashboard">
               <button type="button" className="btn-secondary" style={{ padding: '14px 28px' }}>
-                Hủy
+                {t('cancel')}
               </button>
             </Link>
             <button
@@ -525,7 +527,7 @@ export default function BusinessPostPage() {
                 opacity: isSubmitting ? 0.6 : 1,
               }}
             >
-              {isSubmitting ? '⏳ Đang đăng...' : '📤 Đăng tin'}
+              {isSubmitting ? '⏳ ' + t('submitting') : '📤 ' + t('submit_post')}
             </button>
           </div>
         </form>

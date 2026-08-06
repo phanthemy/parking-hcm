@@ -1,6 +1,6 @@
 'use client';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Locale, t as translate, TranslationKey } from '@/lib/i18n';
+import { Locale, t as translate, TranslationKey, LANGUAGES } from '@/lib/i18n';
 
 interface LocaleContextType {
   locale: Locale;
@@ -19,12 +19,22 @@ export function LocaleProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const saved = localStorage.getItem('mapgo-lang') as Locale;
-    if (saved === 'vi' || saved === 'en') setLocaleState(saved);
+    if (saved && LANGUAGES.some((l) => l.code === saved)) {
+      setLocaleState(saved);
+      if (typeof document !== 'undefined') {
+        document.documentElement.dir = saved === 'ar' ? 'rtl' : 'ltr';
+        document.documentElement.lang = saved;
+      }
+    }
   }, []);
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
     localStorage.setItem('mapgo-lang', l);
+    if (typeof document !== 'undefined') {
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = l;
+    }
   }, []);
 
   const tFunc = useCallback(
