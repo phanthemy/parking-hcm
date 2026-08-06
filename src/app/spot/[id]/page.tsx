@@ -103,8 +103,29 @@ export default function SpotDetailPage() {
     return { star, count, percentage };
   });
 
+  const spotSchema = spot ? {
+    "@context": "https://schema.org",
+    "@type": spot.type === 'PARKING_LOT' ? 'ParkingFacility' : spot.type === 'RESTAURANT' ? 'Restaurant' : spot.type === 'CAFE' ? 'Cafe' : 'LocalBusiness',
+    "name": spot.name,
+    "address": spot.address,
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": spot.latitude,
+      "longitude": spot.longitude
+    },
+    "url": `https://mapgo.vn/spot/${spot.id}`,
+    "telephone": spot.phone || undefined,
+    "image": spot.images?.[0] || "https://mapgo.vn/logo.png"
+  } : null;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-primary, #0d0d12)', color: '#fff' }}>
+      {spotSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(spotSchema) }}
+        />
+      )}
       <Header />
 
       <main className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', flex: 1 }}>

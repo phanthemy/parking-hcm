@@ -15,22 +15,109 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MapGo.vn - Bản đồ tiện ích quanh bạn",
-  description: "Tìm bãi đỗ xe, quán ăn, nhà hàng, nhà vệ sinh, café & tiện ích gần bạn tại TP.HCM. Chỉ đường, dẫn đường GPS real-time. Miễn phí!",
-  keywords: "bãi xe, quán ăn, nhà vệ sinh, café, tiện ích, bản đồ, TP.HCM, Sài Gòn, gửi xe, chỉ đường, mapgo",
+  metadataBase: new URL("https://mapgo.vn"),
+  title: {
+    default: "MapGo.vn - Tìm bãi đỗ xe quanh đây, Quán ăn, Café & Nhà vệ sinh gần nhất",
+    template: "%s | MapGo.vn",
+  },
+  description: "MapGo.vn - Ứng dụng tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng gần nhất tại TP.HCM. Bản đồ chỉ đường GPS real-time miễn phí 24/7.",
+  keywords: [
+    "Tìm bãi đỗ xe quanh đây",
+    "bãi đỗ xe gần đây",
+    "bãi giữ xe ô tô xe máy",
+    "quán ăn có bãi đỗ xe",
+    "nhà hàng có chỗ đậu xe",
+    "nhà vệ sinh gần đây",
+    "nhà vệ sinh công cộng TP.HCM",
+    "quán cafe có bãi đỗ xe",
+    "quán cà phê đỗ xe ô tô",
+    "bãi đỗ xe Quận 1",
+    "bãi đỗ xe TP Thủ Đức",
+    "bãi đỗ xe Quận 7",
+    "bản đồ tiện ích MapGo",
+    "chỉ đường GPS TP.HCM"
+  ],
+  authors: [{ name: "MapGo Team", url: "https://mapgo.vn" }],
+  creator: "MapGo.vn",
+  publisher: "MapGo.vn",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  alternates: {
+    canonical: "https://mapgo.vn",
+  },
   openGraph: {
-    title: "MapGo.vn - Bản đồ tiện ích quanh bạn",
-    description: "Tìm bãi đỗ xe, quán ăn, WC, café gần bạn. Chỉ đường & dẫn đường GPS ngay trên web!",
+    title: "MapGo.vn - Tìm bãi đỗ xe quanh đây, Quán ăn, Café có chỗ đỗ xe & WC công cộng",
+    description: "Bản đồ tìm bãi đỗ xe ô tô xe máy quanh đây, quán ăn có bãi đỗ xe, quán cafe, nhà vệ sinh gần nhất tại TP.HCM. Chỉ đường GPS real-time miễn phí!",
     url: "https://mapgo.vn",
     siteName: "MapGo.vn",
+    images: [
+      {
+        url: "https://mapgo.vn/logo.png",
+        width: 512,
+        height: 512,
+        alt: "MapGo.vn Logo",
+      },
+    ],
     type: "website",
     locale: "vi_VN",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "MapGo.vn - Tìm bãi đỗ xe quanh đây & Tiện ích gần bạn",
+    description: "Tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe có chỗ đỗ xe, nhà vệ sinh gần đây tại TP.HCM. Chỉ đường GPS miễn phí!",
+    images: ["https://mapgo.vn/logo.png"],
+  },
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
+};
+
+const jsonLdWebsite = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "MapGo.vn",
+  "url": "https://mapgo.vn",
+  "description": "Bản đồ tiện ích tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng gần nhất tại TP.HCM",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://mapgo.vn/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
+
+const jsonLdOrganization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "MapGo.vn",
+  "url": "https://mapgo.vn",
+  "logo": "https://mapgo.vn/logo.png",
+  "sameAs": []
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+        />
+      </head>
       <body>
         <AuthProvider>
           <LocaleProvider>

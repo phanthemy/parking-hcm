@@ -556,6 +556,14 @@ export default function HomePage() {
           <span className="fab-post-label">{t('post_spot')}</span>
         </Link>
       )}
+      {/* Hidden Semantic SEO Heading & Keywords Block for Google Indexing */}
+      <div style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
+        <h1>MapGo.vn - Tìm bãi đỗ xe quanh đây, Quán ăn có bãi đỗ xe, Nhà vệ sinh gần đây, Quán cafe có bãi đỗ xe tại TP.HCM</h1>
+        <h2>Bản đồ tiện ích thông minh tìm kiếm địa điểm đỗ xe ô tô, xe máy, quán ăn, nhà hàng, quán cà phê và nhà vệ sinh công cộng gần bạn nhất</h2>
+        <p>
+          MapGo.vn giúp bạn tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng sạch sẽ gần đây tại Quận 1, Quận 3, Quận 7, TP Thủ Đức, Bình Thạnh, Gò Vấp, Phú Nhuận, Quận 10 và toàn bộ TP.HCM. Hỗ trợ chỉ đường GPS trực tiếp trên bản đồ miễn phí 24/7.
+        </p>
+      </div>
     </div>
   );
 }
