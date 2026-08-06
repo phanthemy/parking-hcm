@@ -20,6 +20,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<SpotType | 'all'>('all');
+  const [hasCarParking, setHasCarParking] = useState(false);
   const [selectedSpot, setSelectedSpot] = useState<Spot | null>(null);
   const [bottomSheetState, setBottomSheetState] = useState<'peek' | 'full' | 'detail'>('peek');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -39,6 +40,7 @@ export default function HomePage() {
       if (searchQuery) params.set('search', searchQuery);
       if (latitude) params.set('lat', String(latitude));
       if (longitude) params.set('lng', String(longitude));
+      if (hasCarParking) params.set('hasCarParking', '1');
       params.set('limit', '100');
 
       const data = await api.get<{ spots: Spot[] }>(`/api/spots?${params.toString()}`);
@@ -52,7 +54,7 @@ export default function HomePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeFilter, searchQuery, latitude, longitude]);
+  }, [activeFilter, searchQuery, latitude, longitude, hasCarParking]);
 
   useEffect(() => {
     fetchSpots();
@@ -257,6 +259,13 @@ export default function HomePage() {
             {c.icon} {c.name}
           </div>
         ))}
+        <div
+          className={`floating-chip ${hasCarParking ? 'active' : ''}`}
+          onClick={() => setHasCarParking(v => !v)}
+          style={hasCarParking ? { background: 'rgba(234,179,8,0.25)', borderColor: '#eab308', color: '#fde047' } : {}}
+        >
+          🚗 Có bãi ô tô
+        </div>
       </div>
 
       {/* DESKTOP SIDEBAR */}
@@ -291,6 +300,13 @@ export default function HomePage() {
               {c.icon} {c.name}
             </div>
           ))}
+          <div
+            className={`chip ${hasCarParking ? 'active' : ''}`}
+            onClick={() => setHasCarParking(v => !v)}
+            style={{ fontSize: '12px', padding: '6px 12px', ...(hasCarParking ? { background: 'rgba(234,179,8,0.2)', borderColor: '#eab308', color: '#fde047' } : {}) }}
+          >
+            🚗 Có bãi ô tô
+          </div>
         </div>
 
         <div className="sidebar-results">

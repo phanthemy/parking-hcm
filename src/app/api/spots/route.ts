@@ -13,9 +13,10 @@ export async function GET(req: NextRequest) {
     const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : null;
     const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : null;
     const search = searchParams.get('search');
-    const sort = searchParams.get('sort') || 'distance'; // distance/price/rating
+    const sort = searchParams.get('sort') || 'distance';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
+    const hasCarParking = searchParams.get('hasCarParking') === '1';
 
     // Base query
     const where: any = {};
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
     where.status = { in: ['active', 'ACTIVE'] };
 
     if (type) where.type = type;
+    if (hasCarParking) where.carSlots = { gt: 0 };
     if (minPrice !== null || maxPrice !== null) {
       where.basePricePerHour = {};
       if (minPrice !== null) where.basePricePerHour.gte = minPrice;
