@@ -103,11 +103,16 @@ export default function HomePage() {
   );
 
   const handleMarkerClick = useCallback((spot: Spot) => {
-    setSelectedSpot(spot);
-    setBottomSheetState('detail');
-    if (window.innerWidth >= 768) {
-      setSidebarCollapsed(false);
-    }
+    // Force clear first to ensure React detects change on re-click
+    setSelectedSpot(null);
+    // Use setTimeout to ensure the state clears before setting new spot
+    setTimeout(() => {
+      setSelectedSpot(spot);
+      setBottomSheetState('detail');
+      if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+        setSidebarCollapsed(false);
+      }
+    }, 10);
   }, []);
 
   const [routingDest, setRoutingDest] = useState<Spot | null>(null);

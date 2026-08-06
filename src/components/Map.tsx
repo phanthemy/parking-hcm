@@ -293,14 +293,7 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
         });
 
         const marker = L.marker([spot.latitude, spot.longitude], { icon })
-          .addTo(mapInstanceRef.current!)
-          .bindPopup(
-            `<div style="min-width:150px">
-              <strong>${spot.name}</strong><br/>
-              <small>${spot.address}</small><br/>
-              <small>⭐ ${(spot.rating || 0).toFixed(1)} (${spot.reviewCount || 0})</small>
-            </div>`
-          );
+          .addTo(mapInstanceRef.current!);
 
         marker.on('click', () => {
           if (onSpotClick) onSpotClick(spot);
