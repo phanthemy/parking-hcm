@@ -98,6 +98,51 @@ cool-bohr/
 - **Peek on close**: User kỳ vọng X = đóng → `peek` (thu nhỏ), không phải `full` (mở rộng)
 
 ### Deploy
-- Production: `baidoxe.nextapp.vn` / `parking.nextapp.vn`
+- Production: `mapgo.vn` (trước đó: `baidoxe.nextapp.vn` / `parking.nextapp.vn`)
 - Method: SCP + SSH + `npm run build` + `pm2 restart parking-hcm`
 
+---
+
+## 2026-08-06: Auto-Sync Google Maps + SEO Optimization
+
+### Tính năng mới — Auto Sync
+- [x] **Google Maps Places API scraper** — `scripts/google-places-sync.js`
+  - Dùng Places API (New) `searchNearby` endpoint
+  - Grid search: chia vùng quét thành lưới (1500m/điểm) để phủ rộng
+  - Dedup bằng proximity 50m + cùng type
+  - 5 categories: parking, restaurant, cafe, toilet, gas_station
+  - Spots mới vào status `PENDING` chờ admin duyệt
+  - API key đọc từ `.env` → `GOOGLE_MAPS_API_KEY`
+- [x] **Auto-sync orchestrator** — `scripts/auto-sync.js`
+  - Chạy Google Maps trước → OSM sau
+  - Tự skip Google nếu không có API key
+  - Log kết quả vào `scripts/sync-log.json`
+  - Hỗ trợ `--dry-run`, `--source=google|osm`
+- [x] **Schema update** — Thêm 5 fields vào ParkingSpot:
+  - `sourceId`, `source`, `lastSyncedAt`, `googleRating`, `googlePlaceId`
+- [x] **Overpass scraper update** — Thêm source='OSM', status='PENDING'
+- [x] **Admin panel** — Thêm cột "Nguồn" + Google Rating + stat "Sync mới"
+
+### SEO Optimization
+- [x] **Spot Detail SSR** — Chuyển từ `'use client'` → Server Component
+  - `generateMetadata()` — Dynamic title, description, OG tags
+  - JSON-LD LocalBusiness/ParkingFacility + BreadcrumbList
+  - Client component tách ra `SpotDetailClient.tsx`
+- [x] **District Landing Pages** — `/quan/[slug]` (22 quận)
+  - Server-rendered HTML cho Google bot index
+  - JSON-LD ItemList + Breadcrumb
+  - SEO footer text
+  - Canonical URLs
+- [x] **Sitemap** — Thêm 22 district URLs (priority 0.7)
+- [x] **Google Search Console** — Meta tag verification
+
+### Quyết định kỹ thuật
+- **SSR cho SEO**: Google bot không render JS → phải dùng Server Component
+- **District pages**: Tạo trang tĩnh cho mỗi quận → target từ khóa "bãi đỗ xe Quận X"
+- **Pending status**: Tất cả data mới từ auto-sync → PENDING → admin duyệt → ACTIVE
+- **Grid search**: Google Nearby Search max 20 kết quả → chia grid 1500m để phủ nhiều hơn
+
+### NPM Scripts mới
+- `npm run sync:auto` — Chạy cả Google + OSM
+- `npm run sync:google` — Chỉ Google Maps
+- `npm run sync:dry` — Dry run (không lưu DB)
