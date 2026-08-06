@@ -129,12 +129,48 @@ export default function HomePage() {
     }
   }, [latitude, longitude]);
 
-  // Open Google Maps / native navigation
-  const openGoogleNav = useCallback(() => {
-    if (!routingDest) return;
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${routingDest.latitude},${routingDest.longitude}&travelmode=driving`;
-    window.open(url, '_blank');
+  // In-app real-time navigation
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navInfo, setNavInfo] = useState<{ dist: number; dur: number } | null>(null);
+
+  const startNavMode = useCallback(() => {
+    if (!routingDest || !mapComponentRef.current) return;
+    mapComponentRef.current.startNavigation(
+      [routingDest.latitude, routingDest.longitude],
+      routingDest.name
+    );
+    setIsNavigating(true);
+    setBottomSheetState('peek');
   }, [routingDest]);
+
+  const stopNavMode = useCallback(() => {
+    if (mapComponentRef.current) {
+      mapComponentRef.current.stopNavigation();
+      mapComponentRef.current.clearRoute();
+    }
+    setIsNavigating(false);
+    setIsRouting(false);
+    setRoutingDest(null);
+    setNavInfo(null);
+  }, []);
+
+  // Listen for nav updates from Map
+  useEffect(() => {
+    const handleNavUpdate = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setNavInfo({ dist: detail.dist, dur: detail.dur });
+    };
+    const handleArrived = () => {
+      alert('🎉 Bạn đã đến nơi!');
+      stopNavMode();
+    };
+    document.addEventListener('navUpdate', handleNavUpdate);
+    document.addEventListener('navArrived', handleArrived);
+    return () => {
+      document.removeEventListener('navUpdate', handleNavUpdate);
+      document.removeEventListener('navArrived', handleArrived);
+    };
+  }, [stopNavMode]);
 
   const handleClearRoute = useCallback(() => {
     if (mapComponentRef.current) {
@@ -318,14 +354,14 @@ export default function HomePage() {
       {isRouting && routingDest && (
         <div style={{
           position: 'fixed',
-          bottom: window.innerWidth >= 768 ? '20px' : '170px',
+          bottom: isNavigating ? '20px' : (typeof window !== 'undefined' && window.innerWidth >= 768 ? '20px' : '170px'),
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 250,
-          background: 'rgba(13,13,18,0.95)',
+          background: isNavigating ? 'rgba(0,80,20,0.95)' : 'rgba(13,13,18,0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          border: `1px solid ${isNavigating ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`,
           borderRadius: '16px',
           padding: '14px 20px',
           display: 'flex',
@@ -333,49 +369,44 @@ export default function HomePage() {
           gap: '12px',
           maxWidth: '420px',
           width: 'calc(100% - 32px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: isNavigating ? '0 8px 32px rgba(34,197,94,0.3)' : '0 8px 32px rgba(0,0,0,0.5)',
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              📍 {routingDest.name}
+              {isNavigating ? '🧭 Đang dẫn đường' : '📍'} {routingDest.name}
             </div>
-            <div style={{ fontSize: '11px', color: '#8b8b9e', marginTop: '2px' }}>
-              {routingDest.distance ? `${routingDest.distance.toFixed(1)} km` : routingDest.address?.substring(0, 30)}
+            <div style={{ fontSize: '12px', color: isNavigating ? '#86efac' : '#8b8b9e', marginTop: '3px', fontWeight: isNavigating ? 600 : 400 }}>
+              {isNavigating && navInfo
+                ? `📏 ${navInfo.dist.toFixed(1)} km · ⏱️ ~${navInfo.dur} phút`
+                : routingDest.distance
+                  ? `${routingDest.distance.toFixed(1)} km`
+                  : routingDest.address?.substring(0, 35)
+              }
             </div>
           </div>
+          {!isNavigating ? (
+            <button
+              onClick={startNavMode}
+              style={{
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                border: 'none', borderRadius: '12px', color: '#fff',
+                padding: '10px 18px', fontSize: '13px', fontWeight: 700,
+                cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              🚀 Đi ngay
+            </button>
+          ) : null}
           <button
-            onClick={openGoogleNav}
+            onClick={() => { isNavigating ? stopNavMode() : (() => { handleClearRoute(); setRoutingDest(null); })(); }}
             style={{
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-              border: 'none',
-              borderRadius: '12px',
-              color: '#fff',
-              padding: '10px 18px',
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
+              background: isNavigating ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)',
+              border: `1px solid ${isNavigating ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`,
+              borderRadius: '12px', color: isNavigating ? '#fca5a5' : '#a0a0b0',
+              padding: '10px 14px', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap',
             }}
           >
-            🚀 Đi ngay
-          </button>
-          <button
-            onClick={() => { handleClearRoute(); setRoutingDest(null); }}
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: '12px',
-              color: '#a0a0b0',
-              padding: '10px 14px',
-              fontSize: '13px',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            ✕ Hủy
+            {isNavigating ? '⏹️ Dừng' : '✕ Hủy'}
           </button>
         </div>
       )}
