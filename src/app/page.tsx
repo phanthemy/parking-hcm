@@ -442,13 +442,44 @@ export default function HomePage() {
                 <div className="spot-info">
                   <div className="spot-name">{selectedSpot.name}</div>
                   <div className="spot-meta">{selectedSpot.address}</div>
-                  <div className="spot-actions">
-                    <button onClick={() => handleDirections(selectedSpot)} className="btn btn-primary" style={{ flex: 1, padding: '12px' }}>
+                  {selectedSpot.distance != null && (
+                    <div style={{ fontSize: '13px', color: '#86efac', marginTop: '4px', fontWeight: 600 }}>
+                      📍 {selectedSpot.distance.toFixed(1)} km từ bạn
+                    </div>
+                  )}
+                  <div className="spot-actions" style={{ marginTop: '12px' }}>
+                    <button 
+                      onClick={() => {
+                        handleDirections(selectedSpot);
+                        // Auto-start navigation after route is drawn
+                        setTimeout(() => {
+                          if (mapComponentRef.current) {
+                            mapComponentRef.current.startNavigation(
+                              [selectedSpot.latitude, selectedSpot.longitude],
+                              selectedSpot.name
+                            );
+                            setIsNavigating(true);
+                          }
+                        }, 1500);
+                      }} 
+                      style={{ 
+                        flex: 1, padding: '14px', fontSize: '14px', fontWeight: 700,
+                        border: 'none', borderRadius: '14px', cursor: 'pointer',
+                        background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff',
+                      }}
+                    >
+                      🚀 Đi ngay
+                    </button>
+                    <button 
+                      onClick={() => handleDirections(selectedSpot)} 
+                      className="btn btn-primary" 
+                      style={{ flex: 1, padding: '14px' }}
+                    >
                       🧭 Chỉ đường
                     </button>
                     {selectedSpot.phone && (
-                      <a href={`tel:${selectedSpot.phone}`} className="btn btn-secondary" style={{ flex: 1, padding: '12px' }}>
-                        📞 Gọi điện
+                      <a href={`tel:${selectedSpot.phone}`} className="btn btn-secondary" style={{ padding: '14px' }}>
+                        📞
                       </a>
                     )}
                   </div>
