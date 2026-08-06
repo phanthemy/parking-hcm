@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import StarRating from './StarRating';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocale } from '@/contexts/LocaleContext';
 import api from '@/lib/api';
 
 interface ReviewFormProps {
@@ -12,6 +13,7 @@ interface ReviewFormProps {
 
 export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProps) {
   const { isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,11 +30,11 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
         }}
       >
         <p style={{ fontSize: '15px', marginBottom: '12px', opacity: 0.8 }}>
-          🔒 Đăng nhập để viết đánh giá
+          🔒 {t('login_to_review')}
         </p>
         <a href="/auth/login">
           <button className="btn-primary" style={{ padding: '10px 24px' }}>
-            Đăng nhập
+            {t('login')}
           </button>
         </a>
       </div>
@@ -44,11 +46,11 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
     setError('');
 
     if (rating === 0) {
-      setError('Vui lòng chọn số sao đánh giá');
+      setError(t('select_rating'));
       return;
     }
     if (comment.trim().length < 10) {
-      setError('Nhận xét phải có ít nhất 10 ký tự');
+      setError(t('comment_min'));
       return;
     }
 
@@ -61,7 +63,7 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
       if (onReviewSubmitted) onReviewSubmitted();
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Không thể gửi đánh giá. Vui lòng thử lại.');
+      setError(apiErr.message || t('review_error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -77,16 +79,16 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
         }}
       >
         <p style={{ fontSize: '24px', marginBottom: '8px' }}>✅</p>
-        <p style={{ fontSize: '15px', fontWeight: 600 }}>Cảm ơn bạn đã đánh giá!</p>
+        <p style={{ fontSize: '15px', fontWeight: 600 }}>{t('review_thanks')}</p>
         <p style={{ fontSize: '13px', opacity: 0.7, marginTop: '4px' }}>
-          Đánh giá của bạn đã được gửi thành công.
+          {t('review_success')}
         </p>
         <button
           className="btn-secondary"
           onClick={() => setSuccess(false)}
           style={{ marginTop: '12px', fontSize: '13px' }}
         >
-          Viết đánh giá khác
+          {t('write_another')}
         </button>
       </div>
     );
@@ -95,14 +97,14 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
   return (
     <div className="card" style={{ padding: '24px' }}>
       <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>
-        ✍️ Viết đánh giá
+        ✍️ {t('write_review')}
       </h3>
 
       <form onSubmit={handleSubmit}>
         {/* Rating */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ fontSize: '13px', opacity: 0.7, marginBottom: '8px', display: 'block' }}>
-            Đánh giá sao *
+            {t('star_rating')}
           </label>
           <StarRating rating={rating} size="lg" interactive onChange={setRating} showValue={false} />
         </div>
@@ -110,12 +112,12 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
         {/* Comment */}
         <div style={{ marginBottom: '16px' }}>
           <label style={{ fontSize: '13px', opacity: 0.7, marginBottom: '8px', display: 'block' }}>
-            Nhận xét *
+            {t('comment_label')}
           </label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Chia sẻ trải nghiệm của bạn về bãi xe này..."
+            placeholder={t('comment_placeholder')}
             rows={4}
             style={{
               width: '100%',
@@ -151,7 +153,7 @@ export default function ReviewForm({ spotId, onReviewSubmitted }: ReviewFormProp
             cursor: isSubmitting ? 'not-allowed' : 'pointer',
           }}
         >
-          {isSubmitting ? '⏳ Đang gửi...' : '📤 Gửi đánh giá'}
+          {isSubmitting ? '⏳ ' + t('sending') : '📤 ' + t('send_review')}
         </button>
       </form>
     </div>

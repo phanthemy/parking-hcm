@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { Spot } from '@/lib/types';
 import { formatCurrency, formatHours } from '@/lib/format';
 import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
+import { useLocale } from '@/contexts/LocaleContext';
 
 interface SpotCardProps {
   spot: Spot;
@@ -13,6 +14,7 @@ interface SpotCardProps {
 }
 
 export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardProps) {
+  const { t } = useLocale();
   const handleDirections = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -170,16 +172,16 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
             marginBottom: '12px',
           }}>
             {spot.carSlots > 0 && (
-              <span>🚗 <strong style={{ color: '#d0d0d8' }}>{spot.carSlots}</strong> chỗ ô tô</span>
+              <span>🚗 <strong style={{ color: '#d0d0d8' }}>{spot.carSlots}</strong> {t('car_slots')}</span>
             )}
             {spot.bikeSlots > 0 && (
-              <span>🏍️ <strong style={{ color: '#d0d0d8' }}>{spot.bikeSlots}</strong> chỗ xe máy</span>
+              <span>🏍️ <strong style={{ color: '#d0d0d8' }}>{spot.bikeSlots}</strong> {t('bike_slots')}</span>
             )}
             {(spot.pricePerHourCar != null && spot.pricePerHourCar > 0) && (
               <span>💰 <strong style={{ color: '#d0d0d8', fontWeight: 700 }}>{formatCurrency(spot.pricePerHourCar, '/h')}</strong></span>
             )}
             {(spot.pricePerHourCar === 0 || (spot.pricePerHourBike === 0 && spot.pricePerHourCar == null)) && (
-              <span style={{ color: '#10b981' }}>🎉 <strong>Miễn phí</strong></span>
+              <span style={{ color: '#10b981' }}>🎉 <strong>{t('free')}</strong></span>
             )}
             {(spot.openTime || spot.closeTime) && (
               <span>🕐 {formatHours(spot.openTime, spot.closeTime)}</span>
@@ -205,7 +207,7 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
               onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
             >
-              🧭 Chỉ đường
+              🧭 {t('directions')}
             </button>
             {spot.phone && (
               <button

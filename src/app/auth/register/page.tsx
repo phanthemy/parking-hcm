@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,15 +28,15 @@ export default function RegisterPage() {
     setError('');
 
     if (!name || !email || !password) {
-      setError('Vui lòng nhập đầy đủ thông tin');
+      setError(t('fill_all_fields'));
       return;
     }
     if (password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      setError(t('password_min'));
       return;
     }
     if (password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
+      setError(t('password_mismatch'));
       return;
     }
 
@@ -44,7 +46,7 @@ export default function RegisterPage() {
       router.push('/');
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      setError(apiErr.message || t('register_error'));
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +92,7 @@ export default function RegisterPage() {
             </h1>
           </Link>
           <p style={{ fontSize: '14px', opacity: 0.6, marginTop: '8px' }}>
-            Tạo tài khoản mới
+            {t('register_title')}
           </p>
         </div>
 
@@ -98,7 +100,7 @@ export default function RegisterPage() {
           {/* Role Selection */}
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '8px', opacity: 0.8 }}>
-              Bạn là
+              {t('you_are')}
             </label>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
@@ -113,7 +115,7 @@ export default function RegisterPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                🚗 Tài xế
+                🚗 {t('driver')}
               </button>
               <button
                 type="button"
@@ -127,7 +129,7 @@ export default function RegisterPage() {
                   transition: 'all 0.2s',
                 }}
               >
-                🏢 Doanh nghiệp
+                🏢 {t('business')}
               </button>
             </div>
           </div>
@@ -135,7 +137,7 @@ export default function RegisterPage() {
           {/* Name */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', opacity: 0.8 }}>
-              Họ tên
+              {t('full_name')}
             </label>
             <input
               type="text"
@@ -165,13 +167,13 @@ export default function RegisterPage() {
           {/* Password */}
           <div style={{ marginBottom: '16px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', opacity: 0.8 }}>
-              Mật khẩu
+              {t('password')}
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Ít nhất 6 ký tự"
+              placeholder={t('min_6_chars')}
               style={inputStyle}
               autoComplete="new-password"
             />
@@ -180,13 +182,13 @@ export default function RegisterPage() {
           {/* Confirm Password */}
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', opacity: 0.8 }}>
-              Xác nhận mật khẩu
+              {t('confirm_password')}
             </label>
             <input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Nhập lại mật khẩu"
+              placeholder={t('confirm_password_placeholder')}
               style={inputStyle}
               autoComplete="new-password"
             />
@@ -213,14 +215,14 @@ export default function RegisterPage() {
               cursor: isLoading ? 'not-allowed' : 'pointer',
             }}
           >
-            {isLoading ? '⏳ Đang tạo tài khoản...' : 'Đăng ký'}
+            {isLoading ? '⏳ ' + t('registering') : t('register')}
           </button>
         </form>
 
         {/* Login Link */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <p style={{ fontSize: '14px', opacity: 0.6 }}>
-            Đã có tài khoản?{' '}
+            {t('have_account')}{' '}
             <Link
               href="/auth/login"
               style={{
@@ -229,7 +231,7 @@ export default function RegisterPage() {
                 textDecoration: 'none',
               }}
             >
-              Đăng nhập
+              {t('login')}
             </Link>
           </p>
         </div>
@@ -237,7 +239,7 @@ export default function RegisterPage() {
         {/* Back to home */}
         <div style={{ textAlign: 'center', marginTop: '16px' }}>
           <Link href="/" style={{ fontSize: '13px', opacity: 0.5 }}>
-            ← Quay về trang chủ
+            ← {t('back_home')}
           </Link>
         </div>
       </div>

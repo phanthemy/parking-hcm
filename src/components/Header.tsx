@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { t } = useLocale();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -49,11 +51,11 @@ export default function Header() {
           className="nav-desktop"
         >
           <Link href="/" style={{ fontSize: '14px', opacity: 0.8, transition: 'opacity 0.2s' }}>
-            Bản đồ
+            {t('map')}
           </Link>
           {isAuthenticated && user?.role === 'business' && (
             <Link href="/business/dashboard" style={{ fontSize: '14px', opacity: 0.8 }}>
-              Quản lý
+               {t('manage')}
             </Link>
           )}
           {isAuthenticated && user?.role === 'admin' && (
@@ -72,13 +74,13 @@ export default function Header() {
                 onClick={logout}
                 style={{ fontSize: '13px', padding: '6px 14px' }}
               >
-                Đăng xuất
+                {t('logout')}
               </button>
             </div>
           ) : (
             <Link href="/auth/login">
               <button className="btn-primary" style={{ fontSize: '13px', padding: '8px 18px' }}>
-                Đăng nhập
+                {t('login')}
               </button>
             </Link>
           )}
@@ -127,7 +129,7 @@ export default function Header() {
             onClick={() => setMenuOpen(false)}
             style={{ fontSize: '18px', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
           >
-            🗺️ Bản đồ
+            🗺️ {t('map')}
           </Link>
           {isAuthenticated && user?.role === 'business' && (
             <Link
@@ -135,7 +137,7 @@ export default function Header() {
               onClick={() => setMenuOpen(false)}
               style={{ fontSize: '18px', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
             >
-              📊 Quản lý
+               📊 {t('manage')}
             </Link>
           )}
           {isAuthenticated && user?.role === 'admin' && (
@@ -158,13 +160,13 @@ export default function Header() {
                   onClick={() => { logout(); setMenuOpen(false); }}
                   style={{ width: '100%', padding: '12px' }}
                 >
-                  Đăng xuất
+                  {t('logout')}
                 </button>
               </>
             ) : (
               <Link href="/auth/login" onClick={() => setMenuOpen(false)}>
                 <button className="btn-primary" style={{ width: '100%', padding: '12px' }}>
-                  Đăng nhập
+                  {t('login')}
                 </button>
               </Link>
             )}

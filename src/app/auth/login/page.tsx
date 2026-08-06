@@ -4,10 +4,12 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocale } from '@/contexts/LocaleContext';
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
+  const { t } = useLocale();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,7 +26,7 @@ export default function LoginPage() {
     setError('');
 
     if (!email || !password) {
-      setError('Vui lòng nhập đầy đủ thông tin');
+      setError(t('fill_all_fields'));
       return;
     }
 
@@ -34,7 +36,7 @@ export default function LoginPage() {
       router.push('/');
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      setError(apiErr.message || t('login_error'));
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +70,7 @@ export default function LoginPage() {
             </h1>
           </Link>
           <p style={{ fontSize: '14px', opacity: 0.6, marginTop: '8px' }}>
-            Đăng nhập vào tài khoản
+            {t('login_title')}
           </p>
         </div>
 
@@ -101,7 +103,7 @@ export default function LoginPage() {
           {/* Password */}
           <div style={{ marginBottom: '20px' }}>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, marginBottom: '6px', opacity: 0.8 }}>
-              Mật khẩu
+              {t('password')}
             </label>
             <input
               type="password"
@@ -144,14 +146,14 @@ export default function LoginPage() {
               cursor: isLoading ? 'not-allowed' : 'pointer',
             }}
           >
-            {isLoading ? '⏳ Đang đăng nhập...' : 'Đăng nhập'}
+            {isLoading ? '⏳ ' + t('logging_in') : t('login')}
           </button>
         </form>
 
         {/* Register Link */}
         <div style={{ textAlign: 'center', marginTop: '24px' }}>
           <p style={{ fontSize: '14px', opacity: 0.6 }}>
-            Chưa có tài khoản?{' '}
+            {t('no_account')}{' '}
             <Link
               href="/auth/register"
               style={{
@@ -160,7 +162,7 @@ export default function LoginPage() {
                 textDecoration: 'none',
               }}
             >
-              Đăng ký ngay
+              {t('register_now')}
             </Link>
           </p>
         </div>
@@ -168,7 +170,7 @@ export default function LoginPage() {
         {/* Back to home */}
         <div style={{ textAlign: 'center', marginTop: '16px' }}>
           <Link href="/" style={{ fontSize: '13px', opacity: 0.5 }}>
-            ← Quay về trang chủ
+            ← {t('back_home')}
           </Link>
         </div>
       </div>

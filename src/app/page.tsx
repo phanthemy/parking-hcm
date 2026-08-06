@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import SpotCard from '@/components/SpotCard';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import api from '@/lib/api';
 import type { Spot, SpotType } from '@/lib/types';
@@ -12,6 +13,7 @@ import type { MapHandle } from '@/components/Map';
 const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
 
 export default function HomePage() {
+  const { locale, setLocale, t } = useLocale();
   const { latitude, longitude } = useGeolocation();
   const [spots, setSpots] = useState<Spot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,7 +116,7 @@ export default function HomePage() {
 
   const handleDirections = useCallback((spot: Spot) => {
     if (!latitude || !longitude) {
-      alert('Chưa xác định được vị trí của bạn. Vui lòng bật GPS.');
+      alert(t('gps_not_available'));
       return;
     }
     if (mapComponentRef.current) {
@@ -161,7 +163,7 @@ export default function HomePage() {
       setNavInfo({ dist: detail.dist, dur: detail.dur });
     };
     const handleArrived = () => {
-      alert('🎉 Bạn đã đến nơi!');
+      alert('🎉 ' + t('arrived'));
       stopNavMode();
     };
     document.addEventListener('navUpdate', handleNavUpdate);
@@ -210,12 +212,12 @@ export default function HomePage() {
   };
 
   const categories = [
-    { id: 'all', name: 'Tất cả', icon: '🌐' },
-    { id: 'PARKING_LOT', name: 'Bãi xe', icon: '🚗' },
-    { id: 'RESTAURANT', name: 'Quán ăn', icon: '🍜' },
-    { id: 'CAFE', name: 'Cà phê', icon: '☕' },
-    { id: 'RESTROOM', name: 'Vệ sinh', icon: '🚻' },
-    { id: 'SERVICE', name: 'Dịch vụ', icon: '🛒' },
+    { id: 'all', name: t('all'), icon: '🌐' },
+    { id: 'PARKING_LOT', name: t('parking'), icon: '🚗' },
+    { id: 'RESTAURANT', name: t('restaurant'), icon: '🍜' },
+    { id: 'CAFE', name: t('cafe'), icon: '☕' },
+    { id: 'RESTROOM', name: t('restroom'), icon: '🚻' },
+    { id: 'SERVICE', name: t('service'), icon: '🛒' },
   ];
 
   return (
@@ -227,13 +229,17 @@ export default function HomePage() {
           <input
             className="search-field"
             type="text"
-            placeholder="Tìm bãi xe, quán ăn, WC..."
+            placeholder={t('search_placeholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch()}
           />
           <div className="filter-btn" onClick={() => doSearch()}>
             🔍
+          </div>
+          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', fontSize: '11px', fontWeight: 600, flexShrink: 0 }}>
+            <button onClick={() => setLocale('vi')} style={{ padding: '4px 8px', background: locale === 'vi' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>VI</button>
+            <button onClick={() => setLocale('en')} style={{ padding: '4px 8px', background: locale === 'en' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>EN</button>
           </div>
         </div>
       </div>
@@ -260,11 +266,17 @@ export default function HomePage() {
           <div className="search-bar" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
             <input
               type="text"
-              placeholder="Tìm kiếm..."
+              placeholder={t('search_desktop_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && doSearch()}
             />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginTop: '10px' }}>
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', overflow: 'hidden', fontSize: '11px', fontWeight: 600 }}>
+              <button onClick={() => setLocale('vi')} style={{ padding: '4px 10px', background: locale === 'vi' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>VI</button>
+              <button onClick={() => setLocale('en')} style={{ padding: '4px 10px', background: locale === 'en' ? '#6366f1' : 'transparent', color: '#fff', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}>EN</button>
+            </div>
           </div>
         </div>
 
@@ -285,7 +297,7 @@ export default function HomePage() {
           {selectedSpot ? (
             <div className="spot-detail-sidebar">
               <button className="btn btn-ghost" onClick={() => setSelectedSpot(null)} style={{ marginBottom: '12px' }}>
-                ◀ Quay lại
+                ◀ {t('back')}
               </button>
               <img src={selectedSpot.images?.[0] || 'https://via.placeholder.com/400x200?text=No+Image'} alt={selectedSpot.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px', marginBottom: '16px' }} />
               <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px' }}>{selectedSpot.name}</h2>
@@ -293,18 +305,18 @@ export default function HomePage() {
               
               <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
                 <button onClick={() => handleDirections(selectedSpot)} className="btn btn-primary" style={{ flex: 1 }}>
-                  🧭 Chỉ đường
+                  🧭 {t('directions')}
                 </button>
                 {selectedSpot.phone && (
                   <a href={`tel:${selectedSpot.phone}`} className="btn btn-secondary" style={{ flex: 1 }}>
-                    📞 Gọi điện
+                    📞 {t('call')}
                   </a>
                 )}
               </div>
 
               {selectedSpot.description && (
                 <div style={{ marginBottom: '24px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>Thông tin</h3>
+                  <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>{t('info')}</h3>
                   <p style={{ color: '#a0a0b0', fontSize: '14px' }}>{selectedSpot.description}</p>
                 </div>
               )}
@@ -312,7 +324,7 @@ export default function HomePage() {
           ) : (
             <>
               {isLoading ? (
-                <div style={{ textAlign: 'center', padding: '20px' }}>Đang tải...</div>
+                <div style={{ textAlign: 'center', padding: '20px' }}>{t('loading')}</div>
               ) : spots.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {spots.map((spot) => (
@@ -323,7 +335,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b6b80' }}>
-                  Không tìm thấy kết quả.
+                  {t('no_results')}
                 </div>
               )}
             </>
@@ -383,11 +395,11 @@ export default function HomePage() {
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isNavigating ? '🧭 Đang dẫn đường' : '📍'} {routingDest.name}
+              {isNavigating ? '🧭 ' + t('navigating') : '📍'} {routingDest.name}
             </div>
             <div style={{ fontSize: '12px', color: isNavigating ? '#86efac' : '#8b8b9e', marginTop: '3px', fontWeight: isNavigating ? 600 : 400 }}>
               {isNavigating && navInfo
-                ? `📏 ${navInfo.dist.toFixed(1)} km · ⏱️ ~${navInfo.dur} phút`
+                ? `📏 ${navInfo.dist.toFixed(1)} ${t('km')} · ⏱️ ~${navInfo.dur} ${t('minutes')}`
                 : routingDest.distance
                   ? `${routingDest.distance.toFixed(1)} km`
                   : routingDest.address?.substring(0, 35)
@@ -404,7 +416,7 @@ export default function HomePage() {
                 cursor: 'pointer', whiteSpace: 'nowrap',
               }}
             >
-              🚀 Đi ngay
+              🚀 {t('go_now')}
             </button>
           ) : null}
           <button
@@ -416,7 +428,7 @@ export default function HomePage() {
               padding: '10px 14px', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap',
             }}
           >
-            {isNavigating ? '⏹️ Dừng' : '✕ Hủy'}
+            {isNavigating ? '⏹️ ' + t('stop') : '✕ ' + t('cancel')}
           </button>
         </div>
       )}
@@ -470,7 +482,7 @@ export default function HomePage() {
                   <div className="spot-meta">{selectedSpot.address}</div>
                   {selectedSpot.distance != null && (
                     <div style={{ fontSize: '13px', color: '#86efac', marginTop: '4px', fontWeight: 600 }}>
-                      📍 {selectedSpot.distance.toFixed(1)} km từ bạn
+                      📍 {selectedSpot.distance.toFixed(1)} {t('km_from_you')}
                     </div>
                   )}
                   <div className="spot-actions" style={{ marginTop: '12px' }}>
@@ -493,14 +505,14 @@ export default function HomePage() {
                         background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff',
                       }}
                     >
-                      🚀 Đi ngay
+                      🚀 {t('go_now')}
                     </button>
                     <button 
                       onClick={() => handleDirections(selectedSpot)} 
                       className="btn btn-primary" 
                       style={{ flex: 1, padding: '14px' }}
                     >
-                      🧭 Chỉ đường
+                      🧭 {t('directions')}
                     </button>
                     {selectedSpot.phone && (
                       <a href={`tel:${selectedSpot.phone}`} className="btn btn-secondary" style={{ padding: '14px' }}>
@@ -513,10 +525,10 @@ export default function HomePage() {
             ) : (
               <>
                 <div className="bottom-sheet-title">
-                  {spots.length} địa điểm gần bạn
+                  {spots.length} {t('spots_nearby')}
                 </div>
                 {isLoading ? (
-                  <div style={{ textAlign: 'center', padding: '20px' }}>Đang tải...</div>
+                  <div style={{ textAlign: 'center', padding: '20px' }}>{t('loading')}</div>
                 ) : spots.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {spots.map((spot) => (
@@ -527,7 +539,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '20px', color: '#6b6b80' }}>
-                    Không tìm thấy kết quả.
+                    {t('no_results')}
                   </div>
                 )}
               </>
@@ -538,10 +550,10 @@ export default function HomePage() {
       {/* FAB — Đăng tin (Mobile + Desktop) — hide when detail/full on mobile */}
       {bottomSheetState === 'peek' && (
         <Link href="/business/post" style={{ textDecoration: 'none' }}>
-          <button className="fab-post" title="Đăng tin địa điểm">
+          <button className="fab-post" title={t('post_spot')}>
             ➕
           </button>
-          <span className="fab-post-label">Đăng tin</span>
+          <span className="fab-post-label">{t('post_spot')}</span>
         </Link>
       )}
     </div>
