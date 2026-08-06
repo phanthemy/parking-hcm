@@ -177,13 +177,17 @@ async function scrapeCategory(categoryKey, lat, lng, radiusKm) {
       lat: elLat,
       lng: elLng,
       type: config.dbType,
-      status: 'active',
+      status: 'PENDING', // Chờ admin duyệt
       isPremium: false,
       description: tags.description || '',
       phone: tags.phone || tags['contact:phone'] || null,
       website: tags.website || tags['contact:website'] || null,
       openTime: tags.opening_hours ? tags.opening_hours.split('-')[0]?.trim() : null,
       closeTime: tags.opening_hours ? tags.opening_hours.split('-')[1]?.trim() : null,
+      // Source tracking fields
+      source: 'OSM',
+      sourceId: `osm-${el.type || 'node'}-${el.id}`,
+      lastSyncedAt: new Date(),
     };
 
     try {

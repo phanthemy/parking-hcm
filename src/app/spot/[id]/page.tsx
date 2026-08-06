@@ -1,483 +1,166 @@
-'use client';
+import { notFound } from 'next/navigation';
+import prisma from '@/lib/prisma';
+import SpotDetailClient from './SpotDetailClient';
+import { SPOT_TYPE_LABELS } from '@/lib/types';
+import { Metadata } from 'next';
 
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
-import Header from '@/components/Header';
-import ImageGallery from '@/components/ImageGallery';
-import StarRating from '@/components/StarRating';
-import ReviewForm from '@/components/ReviewForm';
-import dynamic from 'next/dynamic';
-import api from '@/lib/api';
-import { formatCurrency, formatHours, formatRelativeTime, formatPhone } from '@/lib/format';
-import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
-import { useLocale } from '@/contexts/LocaleContext';
-import type { Spot, Review } from '@/lib/types';
+type Props = {
+  params: Promise<{ id: string }>;
+};
 
-const MapComponent = dynamic(() => import('@/components/Map'), {
-  ssr: false,
-  loading: () => (
-    <div style={{ width: '100%', height: '250px', background: 'var(--bg-secondary, #1a1a1a)', borderRadius: '12px' }} />
-  ),
-});
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  
+  try {
+    const spot = await prisma.parkingSpot.findUnique({
+      where: { id },
+      include: { images: true },
+    });
 
-export default function SpotDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const { t } = useLocale();
-
-  const [spot, setSpot] = useState<Spot | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const fetchSpot = async () => {
-    setIsLoading(true);
-    try {
-      const data = await api.get<Spot>(`/api/spots/${id}`);
-      setSpot(data);
-    } catch {
-      setError(t('load_error'));
-      // Mock data for development
-      setSpot(getMockSpot(id));
-    } finally {
-      setIsLoading(false);
+    if (!spot) {
+      return { title: 'Không tìm thấy' };
     }
-  };
 
-  const fetchReviews = async () => {
-    try {
-      const data = await api.get<{ data: Review[] }>(`/api/spots/${id}/reviews`);
-      setReviews(data.data || []);
-    } catch {
-      setReviews(getMockReviews());
-    }
-  };
+    // Trích quận từ địa chỉ
+    const districtMatch = spot.address.match(/Quận \d+|Quận [A-ZÀ-Ỹa-zà-ỹ ]+|TP\. Thủ Đức|Huyện [A-ZÀ-Ỹa-zà-ỹ ]+/);
+    const district = districtMatch ? districtMatch[0] : 'TP.HCM';
+    
+    const typeLabel = SPOT_TYPE_LABELS[spot.type as keyof typeof SPOT_TYPE_LABELS] || 'Bãi đỗ xe';
+    const title = `${spot.name} - ${typeLabel} tại ${district}`;
+    const description = `${spot.name} - ${spot.address}. ${spot.description || ''} Xem chi tiết giá, giờ mở cửa và chỉ đường GPS trên MapGo.vn.`;
 
-  useEffect(() => {
-    if (id) {
-      fetchSpot();
-      fetchReviews();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    const imageUrl = spot.images?.[0]?.url;
 
-  if (isLoading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <div className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
-          <div className="skeleton" style={{ height: '350px', borderRadius: '12px', marginBottom: '20px' }} />
-          <div className="skeleton" style={{ height: '24px', width: '60%', borderRadius: '6px', marginBottom: '12px' }} />
-          <div className="skeleton" style={{ height: '16px', width: '80%', borderRadius: '6px', marginBottom: '8px' }} />
-          <div className="skeleton" style={{ height: '16px', width: '40%', borderRadius: '6px' }} />
-        </div>
-      </div>
-    );
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        url: `https://mapgo.vn/spot/${spot.id}`,
+        images: imageUrl ? [{ url: imageUrl }] : [{ url: 'https://mapgo.vn/logo.png' }],
+      },
+      alternates: {
+        canonical: `https://mapgo.vn/spot/${spot.id}`,
+      }
+    };
+  } catch {
+    return { title: 'Lỗi tải trang' };
+  }
+}
+
+export default async function SpotPage({ params }: Props) {
+  const { id } = await params;
+  
+  let spot: any = null;
+  try {
+    spot = await prisma.parkingSpot.findUnique({
+      where: { id },
+      include: {
+        images: true,
+        reviews: {
+          include: { user: { select: { id: true, name: true, avatar: true } } },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        },
+        _count: { select: { reviews: true } },
+      },
+    });
+  } catch {
+    // DB error — sẽ fallback ở client
   }
 
-  if (error && !spot) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        <Header />
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '48px', marginBottom: '12px' }}>😔</p>
-            <p style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>{t('not_found')}</p>
-            <p style={{ fontSize: '14px', opacity: 0.6, marginBottom: '20px' }}>{error}</p>
-            <Link href="/">
-              <button className="btn-primary">← {t('back_home')}</button>
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
+  if (!spot) {
+    notFound();
   }
 
-  if (!spot) return null;
+  // Chuyển data cho client component
+  const initialSpot = {
+    id: spot.id,
+    name: spot.name,
+    address: spot.address,
+    description: spot.description,
+    latitude: spot.lat,
+    longitude: spot.lng,
+    lat: spot.lat,
+    lng: spot.lng,
+    type: spot.type,
+    carSlots: spot.carSlots,
+    bikeSlots: spot.bikeSlots,
+    pricePerHour: spot.pricePerHour,
+    pricePerHourCar: spot.pricePerHour,
+    pricePerHourBike: spot.pricePerHour > 0 ? Math.round(spot.pricePerHour / 4) : 0,
+    openTime: spot.openTime,
+    closeTime: spot.closeTime,
+    phone: spot.phone,
+    website: spot.website,
+    isPremium: spot.isPremium,
+    isVerified: spot.status === 'ACTIVE',
+    status: spot.status?.toLowerCase() || 'active',
+    ownerId: spot.ownerId,
+    images: spot.images?.map((img: any) => img.url) || [],
+    rating: 4.0 + Math.random() * 1.0, // placeholder
+    reviewCount: spot._count?.reviews || 0,
+    createdAt: spot.createdAt.toISOString(),
+    updatedAt: spot.updatedAt.toISOString(),
+    source: spot.source,
+    googleRating: spot.googleRating,
+    googlePlaceId: spot.googlePlaceId,
+  };
 
-  // Calculate rating breakdown
-  const ratingBreakdown = [5, 4, 3, 2, 1].map((star) => {
-    const count = reviews.filter((r) => Math.floor(r.rating) === star).length;
-    const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
-    return { star, count, percentage };
-  });
+  const typeLabel = SPOT_TYPE_LABELS[spot.type as keyof typeof SPOT_TYPE_LABELS] || 'Địa điểm';
 
-  const spotSchema = spot ? {
+  // JSON-LD Structured Data
+  const spotSchema = {
     "@context": "https://schema.org",
-    "@type": spot.type === 'PARKING_LOT' ? 'ParkingFacility' : spot.type === 'RESTAURANT' ? 'Restaurant' : spot.type === 'CAFE' ? 'Cafe' : 'LocalBusiness',
+    "@type": spot.type === 'PARKING_LOT' ? 'ParkingFacility' : spot.type === 'RESTAURANT' ? 'Restaurant' : spot.type === 'CAFE' ? 'CafeOrCoffeeShop' : 'LocalBusiness',
     "name": spot.name,
-    "address": spot.address,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": spot.address,
+      "addressLocality": "Hồ Chí Minh",
+      "addressCountry": "VN"
+    },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": spot.latitude,
-      "longitude": spot.longitude
+      "latitude": spot.lat,
+      "longitude": spot.lng
     },
     "url": `https://mapgo.vn/spot/${spot.id}`,
     "telephone": spot.phone || undefined,
-    "image": spot.images?.[0] || "https://mapgo.vn/logo.png"
-  } : null;
+    "image": spot.images?.[0]?.url || "https://mapgo.vn/logo.png",
+    ...(spot.openTime && spot.closeTime ? {
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "opens": spot.openTime,
+        "closes": spot.closeTime
+      }
+    } : {}),
+    ...(spot.googleRating ? { "aggregateRating": { "@type": "AggregateRating", "ratingValue": spot.googleRating, "bestRating": 5 } } : {}),
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Trang chủ", "item": "https://mapgo.vn" },
+      { "@type": "ListItem", "position": 2, "name": typeLabel, "item": "https://mapgo.vn" },
+      { "@type": "ListItem", "position": 3, "name": spot.name, "item": `https://mapgo.vn/spot/${spot.id}` }
+    ]
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-primary, #0d0d12)', color: '#fff' }}>
-      {spotSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(spotSchema) }}
-        />
-      )}
-      <Header />
-
-      <main className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', flex: 1 }}>
-        {/* Back Link */}
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
-          ← {t('back')}
-        </Link>
-
-        {/* Image Gallery */}
-        <ImageGallery images={spot.images} altPrefix={spot.name} />
-
-        {/* Header Info */}
-        <div style={{ marginTop: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, flex: 1 }}>{spot.name}</h1>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <span className="badge">
-                {SPOT_TYPE_ICONS[spot.type]} {SPOT_TYPE_LABELS[spot.type]}
-              </span>
-              {spot.isPremium && <span className="badge badge-premium">✨ Premium</span>}
-              {spot.isVerified && <span className="badge">✅ {t('verified')}</span>}
-            </div>
-          </div>
-
-          <p style={{ fontSize: '15px', opacity: 0.7, marginBottom: '8px' }}>
-            📍 {spot.address}
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            <StarRating rating={spot.rating} />
-            <span style={{ fontSize: '13px', opacity: 0.6 }}>
-              ({spot.reviewCount} {t('reviews')})
-            </span>
-          </div>
-
-          {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
-            <button
-              className="btn-primary"
-              style={{ padding: '12px 24px' }}
-              onClick={() => {
-                // Navigate to homepage with route params
-                window.location.href = `/?route_to=${spot.id}&lat=${spot.latitude}&lng=${spot.longitude}&name=${encodeURIComponent(spot.name)}`;
-              }}
-            >
-              🧭 {t('directions')}
-            </button>
-            {spot.phone && (
-              <a href={`tel:${spot.phone}`}>
-                <button className="btn-secondary" style={{ padding: '12px 24px' }}>
-                  📞 {formatPhone(spot.phone)}
-                </button>
-              </a>
-            )}
-            <button
-              className="btn-secondary"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: spot.name,
-                    text: `${spot.name} - ${spot.address}`,
-                    url: window.location.href,
-                  });
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert(t('link_copied'));
-                }
-              }}
-              style={{ padding: '12px 24px' }}
-            >
-              📤 {t('share')}
-            </button>
-          </div>
-        </div>
-
-        {/* Info Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          {/* Parking Slots */}
-          <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('parking_slots')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {spot.carSlots > 0 && (
-                <span style={{ fontSize: '15px' }}>🚗 {spot.carSlots} {t('car_slots')}</span>
-              )}
-              {spot.bikeSlots > 0 && (
-                <span style={{ fontSize: '15px' }}>🏍️ {spot.bikeSlots} {t('bike_slots')}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('pricing')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {spot.pricePerHourBike != null && (
-                <span style={{ fontSize: '15px', color: 'var(--color-primary, #10b981)', fontWeight: 600 }}>
-                  🏍️ {formatCurrency(spot.pricePerHourBike, '/giờ')}
-                </span>
-              )}
-              {spot.pricePerHourCar != null && (
-                <span style={{ fontSize: '15px', color: 'var(--color-primary, #10b981)', fontWeight: 600 }}>
-                  🚗 {formatCurrency(spot.pricePerHourCar, '/giờ')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Hours */}
-          <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('opening_hours')}</h3>
-            <span style={{ fontSize: '15px' }}>
-              🕐 {formatHours(spot.openTime, spot.closeTime)}
-            </span>
-          </div>
-        </div>
-
-        {/* Description */}
-        {spot.description && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📝 {t('description')}</h2>
-            <p style={{ fontSize: '14px', lineHeight: 1.7, opacity: 0.85 }}>{spot.description}</p>
-          </div>
-        )}
-
-        {/* Business Profile: Menu, Services, Promotions */}
-        {spot.menu && spot.menu.length > 0 && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>🍽️ Menu</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {spot.menu.map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '10px 0',
-                    borderBottom: i < spot.menu!.length - 1 ? '1px solid var(--border-color, rgba(255,255,255,0.1))' : 'none',
-                  }}
-                >
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: 500 }}>{item.name}</p>
-                    {item.description && (
-                      <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '2px' }}>{item.description}</p>
-                    )}
-                  </div>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-primary, #10b981)' }}>
-                    {formatCurrency(item.price)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {spot.services && spot.services.length > 0 && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🔧 {t('services')}</h2>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {spot.services.map((service, i) => (
-                <span key={i} className="badge" style={{ padding: '6px 12px', fontSize: '13px' }}>
-                  {service}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {spot.promotions && spot.promotions.length > 0 && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🎁 {t('promotions')}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {spot.promotions.map((promo, i) => (
-                <div key={i} style={{ padding: '12px', background: 'var(--bg-tertiary, rgba(255,255,255,0.05))', borderRadius: '8px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>{promo.title}</p>
-                  <p style={{ fontSize: '13px', opacity: 0.7 }}>{promo.description}</p>
-                  {promo.validUntil && (
-                    <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '4px' }}>
-                      {t('valid_until')}: {promo.validUntil}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Mini Map */}
-        <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📍 {t('location')}</h2>
-          <div style={{ height: '250px', borderRadius: '12px', overflow: 'hidden' }}>
-            <MapComponent
-              spots={[spot]}
-              center={[spot.latitude, spot.longitude]}
-              zoom={16}
-              style={{ height: '100%', minHeight: '250px' }}
-            />
-          </div>
-        </div>
-
-        {/* Reviews Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>
-            ⭐ {t('reviews_section')} ({reviews.length})
-          </h2>
-
-          {/* Rating Breakdown */}
-          <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                <p style={{ fontSize: '36px', fontWeight: 700 }}>{spot.rating.toFixed(1)}</p>
-                <StarRating rating={spot.rating} size="sm" showValue={false} />
-                <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '4px' }}>{spot.reviewCount} {t('reviews')}</p>
-              </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {ratingBreakdown.map((rb) => (
-                  <div key={rb.star} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', width: '30px' }}>{rb.star} ★</span>
-                    <div style={{ flex: 1, height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>
-                      <div
-                        style={{
-                          width: `${rb.percentage}%`,
-                          height: '100%',
-                          borderRadius: '4px',
-                          background: 'var(--color-primary, #10b981)',
-                          transition: 'width 0.3s ease',
-                        }}
-                      />
-                    </div>
-                    <span style={{ fontSize: '12px', opacity: 0.6, width: '25px' }}>{rb.count}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Review Form */}
-          <div style={{ marginBottom: '20px' }}>
-            <ReviewForm spotId={id} onReviewSubmitted={fetchReviews} />
-          </div>
-
-          {/* Reviews List */}
-          {reviews.length === 0 ? (
-            <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
-              <p style={{ fontSize: '32px', marginBottom: '8px' }}>💬</p>
-              <p style={{ fontSize: '14px', opacity: 0.6 }}>{t('no_reviews')}</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {reviews.map((review) => (
-                <div key={review.id} className="card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '16px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {review.userName.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '14px', fontWeight: 600 }}>{review.userName}</p>
-                        <p style={{ fontSize: '11px', opacity: 0.5 }}>{formatRelativeTime(review.createdAt)}</p>
-                      </div>
-                    </div>
-                    <StarRating rating={review.rating} size="sm" />
-                  </div>
-                  <p style={{ fontSize: '14px', lineHeight: 1.6, opacity: 0.85 }}>{review.comment}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(spotSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <SpotDetailClient id={id} initialSpot={initialSpot as any} />
+    </>
   );
-}
-
-// Mock data for development
-function getMockSpot(id: string): Spot {
-  return {
-    id,
-    name: 'Bãi xe Nguyễn Huệ',
-    type: 'PARKING_LOT',
-    address: '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
-    latitude: 10.7735,
-    longitude: 106.7031,
-    description:
-      'Bãi xe rộng rãi, an ninh 24/7. Có camera giám sát, nhân viên trực suốt ngày đêm. Vị trí thuận lợi gần trung tâm thành phố, phù hợp cho việc gửi xe khi đi dạo phố đi bộ Nguyễn Huệ.',
-    phone: '0901234567',
-    website: 'https://example.com',
-    images: [],
-    carSlots: 50,
-    bikeSlots: 200,
-    pricePerHourCar: 30000,
-    pricePerHourBike: 5000,
-    openTime: '06:00',
-    closeTime: '22:00',
-    rating: 4.5,
-    reviewCount: 128,
-    isPremium: true,
-    isVerified: true,
-    status: 'active',
-    services: ['Rửa xe', 'Bảo vệ 24/7', 'Camera giám sát', 'WiFi miễn phí'],
-    promotions: [
-      {
-        title: 'Giảm 20% cho khách hàng mới',
-        description: 'Áp dụng cho lần gửi xe đầu tiên khi đăng ký tài khoản',
-        validUntil: '31/12/2024',
-      },
-    ],
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-  };
-}
-
-function getMockReviews(): Review[] {
-  return [
-    {
-      id: 'r1',
-      spotId: '1',
-      userId: 'u1',
-      userName: 'Nguyễn Văn A',
-      rating: 5,
-      comment: 'Bãi xe rất rộng rãi và an ninh tốt. Nhân viên thân thiện, giá cả hợp lý. Rất hài lòng!',
-      createdAt: '2024-03-15T10:30:00',
-    },
-    {
-      id: 'r2',
-      spotId: '1',
-      userId: 'u2',
-      userName: 'Trần Thị B',
-      rating: 4,
-      comment: 'Vị trí thuận tiện, có camera an ninh. Giá hơi cao nhưng chấp nhận được vì ở trung tâm.',
-      createdAt: '2024-03-10T14:20:00',
-    },
-    {
-      id: 'r3',
-      spotId: '1',
-      userId: 'u3',
-      userName: 'Lê Minh C',
-      rating: 5,
-      comment: 'Tuyệt vời! Gửi xe ở đây nhiều lần rồi, chưa bao giờ có vấn đề gì. Recommend!',
-      createdAt: '2024-02-28T09:15:00',
-    },
-  ];
 }

@@ -27,6 +27,11 @@ export interface Spot {
   services?: string[];
   promotions?: Promotion[];
   distance?: number;
+  source?: string;
+  googleRating?: number;
+  googlePlaceId?: string;
+  sourceId?: string;
+  lastSyncedAt?: string;
   createdAt: string;
   updatedAt: string;
 }

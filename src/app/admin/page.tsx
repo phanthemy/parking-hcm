@@ -29,8 +29,8 @@ export default function AdminPage() {
   const fetchAllSpots = async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<{ data: Spot[] }>('/api/admin/spots');
-      setSpots(data.data || []);
+      const data = await api.get<{ spots: Spot[] }>('/api/admin/spots');
+      setSpots(data.spots || []);
     } catch {
       setSpots(getMockAdminSpots());
     } finally {
@@ -75,6 +75,9 @@ export default function AdminPage() {
   const activeCount = spots.filter((s) => s.status === 'active').length;
   const pendingCount = spots.filter((s) => s.status === 'pending').length;
   const hiddenCount = spots.filter((s) => s.status === 'hidden').length;
+  const autoSyncPendingCount = spots.filter((s) => 
+    s.status === 'pending' && (s.source === 'GOOGLE_MAPS' || s.source === 'OSM')
+  ).length;
 
   const statusLabels: Record<string, string> = {
     active: '✅ Hoạt động',
@@ -86,6 +89,14 @@ export default function AdminPage() {
     active: '#10b981',
     pending: '#f59e0b',
     hidden: '#6b7280',
+  };
+
+  const getSourceBadge = (source?: string) => {
+    switch (source) {
+      case 'GOOGLE_MAPS': return <span className="badge" style={{ fontSize: '11px', background: '#4285F4' }}>🌐 Google Maps</span>;
+      case 'OSM': return <span className="badge" style={{ fontSize: '11px', background: '#7ebc6f' }}>🗺️ OpenStreetMap</span>;
+      default: return <span className="badge" style={{ fontSize: '11px' }}>✍️ Thủ công</span>;
+    }
   };
 
   if (authLoading) {
@@ -120,6 +131,10 @@ export default function AdminPage() {
           <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
             <p style={{ fontSize: '32px', fontWeight: 700, color: '#f59e0b' }}>{pendingCount}</p>
             <p style={{ fontSize: '13px', opacity: 0.6 }}>Chờ duyệt</p>
+          </div>
+          <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '32px', fontWeight: 700, color: '#4285F4' }}>{autoSyncPendingCount}</p>
+            <p style={{ fontSize: '13px', opacity: 0.6 }}>Sync mới</p>
           </div>
           <div className="card" style={{ padding: '20px', textAlign: 'center' }}>
             <p style={{ fontSize: '32px', fontWeight: 700, color: '#6b7280' }}>{hiddenCount}</p>
@@ -174,6 +189,7 @@ export default function AdminPage() {
                     <th style={{ padding: '12px 16px', textAlign: 'left', opacity: 0.6, fontWeight: 500, fontSize: '12px' }}>Trạng thái</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', opacity: 0.6, fontWeight: 500, fontSize: '12px' }}>Đánh giá</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', opacity: 0.6, fontWeight: 500, fontSize: '12px' }}>Premium</th>
+                    <th style={{ padding: '12px 16px', textAlign: 'left', opacity: 0.6, fontWeight: 500, fontSize: '12px' }}>Nguồn</th>
                     <th style={{ padding: '12px 16px', textAlign: 'left', opacity: 0.6, fontWeight: 500, fontSize: '12px' }}>Ngày tạo</th>
                     <th style={{ padding: '12px 16px', textAlign: 'right', opacity: 0.6, fontWeight: 500, fontSize: '12px' }}>Thao tác</th>
                   </tr>
@@ -206,9 +222,13 @@ export default function AdminPage() {
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         ⭐ {spot.rating.toFixed(1)} ({spot.reviewCount})
+                        {spot.googleRating != null && <span style={{ fontSize: '11px', display: 'block', opacity: 0.7, marginTop: '2px' }}>⭐ {spot.googleRating} (Google)</span>}
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         {spot.isPremium ? '✨ Có' : '—'}
+                      </td>
+                      <td style={{ padding: '14px 16px' }}>
+                        {getSourceBadge(spot.source)}
                       </td>
                       <td style={{ padding: '14px 16px', fontSize: '13px', opacity: 0.6 }}>
                         {formatDate(spot.createdAt)}

@@ -21,6 +21,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
+  const DISTRICTS = [
+    'quan-1', 'quan-3', 'quan-4', 'quan-5', 'quan-6', 'quan-7', 'quan-8',
+    'quan-10', 'quan-11', 'quan-12', 'binh-tan', 'binh-thanh', 'go-vap',
+    'phu-nhuan', 'tan-binh', 'tan-phu', 'thu-duc', 'binh-chanh', 'cu-chi',
+    'hoc-mon', 'nha-be', 'can-gio'
+  ];
+
+  const districtUrls = DISTRICTS.map((slug) => ({
+    url: `${baseUrl}/quan/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
   return [
     {
       url: baseUrl,
@@ -40,6 +54,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.3,
     },
+    ...districtUrls,
     ...spotUrls,
   ];
 }
