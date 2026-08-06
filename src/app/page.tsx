@@ -103,16 +103,11 @@ export default function HomePage() {
   );
 
   const handleMarkerClick = useCallback((spot: Spot) => {
-    // Force clear first to ensure React detects change on re-click
-    setSelectedSpot(null);
-    // Use setTimeout to ensure the state clears before setting new spot
-    setTimeout(() => {
-      setSelectedSpot(spot);
-      setBottomSheetState('detail');
-      if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-        setSidebarCollapsed(false);
-      }
-    }, 10);
+    setSelectedSpot(spot);
+    setBottomSheetState('detail');
+    if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+      setSidebarCollapsed(false);
+    }
   }, []);
 
   const [routingDest, setRoutingDest] = useState<Spot | null>(null);
@@ -437,11 +432,14 @@ export default function HomePage() {
                 ? 'translateY(0)' 
                 : 'translateY(calc(100% - 160px))' // peek state
           }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
-          <div className="bottom-sheet-handle">
+          <div 
+            className="bottom-sheet-handle"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ cursor: 'grab', padding: '12px 0' }}
+          >
             <div className="bottom-sheet-handle-bar" />
           </div>
           
