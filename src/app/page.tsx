@@ -344,7 +344,7 @@ export default function HomePage() {
           // Close detail panel when tapping on map background
           if (bottomSheetState === 'detail') {
             setSelectedSpot(null);
-            setBottomSheetState('full');
+            setBottomSheetState('peek');
           }
         }}
       >
@@ -448,7 +448,7 @@ export default function HomePage() {
               <div className="spot-detail-sheet" style={{ position: 'relative' }}>
                 {/* X Close button */}
                 <button
-                  onClick={() => { setSelectedSpot(null); setBottomSheetState('full'); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedSpot(null); setBottomSheetState('peek'); }}
                   style={{
                     position: 'absolute', top: '10px', right: '10px', zIndex: 10,
                     width: '32px', height: '32px', borderRadius: '50%',
