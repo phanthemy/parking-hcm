@@ -204,7 +204,7 @@ export default function HomePage() {
     } else if (bottomSheetState === 'full' && diff > 50) {
       setBottomSheetState('peek');
     } else if (bottomSheetState === 'detail' && diff > 50) {
-      setBottomSheetState('peek');
+      setBottomSheetState('full');
       setSelectedSpot(null);
     }
   };
