@@ -14,9 +14,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ParkingHCM - Tìm bãi xe TP.HCM",
-  description: "Tìm bãi xe, quán ăn, café gần bạn tại TP. Hồ Chí Minh. Giá rẻ, tiện lợi, đánh giá từ cộng đồng.",
-  keywords: "bãi xe, parking, TP.HCM, Sài Gòn, gửi xe, tìm bãi xe",
+  title: "MapGo.vn - Bản đồ tiện ích quanh bạn",
+  description: "Tìm bãi đỗ xe, quán ăn, nhà hàng, nhà vệ sinh, café & tiện ích gần bạn tại TP.HCM. Chỉ đường, dẫn đường GPS real-time. Miễn phí!",
+  keywords: "bãi xe, quán ăn, nhà vệ sinh, café, tiện ích, bản đồ, TP.HCM, Sài Gòn, gửi xe, chỉ đường, mapgo",
+  openGraph: {
+    title: "MapGo.vn - Bản đồ tiện ích quanh bạn",
+    description: "Tìm bãi đỗ xe, quán ăn, WC, café gần bạn. Chỉ đường & dẫn đường GPS ngay trên web!",
+    url: "https://mapgo.vn",
+    siteName: "MapGo.vn",
+    type: "website",
+    locale: "vi_VN",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
