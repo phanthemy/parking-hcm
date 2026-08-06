@@ -9,9 +9,10 @@ import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
 interface SpotCardProps {
   spot: Spot;
   onDirections?: (spot: Spot) => void;
+  onCardClick?: (spot: Spot) => void;
 }
 
-export default function SpotCard({ spot, onDirections }: SpotCardProps) {
+export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardProps) {
   const handleDirections = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -34,9 +35,8 @@ export default function SpotCard({ spot, onDirections }: SpotCardProps) {
   const rating = (spot.rating || 0).toFixed(1);
   const distanceText = spot.distance != null ? `${spot.distance.toFixed(1)} km` : null;
 
-  return (
-    <Link href={`/spot/${spot.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-      <div style={{
+  const cardContent = (
+    <div style={{
         background: '#1a1a24',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '14px',
@@ -230,6 +230,20 @@ export default function SpotCard({ spot, onDirections }: SpotCardProps) {
           </div>
         </div>
       </div>
+  );
+
+  // When onCardClick is provided, use div (stay on page). Otherwise use Link (navigate to detail page).
+  if (onCardClick) {
+    return (
+      <div onClick={() => onCardClick(spot)} style={{ textDecoration: 'none', color: 'inherit' }}>
+        {cardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link href={`/spot/${spot.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+      {cardContent}
     </Link>
   );
 }

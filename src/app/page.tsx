@@ -316,7 +316,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {spots.map((spot) => (
                     <div key={spot.id} onClick={() => handleMarkerClick(spot)} style={{ cursor: 'pointer' }}>
-                      <SpotCard spot={spot} onDirections={handleDirections} />
+                      <SpotCard spot={spot} onDirections={handleDirections} onCardClick={handleMarkerClick} />
                     </div>
                   ))}
                 </div>
@@ -495,8 +495,8 @@ export default function HomePage() {
                 ) : spots.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {spots.map((spot) => (
-                      <div key={spot.id} onClick={() => handleMarkerClick(spot)}>
-                        <SpotCard spot={spot} onDirections={handleDirections} />
+                      <div key={spot.id}>
+                        <SpotCard spot={spot} onDirections={handleDirections} onCardClick={handleMarkerClick} />
                       </div>
                     ))}
                   </div>
