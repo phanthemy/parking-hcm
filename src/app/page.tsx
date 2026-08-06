@@ -55,6 +55,22 @@ export default function HomePage() {
     fetchSpots();
   }, [fetchSpots]);
 
+  // Dedicated search function — always resets state & forces fresh fetch
+  const doSearch = useCallback(() => {
+    // Clear routing if active
+    if (isRouting && mapComponentRef.current) {
+      mapComponentRef.current.clearRoute();
+      setIsRouting(false);
+    }
+    // Clear selected spot detail
+    setSelectedSpot(null);
+    if (bottomSheetState === 'detail') {
+      setBottomSheetState('peek');
+    }
+    // Force re-fetch (even if query didn't change)
+    fetchSpots();
+  }, [fetchSpots, isRouting, bottomSheetState]);
+
   // Auto-route from URL params (from spot detail page)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -167,9 +183,9 @@ export default function HomePage() {
             placeholder="Tìm địa điểm, bãi xe..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && fetchSpots()}
+            onKeyDown={(e) => e.key === 'Enter' && doSearch()}
           />
-          <div className="filter-btn" onClick={() => fetchSpots()}>
+          <div className="filter-btn" onClick={() => doSearch()}>
             🔍
           </div>
         </div>
@@ -200,7 +216,7 @@ export default function HomePage() {
               placeholder="Tìm kiếm..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && fetchSpots()}
+              onKeyDown={(e) => e.key === 'Enter' && doSearch()}
             />
           </div>
         </div>
