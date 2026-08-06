@@ -49,3 +49,43 @@
 ## Lỗi 10: "Chỉ đường" từ /spot/[id] mở Google Maps tab mới
 - **Nguyên nhân**: Trang detail vẫn dùng `<a href="google.com/maps/...">` cũ
 - **Fix**: Thay bằng `window.location.href = /?route_to=...` quay về homepage + auto-route
+
+---
+
+## 2026-08-06: Lỗi UX mobile
+
+## Lỗi 11: Tìm kiếm sau chỉ đường không hiện kết quả
+- **Thời điểm**: 2026-08-06
+- **Nguyên nhân**: State `routingDest`, `selectedSpot`, `isRouting` không reset khi search mới
+- **Fix**: Tạo `doSearch()` helper reset tất cả state trước khi `setSearchQuery`
+- **Bài học**: Khi có nhiều state liên quan (routing, selection, search), phải reset cross-state khi action mới
+
+## Lỗi 12: SpotCard bấm lần 2 không mở detail
+- **Thời điểm**: 2026-08-06
+- **Nguyên nhân**: SpotCard bọc trong `<Link href="/spot/[id]">` → bấm card navigate sang trang khác → mất hết state
+- **Fix**: Thêm `onCardClick` prop → khi có prop này, dùng `<div>` thay `<Link>` (ở lại trang chủ)
+- **Bài học**: Trong bottom sheet list, card click phải inline (không navigate), chỉ dùng Link khi ở trang khác
+
+## Lỗi 13: Touch handler chặn click event trên mobile
+- **Thời điểm**: 2026-08-06  
+- **Nguyên nhân**: `onTouchStart/Move/End` gắn trên TOÀN BỘ bottom sheet div → intercept touch → không cho click event fire trên SpotCard bên trong
+- **Fix**: Chuyển touch handlers chỉ gắn trên `bottom-sheet-handle` div (thanh kéo), không phải toàn sheet
+- **Bài học**: Touch handlers trên parent div sẽ ăn click events của children trên mobile. Chỉ gắn touch handlers lên vùng cần drag, không phải toàn container
+
+## Lỗi 14: Leaflet popup trắng che bottom sheet + gây stuck state
+- **Thời điểm**: 2026-08-06
+- **Nguyên nhân**: `marker.bindPopup(...)` tạo popup trắng Leaflet khi click marker → che bottom sheet detail → user bấm popup thay vì detail → state không update → bấm tiếp không hoạt động
+- **Fix**: Xóa `bindPopup()` khỏi spot markers, chỉ dùng bottom sheet detail view
+- **Bài học**: Không mix 2 hệ thống hiển thị detail (Leaflet popup + custom bottom sheet) → chọn 1
+
+## Lỗi 15: Nút X mở "popup thật to" thay vì đóng
+- **Thời điểm**: 2026-08-06
+- **Nguyên nhân**: Nút X set `bottomSheetState = 'full'` → bottom sheet mở rộng 85% → user nghĩ là popup to không đóng được
+- **Fix**: X set `bottomSheetState = 'peek'` (thu nhỏ) + `e.stopPropagation()` ngăn event bubble
+- **Bài học**: "Đóng" đối với user = thu nhỏ/ẩn, KHÔNG phải mở rộng danh sách
+
+## Lỗi 16: Nút "Đăng tin" (FAB) che nút "Chỉ đường" trên mobile
+- **Thời điểm**: 2026-08-06
+- **Nguyên nhân**: FAB position `fixed; bottom: 90px` → nằm đúng vùng action buttons của bottom sheet detail
+- **Fix**: Chỉ hiện FAB khi `bottomSheetState === 'peek'`, ẩn khi detail/full
+- **Bài học**: Floating buttons phải kiểm tra overlap với tất cả trạng thái bottom sheet
