@@ -223,10 +223,11 @@ export default function HomePage() {
       {/* MOBILE HEADER / SEARCH */}
       <div className="floating-search">
         <div className="search-input-wrap">
+          <img src="/logo.png" alt="MapGo" style={{ width: '36px', height: '36px', borderRadius: '50%', flexShrink: 0 }} />
           <input
             className="search-field"
             type="text"
-            placeholder="Tìm địa điểm, bãi xe..."
+            placeholder="Tìm bãi xe, quán ăn, WC..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch()}
@@ -252,9 +253,9 @@ export default function HomePage() {
       {/* DESKTOP SIDEBAR */}
       <div className={`desktop-sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <span style={{ fontSize: '24px' }}>🅿️</span>
-            <span style={{ fontSize: '18px', fontWeight: 700 }}>ParkingHCM</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+            <img src="/logo.png" alt="MapGo" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+            <span style={{ fontSize: '18px', fontWeight: 700 }}>MapGo.vn</span>
           </div>
           <div className="search-bar" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
             <input
