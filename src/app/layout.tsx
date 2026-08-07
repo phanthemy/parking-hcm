@@ -17,25 +17,27 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mapgo.vn"),
   title: {
-    default: "MapGo.vn - Tìm bãi đỗ xe quanh đây, Quán ăn, Café & Nhà vệ sinh gần nhất",
+    default: "MapGo.vn – Tìm bãi đỗ xe, quán ăn, WC gần bạn | TP.HCM",
     template: "%s | MapGo.vn",
   },
-  description: "MapGo.vn - Ứng dụng tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng gần nhất tại TP.HCM. Bản đồ chỉ đường GPS real-time miễn phí 24/7.",
+  description: "Tìm bãi đỗ xe ô tô gần đây, quán ăn có chỗ đậu xe, quán cafe có bãi xe, nhà vệ sinh công cộng tại TP.HCM. Bản đồ GPS real-time miễn phí.",
   keywords: [
-    "Tìm bãi đỗ xe quanh đây",
+    // Head terms — nhắm dài hạn
+    "tìm bãi đỗ xe",
     "bãi đỗ xe gần đây",
-    "bãi giữ xe ô tô xe máy",
-    "quán ăn có bãi đỗ xe",
-    "nhà hàng có chỗ đậu xe",
-    "nhà vệ sinh gần đây",
-    "nhà vệ sinh công cộng TP.HCM",
-    "quán cafe có bãi đỗ xe",
-    "quán cà phê đỗ xe ô tô",
+    "bãi giữ xe TP.HCM",
+    "bãi đỗ xe ô tô",
+    // Long-tail — dễ rank, ưu tiên
+    "quán ăn có chỗ đậu ô tô Quận 1",
+    "quán ăn có bãi đỗ xe TP.HCM",
+    "quán cafe có bãi xe ô tô Phú Nhuận",
+    "nhà vệ sinh công cộng gần Bến Thành",
+    "nhà vệ sinh gần đây TP.HCM",
     "bãi đỗ xe Quận 1",
-    "bãi đỗ xe TP Thủ Đức",
     "bãi đỗ xe Quận 7",
-    "bản đồ tiện ích MapGo",
-    "chỉ đường GPS TP.HCM"
+    "bãi đỗ xe TP Thủ Đức",
+    "chỉ đường bãi xe GPS",
+    "bản đồ tiện ích Sài Gòn"
   ],
   authors: [{ name: "MapGo Team", url: "https://mapgo.vn" }],
   creator: "MapGo.vn",

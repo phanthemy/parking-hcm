@@ -421,9 +421,15 @@ a:hover {
 .floating-chip.active { background: linear-gradient(135deg, #3B82F6, #8B5CF6); color: #fff; border-color: transparent; }
 
 /* Floating Action Button — Đăng tin */
-.fab-post { position: fixed; bottom: 90px; right: 16px; z-index: 300; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #8B5CF6); border: none; color: #fff; font-size: 24px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(59,130,246,0.4); transition: transform 0.2s, box-shadow 0.2s; }
+.fab-post { position: relative; z-index: 1; width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #ef4444); border: 2px solid rgba(255,255,255,0.3); color: #fff; font-size: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 20px rgba(245,158,11,0.6); transition: transform 0.2s; }
 .fab-post:active { transform: scale(0.92); }
-.fab-post-label { position: fixed; bottom: 76px; right: 80px; z-index: 300; background: rgba(0,0,0,0.75); backdrop-filter: blur(10px); color: #fff; font-size: 12px; padding: 4px 10px; border-radius: 8px; white-space: nowrap; pointer-events: none; }
+.fab-post-label { display: none; }
+@keyframes fabPulse {
+  0%   { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
+  50%  { transform: translate(-50%,-50%) scale(1.5); opacity: 0.2; }
+  100% { transform: translate(-50%,-50%) scale(1);   opacity: 0.7; }
+}
+
 
 /* Full-screen map container */
 .map-fullscreen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; height: 100dvh; z-index: 1; }

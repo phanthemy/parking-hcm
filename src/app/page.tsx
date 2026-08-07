@@ -216,12 +216,22 @@ export default function HomePage() {
 
   const categories = [
     { id: 'all', name: t('all'), icon: '🌐' },
-    { id: 'PARKING_LOT', name: t('parking'), icon: '🚗' },
+    { id: 'PARKING_LOT', name: t('parking'), icon: '🅿️' },
     { id: 'RESTAURANT', name: t('restaurant'), icon: '🍜' },
     { id: 'CAFE', name: t('cafe'), icon: '☕' },
     { id: 'RESTROOM', name: t('restroom'), icon: '🚻' },
     { id: 'SERVICE', name: t('service'), icon: '🛒' },
   ];
+
+  // Đếm số lượng theo từng category để hiện trong chip
+  const chipCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: spots.length };
+    for (const spot of spots) {
+      const key = (spot.type || '').toUpperCase();
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return counts;
+  }, [spots]);
 
   return (
     <div className="page-map-layout">
@@ -250,20 +260,47 @@ export default function HomePage() {
       </div>
 
       <div className="floating-chips">
-        {categories.map((c) => (
-          <div
-            key={c.id}
-            className={`floating-chip ${activeFilter === c.id ? 'active' : ''}`}
-            onClick={() => setActiveFilter(c.id as any)}
-          >
-            {c.icon} {c.name}
-          </div>
-        ))}
+        {categories.map((c) => {
+          const isActive = activeFilter === c.id;
+          const count = chipCounts[c.id === 'all' ? 'all' : c.id] ?? 0;
+          return (
+            <div
+              key={c.id}
+              className={`floating-chip ${isActive ? 'active' : ''}`}
+              onClick={() => setActiveFilter(c.id as any)}
+              style={isActive ? {
+                background: 'linear-gradient(135deg,rgba(99,102,241,0.5),rgba(139,92,246,0.5))',
+                borderColor: '#818cf8',
+                color: '#fff',
+                fontWeight: 700,
+                boxShadow: '0 0 10px rgba(99,102,241,0.5)',
+              } : { opacity: 0.75 }}
+            >
+              {isActive && <span style={{ marginRight: 2 }}>✓</span>}
+              {c.icon} {c.name}
+              {count > 0 && (
+                <span style={{
+                  marginLeft: 5,
+                  background: isActive ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
+                  borderRadius: 99, padding: '0px 6px',
+                  fontSize: '11px', fontWeight: 600,
+                }}>{count}</span>
+              )}
+            </div>
+          );
+        })}
         <div
           className={`floating-chip ${hasCarParking ? 'active' : ''}`}
           onClick={() => setHasCarParking(v => !v)}
-          style={hasCarParking ? { background: 'rgba(234,179,8,0.25)', borderColor: '#eab308', color: '#fde047' } : {}}
+          style={hasCarParking ? {
+            background: 'rgba(234,179,8,0.3)',
+            borderColor: '#eab308',
+            color: '#fde047',
+            fontWeight: 700,
+            boxShadow: '0 0 10px rgba(234,179,8,0.4)',
+          } : { opacity: 0.75 }}
         >
+          {hasCarParking && <span style={{ marginRight: 2 }}>✓</span>}
           🚗 Có bãi ô tô
         </div>
       </div>
@@ -290,22 +327,45 @@ export default function HomePage() {
         </div>
 
         <div className="sidebar-chips">
-          {categories.map((c) => (
-            <div
-              key={c.id}
-              className={`chip ${activeFilter === c.id ? 'active' : ''}`}
-              onClick={() => setActiveFilter(c.id as any)}
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              {c.icon} {c.name}
-            </div>
-          ))}
+          {categories.map((c) => {
+            const isActive = activeFilter === c.id;
+            const count = chipCounts[c.id === 'all' ? 'all' : c.id] ?? 0;
+            return (
+              <div
+                key={c.id}
+                className={`chip ${isActive ? 'active' : ''}`}
+                onClick={() => setActiveFilter(c.id as any)}
+                style={{
+                  fontSize: '12px', padding: '6px 12px',
+                  ...(isActive ? {
+                    background: 'linear-gradient(135deg,rgba(99,102,241,0.4),rgba(139,92,246,0.4))',
+                    borderColor: '#818cf8',
+                    color: '#fff',
+                    fontWeight: 700,
+                  } : { opacity: 0.7 }),
+                }}
+              >
+                {isActive && '✓ '}{c.icon} {c.name}
+                {count > 0 && (
+                  <span style={{
+                    marginLeft: 4,
+                    background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                    borderRadius: 99, padding: '0px 5px',
+                    fontSize: '11px', fontWeight: 600,
+                  }}>{count}</span>
+                )}
+              </div>
+            );
+          })}
           <div
             className={`chip ${hasCarParking ? 'active' : ''}`}
             onClick={() => setHasCarParking(v => !v)}
-            style={{ fontSize: '12px', padding: '6px 12px', ...(hasCarParking ? { background: 'rgba(234,179,8,0.2)', borderColor: '#eab308', color: '#fde047' } : {}) }}
+            style={{ fontSize: '12px', padding: '6px 12px', ...(hasCarParking ? {
+              background: 'rgba(234,179,8,0.25)', borderColor: '#eab308',
+              color: '#fde047', fontWeight: 700,
+            } : { opacity: 0.7 }) }}
           >
-            🚗 Có bãi ô tô
+            {hasCarParking && '✓ '}🚗 Có bãi ô tô
           </div>
         </div>
 
@@ -563,13 +623,71 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-      {/* FAB — Đăng tin (Mobile + Desktop) — hide when detail/full on mobile */}
+      {/* FAB — Đăng tin nổi bật với pulse animation */}
       {bottomSheetState === 'peek' && (
         <Link href="/business/post" style={{ textDecoration: 'none' }}>
-          <button className="fab-post" title={t('post_spot')}>
-            ➕
-          </button>
-          <span className="fab-post-label">{t('post_spot')}</span>
+          <div style={{
+            position: 'fixed',
+            bottom: '100px',
+            right: '16px',
+            zIndex: 500,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            {/* Pulse ring */}
+            <div style={{
+              position: 'absolute',
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              background: 'rgba(251,191,36,0.3)',
+              animation: 'fabPulse 2s ease-in-out infinite',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              pointerEvents: 'none',
+            }} />
+            <button
+              className="fab-post"
+              title={t('post_spot')}
+              style={{
+                width: '52px',
+                height: '52px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
+                border: '2px solid rgba(255,255,255,0.3)',
+                color: '#fff',
+                fontSize: '22px',
+                cursor: 'pointer',
+                boxShadow: '0 4px 20px rgba(245,158,11,0.6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'transform 0.2s',
+                position: 'relative',
+                zIndex: 1,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.1)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1.0)')}
+            >
+              ✏️
+            </button>
+            <span style={{
+              background: 'linear-gradient(135deg,#f59e0b,#ef4444)',
+              color: '#fff',
+              fontSize: '11px',
+              fontWeight: 700,
+              padding: '3px 10px',
+              borderRadius: 99,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
+              letterSpacing: '0.3px',
+            }}>
+              ✏️ Đăng tin
+            </span>
+          </div>
         </Link>
       )}
       {/* Hidden Semantic SEO Heading & Keywords Block for Google Indexing */}
