@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
   
   if (!post) return NextResponse.json({ error: 'Post not found' }, { status: 404 });
 
-  const extracted = extractSpotInfo(post.content);
+  const extracted = extractSpotInfo(post.content || '');
   
   // Search for similar existing spots
   const existingSpots = [];
@@ -165,6 +165,8 @@ export async function PUT(request: NextRequest) {
       pricePerHour: pricePerHour || 0,
       lat: lat || 10.78,
       lng: lng || 106.69,
+      openTime: '00:00',
+      closeTime: '23:59',
       status: 'ACTIVE',
       images: images?.length ? {
         create: images.map((url: string) => ({ url }))

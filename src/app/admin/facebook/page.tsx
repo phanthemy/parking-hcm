@@ -76,6 +76,8 @@ export default function AdminFacebookPage() {
     loading: boolean;
   } | null>(null);
   const [editExtracted, setEditExtracted] = useState<any>(null);
+  const [geoResult, setGeoResult] = useState<{ lat: number; lng: number; formattedAddress: string } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
 
   useEffect(() => {
     const role = user?.role?.toString().toUpperCase();
@@ -167,12 +169,35 @@ export default function AdminFacebookPage() {
   };
 
   // Smart extract & assign
+  // Geocode address to lat/lng
+  const handleGeocode = async (address: string) => {
+    if (!address || address.length < 5) return;
+    setGeoLoading(true);
+    try {
+      const res = await api.post<any>('/api/admin/facebook/geocode', { address });
+      if (res.lat && res.lng) {
+        setGeoResult({ lat: res.lat, lng: res.lng, formattedAddress: res.formattedAddress || address });
+      } else {
+        setGeoResult(null);
+      }
+    } catch {
+      setGeoResult(null);
+    } finally {
+      setGeoLoading(false);
+    }
+  };
+
   const handleExtract = async (postId: string) => {
     setExtractModal({ postId, extracted: { name: '', address: '', phone: '', pricePerHour: 0, priceMonthly: '', type: 'PARKING_LOT', features: [] }, existingSpots: [], postImages: [], loading: true });
+    setGeoResult(null);
     try {
       const res = await api.post<any>('/api/admin/facebook/extract', { postId });
       setExtractModal({ postId, ...res, loading: false });
       setEditExtracted({ ...res.extracted });
+      // Auto-geocode if address found
+      if (res.extracted?.address) {
+        handleGeocode(res.extracted.address);
+      }
     } catch {
       alert('Không thể trích xuất. Thử lại.');
       setExtractModal(null);
@@ -181,14 +206,19 @@ export default function AdminFacebookPage() {
 
   const handleCreateSpot = async () => {
     if (!extractModal || !editExtracted) return;
+    if (!geoResult) {
+      if (!confirm('⚠️ Chưa có tọa độ! Bãi xe sẽ được đặt ở vị trí mặc định. Tiếp tục?')) return;
+    }
     try {
       await api.put('/api/admin/facebook/extract', {
         postId: extractModal.postId,
         name: editExtracted.name,
-        address: editExtracted.address,
+        address: geoResult?.formattedAddress || editExtracted.address,
         phone: editExtracted.phone,
         type: editExtracted.type,
         pricePerHour: editExtracted.pricePerHour,
+        lat: geoResult?.lat || 10.78,
+        lng: geoResult?.lng || 106.69,
         images: extractModal.postImages
       });
       setExtractModal(null);
@@ -645,10 +675,53 @@ export default function AdminFacebookPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Địa chỉ</label>
-                  <input type="text" value={editExtracted.address}
-                    onChange={e => setEditExtracted({ ...editExtracted, address: e.target.value })}
-                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>📍 Địa chỉ</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input type="text" value={editExtracted.address}
+                      onChange={e => setEditExtracted({ ...editExtracted, address: e.target.value })}
+                      onBlur={() => editExtracted.address && handleGeocode(editExtracted.address)}
+                      placeholder="Nhập địa chỉ để tự tìm tọa độ..."
+                      style={{ flex: 1, padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                    <button
+                      onClick={() => handleGeocode(editExtracted.address)}
+                      disabled={geoLoading || !editExtracted.address}
+                      style={{
+                        padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                        background: geoLoading ? '#4b5563' : 'linear-gradient(135deg, #10b981, #059669)',
+                        color: '#fff', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {geoLoading ? '⏳...' : '📍 Tìm vị trí'}
+                    </button>
+                  </div>
+
+                  {/* Geocode Result + Mini Map */}
+                  {geoResult && (
+                    <div style={{ marginTop: '10px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(16,185,129,0.3)' }}>
+                      <div style={{ padding: '8px 12px', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '16px' }}>✅</span>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '12px', color: '#10b981', fontWeight: 600, margin: 0 }}>Đã tìm thấy vị trí!</p>
+                          <p style={{ fontSize: '11px', color: '#a0a0b0', margin: '2px 0 0 0' }}>{geoResult.formattedAddress}</p>
+                        </div>
+                        <span style={{ fontSize: '11px', color: '#6b7280' }}>{geoResult.lat.toFixed(5)}, {geoResult.lng.toFixed(5)}</span>
+                      </div>
+                      <iframe
+                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'AIzaSyCaf1H1dOg1sQvCE0-UHiXogHSlcRe0FTg'}&q=${geoResult.lat},${geoResult.lng}&zoom=17&maptype=roadmap`}
+                        style={{ width: '100%', height: '180px', border: 'none' }}
+                        allowFullScreen
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+
+                  {geoLoading && (
+                    <p style={{ fontSize: '12px', color: '#f59e0b', marginTop: '8px' }}>🔍 Đang tìm tọa độ từ địa chỉ...</p>
+                  )}
+
+                  {!geoResult && !geoLoading && editExtracted.address && (
+                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '6px' }}>💡 Nhấn "Tìm vị trí" hoặc rời ô địa chỉ để tự tìm tọa độ</p>
+                  )}
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
