@@ -22,9 +22,15 @@ function extractSpotInfo(text: string) {
   };
 
   // === PHONE ===
-  const phoneMatch = text.match(/(?:lh|liên hệ|sdt|hotline|zalo|call|gọi|☎|📞|📱)?\s*:?\s*(0\d{8,9})/i)
-    || text.match(/(0\d{2}[\s.-]?\d{3}[\s.-]?\d{3,4})/);
-  if (phoneMatch) info.phone = phoneMatch[1].replace(/[\s.-]/g, '');
+  // Catch all Vietnamese phone number patterns
+  const allPhones = text.match(/0\d[\d\s.\-]{7,12}/g) || [];
+  for (const raw of allPhones) {
+    const clean = raw.replace(/[\s.\-]/g, '');
+    if (clean.length === 10 || clean.length === 11) {
+      info.phone = clean;
+      break;
+    }
+  }
 
   // === ADDRESS ===
   // Pattern 1: Explicit "Địa chỉ: ..." or "Đ/C: ..."
@@ -42,28 +48,50 @@ function extractSpotInfo(text: string) {
   }
 
   // === PRICE ===
-  // Monthly price
-  const monthlyMatch = text.match(/(\d[\d.,]*)\s*(?:k|ngàn|nghìn|triệu|tr)?\s*(?:\/\s*tháng|\/tháng|đồng\/tháng|vnđ\/tháng)/i)
-    || text.match(/giá\s*(?:thuê|gửi)?\s*:?\s*(\d[\d.,]*)\s*(?:k|ngàn|nghìn|triệu|tr|vnđ|đ)/i);
-  if (monthlyMatch) {
-    let val = monthlyMatch[1].replace(/[.,]/g, '');
-    const numVal = parseInt(val);
-    const unit = monthlyMatch[0].toLowerCase();
-    if (unit.includes('triệu') || unit.includes('tr')) {
-      info.priceMonthly = (numVal * 1000000).toLocaleString('vi-VN') + ' đ/tháng';
-    } else if (unit.includes('k') || unit.includes('ngàn') || unit.includes('nghìn')) {
-      info.priceMonthly = (numVal * 1000).toLocaleString('vi-VN') + ' đ/tháng';
-    } else if (numVal > 100000) {
-      info.priceMonthly = numVal.toLocaleString('vi-VN') + ' đ/tháng';
+  // Extract ALL price patterns: "10.000 VNĐ/đêm", "150.000 VNĐ/tháng", "1tr5/tháng", etc.
+  const pricePatterns = [
+    // "xxx VNĐ/tháng" or "xxx đ/tháng" or "xxx/tháng"
+    /([\d.,]+)\s*(?:VNĐ|vnđ|đồng|đ|d)?\s*\/\s*tháng/gi,
+    // "giá xxx" with unit
+    /giá\s*(?:thuê|gửi|xe|ô tô|xe máy)?\s*:?\s*([\d.,]+)\s*(?:VNĐ|vnđ|đồng|đ|k|ngàn|triệu|tr)/gi,
+    // "xxxk/tháng" or "xxxtr/tháng"
+    /([\d.,]+)\s*(?:k|tr|triệu)\s*\/\s*tháng/gi,
+  ];
+
+  let monthlyPrices: number[] = [];
+  for (const pattern of pricePatterns) {
+    let m;
+    while ((m = pattern.exec(text)) !== null) {
+      let raw = m[1].replace(/\./g, '').replace(/,/g, '');
+      let val = parseInt(raw);
+      const ctx = m[0].toLowerCase();
+      if (ctx.includes('triệu') || ctx.includes('tr')) val *= 1000000;
+      else if (ctx.includes('k') || ctx.includes('ngàn')) val *= 1000;
+      if (val > 0 && val < 100000000) monthlyPrices.push(val);
     }
   }
 
-  // Hourly price
-  const hourlyMatch = text.match(/(\d[\d.,]*)\s*(?:k|ngàn|nghìn)?\s*(?:\/\s*giờ|\/giờ|đồng\/giờ)/i);
+  if (monthlyPrices.length > 0) {
+    // Use the smallest price as "starting from"
+    const minPrice = Math.min(...monthlyPrices);
+    info.priceMonthly = minPrice.toLocaleString('vi-VN') + ' đ/tháng';
+    // Auto-calculate hourly: monthly / 30 / 12h (rough estimate)
+    info.pricePerHour = Math.round(minPrice / 30 / 12);
+  }
+
+  // Hourly price (explicit)
+  const hourlyMatch = text.match(/([\d.,]+)\s*(?:VNĐ|vnđ|đồng|đ|k)?\s*\/\s*(?:giờ|h|hour)/i);
   if (hourlyMatch) {
     let val = parseInt(hourlyMatch[1].replace(/[.,]/g, ''));
-    if (hourlyMatch[0].toLowerCase().includes('k') || hourlyMatch[0].toLowerCase().includes('ngàn')) val *= 1000;
+    if (hourlyMatch[0].toLowerCase().includes('k')) val *= 1000;
     info.pricePerHour = val;
+  }
+
+  // Daily/nightly price
+  const dailyMatch = text.match(/([\d.,]+)\s*(?:VNĐ|vnđ|đồng|đ)?\s*\/\s*(?:đêm|ngày|đ|dem|ngay)/i);
+  if (dailyMatch && !info.pricePerHour) {
+    let val = parseInt(dailyMatch[1].replace(/[.,]/g, ''));
+    info.pricePerHour = Math.round(val / 12); // rough hourly from daily
   }
 
   // === NAME ===
