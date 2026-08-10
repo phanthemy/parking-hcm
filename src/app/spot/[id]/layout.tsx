@@ -106,7 +106,6 @@ export default async function SpotLayout({
   
   return (
     <>
-      {/* @ts-expect-error Async Server Component */}
       <SpotStructuredData id={id} />
       {children}
     </>
