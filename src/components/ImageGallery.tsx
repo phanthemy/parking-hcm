@@ -16,15 +16,23 @@ export default function ImageGallery({ images, altPrefix = 'Hình ảnh' }: Imag
         style={{
           width: '100%',
           height: '300px',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           borderRadius: 'var(--radius-lg, 12px)',
-          fontSize: '64px',
+          overflow: 'hidden',
+          position: 'relative',
         }}
       >
-        🅿️
+        <img 
+          src="/images/parking-default.jpg" 
+          alt={`${altPrefix} - Bãi đỗ xe`}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+        <div style={{
+          position: 'absolute', bottom: '12px', right: '12px',
+          background: 'rgba(0,0,0,0.6)', color: '#fff',
+          padding: '4px 12px', borderRadius: '20px', fontSize: '12px',
+        }}>
+          Ảnh minh họa
+        </div>
       </div>
     );
   }
