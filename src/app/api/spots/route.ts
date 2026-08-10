@@ -30,19 +30,7 @@ export async function GET(req: NextRequest) {
       if (minPrice !== null) where.basePricePerHour.gte = minPrice;
       if (maxPrice !== null) where.basePricePerHour.lte = maxPrice;
     }
-    if (search) {
-      // Check if search has Vietnamese diacritics
-      const hasAccent = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(search);
-      if (hasAccent) {
-        // Direct match with diacritics
-        where.OR = [
-          { name: { contains: search } },
-          { address: { contains: search } },
-          { description: { contains: search } },
-        ];
-      }
-      // If no accent, we'll filter after fetch (see below)
-    }
+    // Search filtering is done in-memory after fetch (SQLite doesn't support case-insensitive contains)
 
     // Fetch spots
     const spots = await prisma.parkingSpot.findMany({
@@ -94,19 +82,25 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    // Vietnamese unaccent filter (when searching without diacritics)
+    // In-memory search filter (works for both accented & unaccented, case-insensitive)
     if (search) {
-      const hasAccent = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(search);
-      if (!hasAccent) {
-        const removeAccent = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
-        const searchNorm = removeAccent(search.toLowerCase());
-        processedSpots = processedSpots.filter((spot: any) => {
-          const name = removeAccent(spot.name || '');
-          const addr = removeAccent(spot.address || '');
-          const desc = removeAccent(spot.description || '');
-          return name.includes(searchNorm) || addr.includes(searchNorm) || desc.includes(searchNorm);
-        });
-      }
+      const removeAccent = (str: string) => str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+      const searchLower = search.toLowerCase();
+      const searchNorm = removeAccent(searchLower);
+      
+      processedSpots = processedSpots.filter((spot: any) => {
+        const name = (spot.name || '').toLowerCase();
+        const addr = (spot.address || '').toLowerCase();
+        const desc = (spot.description || '').toLowerCase();
+        
+        // Direct match (case-insensitive)
+        if (name.includes(searchLower) || addr.includes(searchLower) || desc.includes(searchLower)) return true;
+        
+        // Unaccented match
+        return removeAccent(name).includes(searchNorm) || 
+               removeAccent(addr).includes(searchNorm) || 
+               removeAccent(desc).includes(searchNorm);
+      });
     }
 
     // Filter by radius ONLY when NOT searching (user wants nearby results when browsing, but ALL results when searching)
