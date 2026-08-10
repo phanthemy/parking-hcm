@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
       // Map DB fields to frontend Spot interface
       return {
         id: spot.id,
+        slug: spot.slug,
         name: spot.name,
         address: spot.address,
         description: spot.description,

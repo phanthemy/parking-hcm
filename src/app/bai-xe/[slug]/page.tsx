@@ -107,13 +107,13 @@ export default function BaiXeSlugPage() {
         <p style={{ fontSize: '14px', opacity: 0.7, marginBottom: '8px' }}>📍 {spot.address}</p>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-          <StarRating rating={spot.rating || 0} size={16} />
+          <StarRating rating={spot.rating || 0} size={'sm'} />
           <span style={{ fontSize: '14px', opacity: 0.6 }}>({spot.reviewCount || 0} đánh giá)</span>
         </div>
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
-          <a href={`https://www.google.com/maps/dir/?api=1&destination=${spot.lat || spot.latitude},${spot.lng || spot.longitude}`} target="_blank" rel="noopener">
+          <a href={`https://www.google.com/maps/dir/?api=1&destination=${spot.latitude},${spot.longitude}`} target="_blank" rel="noopener">
             <button className="btn-primary" style={{ fontSize: '14px' }}>🧭 Chỉ đường</button>
           </a>
           <button className="btn-secondary" style={{ fontSize: '14px' }} onClick={() => {
@@ -133,7 +133,7 @@ export default function BaiXeSlugPage() {
           <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '16px' }}>
             <p style={{ fontSize: '12px', opacity: 0.5, marginBottom: '8px' }}>Giá gửi xe</p>
             <p style={{ fontSize: '14px' }}>🏍️ {formatCurrency(spot.pricePerHourBike || 0)}/giờ</p>
-            <p style={{ fontSize: '14px' }}>🚗 {formatCurrency(spot.pricePerHourCar || spot.pricePerHour || 0)}/giờ</p>
+            <p style={{ fontSize: '14px' }}>🚗 {formatCurrency(spot.pricePerHourCar || 0)}/giờ</p>
           </div>
           <div style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '16px' }}>
             <p style={{ fontSize: '12px', opacity: 0.5, marginBottom: '8px' }}>Giờ mở cửa</p>
@@ -160,11 +160,11 @@ export default function BaiXeSlugPage() {
         )}
 
         {/* Map */}
-        {(spot.lat || spot.latitude) && (
+        {(spot.latitude) && (
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>📍 Vị trí</h2>
             <div style={{ borderRadius: '12px', overflow: 'hidden', height: '250px' }}>
-              <MapComponent spots={[spot]} center={{ lat: spot.lat || spot.latitude!, lng: spot.lng || spot.longitude! }} zoom={16} />
+              <MapComponent spots={[spot]} center={[spot.latitude, spot.longitude!]} zoom={16} />
             </div>
           </div>
         )}
@@ -175,13 +175,13 @@ export default function BaiXeSlugPage() {
           <ReviewForm spotId={spot.id} onReviewSubmitted={() => {
             api.get<{ data: Review[] }>(`/api/spots/${slug}/reviews`).then(data => setReviews(data.data || [])).catch(() => {});
           }} />
-          {reviews.map((review) => (
+          {reviews.map((review: any) => (
             <div key={review.id} style={{ background: 'var(--bg-secondary)', borderRadius: '12px', padding: '16px', marginTop: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontWeight: 600, fontSize: '14px' }}>{review.user?.name || 'Ẩn danh'}</span>
+                <span style={{ fontWeight: 600, fontSize: '14px' }}>{review.user?.name || review.userName || 'Ẩn danh'}</span>
                 <span style={{ fontSize: '12px', opacity: 0.5 }}>{formatRelativeTime(review.createdAt)}</span>
               </div>
-              <StarRating rating={review.rating} size={14} />
+              <StarRating rating={review.rating} size={'sm'} />
               {review.comment && <p style={{ fontSize: '14px', marginTop: '8px', opacity: 0.8 }}>{review.comment}</p>}
             </div>
           ))}

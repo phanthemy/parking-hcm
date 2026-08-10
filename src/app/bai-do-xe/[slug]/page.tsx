@@ -144,18 +144,18 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
   if (!config) notFound();
 
   // Lấy bãi xe theo quận từ DB
-  let spots: { id: string; name: string; address: string; carSlots: number; type: string }[] = [];
+  let spots: { id: string; slug: string | null; name: string; address: string; carSlots: number; type: string }[] = [];
   try {
     spots = await prisma.parkingSpot.findMany({
       where: {
         status: { in: ['active', 'ACTIVE'] },
-        type: 'PARKING_LOT',  // Fix: DB dùng PARKING_LOT không phải 'parking'
+        type: 'PARKING_LOT',
         OR: [
           { address: { contains: config.name } },
           { address: { contains: config.nameVi } },
         ],
       },
-      select: { id: true, name: true, address: true, carSlots: true, type: true },
+      select: { id: true, slug: true, name: true, address: true, carSlots: true, type: true },
       take: 20,
     });
   } catch (e) {
@@ -212,7 +212,7 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
             {spots.map((spot) => (
               <Link
                 key={spot.id}
-                href={`/spot/${spot.id}`}
+                href={`/bai-xe/${spot.slug || spot.id}`}
                 style={{
                   display: 'block',
                   background: '#f8f8ff',
@@ -303,7 +303,7 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
               '@type': 'ListItem',
               position: i + 1,
               name: s.name,
-              url: `https://mapgo.vn/spot/${s.id}`,
+              url: `https://mapgo.vn/bai-xe/${s.slug || s.id}`,
             })),
           }),
         }}
