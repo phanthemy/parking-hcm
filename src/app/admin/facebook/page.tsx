@@ -83,6 +83,7 @@ export default function AdminFacebookPage() {
   const [quickAdd, setQuickAdd] = useState(false);
   const [quickForm, setQuickForm] = useState({ name: '', address: '', phone: '', type: 'PARKING_LOT', coords: '', pricePerHour: 0 });
   const [quickGeo, setQuickGeo] = useState<{ lat: number; lng: number } | null>(null);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const role = user?.role?.toString().toUpperCase();
@@ -176,7 +177,21 @@ export default function AdminFacebookPage() {
   // Smart extract & assign
   // Geocode address to lat/lng
   const handleGeocode = async (address: string) => {
-    if (!address || address.length < 5) return;
+    if (!address || address.length < 3) return;
+    
+    // Detect if user pasted coordinates directly (e.g. "10.839, 106.654")
+    const coordMatch = address.match(/([\d.]+)\s*[,\s]\s*([\d.]+)/);
+    if (coordMatch) {
+      let a = parseFloat(coordMatch[1]);
+      let b = parseFloat(coordMatch[2]);
+      // Swap if needed (ensure lat is ~8-24 for Vietnam, lng is ~100-115)
+      if (a > 100 && b < 24) { const t = a; a = b; b = t; }
+      if (a > 8 && a < 24 && b > 100 && b < 115) {
+        setGeoResult({ lat: a, lng: b, formattedAddress: `${a.toFixed(6)}, ${b.toFixed(6)}` });
+        return;
+      }
+    }
+    
     setGeoLoading(true);
     try {
       const res = await api.post<any>('/api/admin/facebook/geocode', { address });
@@ -319,13 +334,25 @@ export default function AdminFacebookPage() {
             <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>📱 Facebook Crawler</h1>
             <p style={{ fontSize: '13px', opacity: 0.5, marginTop: '4px' }}>Quản lý bài viết crawl từ Facebook Groups</p>
           </div>
-          <button
-            className="btn-secondary"
-            onClick={() => router.push('/admin')}
-            style={{ fontSize: '13px', padding: '8px 16px' }}
-          >
-            ← Về trang quản trị
-          </button>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <button
+              onClick={() => setQuickAdd(true)}
+              style={{
+                fontSize: '14px', padding: '10px 20px', borderRadius: '10px', border: 'none',
+                background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff',
+                fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 15px rgba(139,92,246,0.4)'
+              }}
+            >
+              ➕ Thêm bãi xe
+            </button>
+            <button
+              className="btn-secondary"
+              onClick={() => router.push('/admin')}
+              style={{ fontSize: '13px', padding: '8px 16px' }}
+            >
+              ← Về trang quản trị
+            </button>
+          </div>
         </div>
 
         {/* Tab Switcher */}
@@ -446,13 +473,35 @@ export default function AdminFacebookPage() {
                         </div>
 
                         {/* Content */}
-                        <p style={{
-                          fontSize: '14px', lineHeight: '1.6', margin: '0 0 12px 0',
-                          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' as any,
-                          wordBreak: 'break-word'
-                        }}>
+                        <p
+                          onClick={() => {
+                            const next = new Set(expandedPosts);
+                            next.has(post.id) ? next.delete(post.id) : next.add(post.id);
+                            setExpandedPosts(next);
+                          }}
+                          style={{
+                            fontSize: '14px', lineHeight: '1.6', margin: '0 0 4px 0',
+                            cursor: 'pointer', wordBreak: 'break-word',
+                            ...(expandedPosts.has(post.id) ? {} : {
+                              overflow: 'hidden', display: '-webkit-box',
+                              WebkitLineClamp: 4, WebkitBoxOrient: 'vertical' as any
+                            })
+                          }}
+                        >
                           {post.content}
                         </p>
+                        {post.content.length > 200 && (
+                          <button
+                            onClick={() => {
+                              const next = new Set(expandedPosts);
+                              next.has(post.id) ? next.delete(post.id) : next.add(post.id);
+                              setExpandedPosts(next);
+                            }}
+                            style={{ background: 'none', border: 'none', color: '#3b82f6', fontSize: '12px', cursor: 'pointer', padding: '0 0 8px 0' }}
+                          >
+                            {expandedPosts.has(post.id) ? '▲ Thu gọn' : '▼ Xem thêm'}
+                          </button>
+                        )}
 
                         {/* Actions */}
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
