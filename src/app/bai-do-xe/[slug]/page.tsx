@@ -70,6 +70,48 @@ const DISTRICT_CONFIG: Record<string, {
     keywords: ['bãi đỗ xe Bình Tân', 'bãi giữ xe Bình Tân TP.HCM', 'chỗ đậu xe Aeon Mall Bình Tân'],
     description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận Bình Tân TP.HCM. Bãi xe gần Aeon Mall Bình Tân, Quốc lộ 1A.',
   },
+  'quan-4': {
+    name: 'Quận 4',
+    nameVi: 'Quận 4',
+    keywords: ['bãi đỗ xe Quận 4', 'bãi giữ xe Quận 4 TP.HCM', 'chỗ đậu xe Quận 4'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận 4 TP.HCM. Bãi xe gần Tôn Đản, Khánh Hội, Bến Vân Đồn.',
+  },
+  'quan-6': {
+    name: 'Quận 6',
+    nameVi: 'Quận 6',
+    keywords: ['bãi đỗ xe Quận 6', 'bãi giữ xe Quận 6 TP.HCM', 'chỗ đậu xe Quận 6'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận 6 TP.HCM. Bãi xe gần Bình Tây, Phú Lâm, Minh Phụng.',
+  },
+  'quan-8': {
+    name: 'Quận 8',
+    nameVi: 'Quận 8',
+    keywords: ['bãi đỗ xe Quận 8', 'bãi giữ xe Quận 8 TP.HCM', 'chỗ đậu xe Quận 8'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận 8 TP.HCM. Bãi xe gần Tạ Quang Bửu, Bình Đông, Phạm Thế Hiển.',
+  },
+  'quan-11': {
+    name: 'Quận 11',
+    nameVi: 'Quận 11',
+    keywords: ['bãi đỗ xe Quận 11', 'bãi giữ xe Quận 11 TP.HCM', 'chỗ đậu xe Đầm Sen'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận 11 TP.HCM. Bãi xe gần Công viên Đầm Sen, Lạc Long Quân, Hòa Bình.',
+  },
+  'quan-12': {
+    name: 'Quận 12',
+    nameVi: 'Quận 12',
+    keywords: ['bãi đỗ xe Quận 12', 'bãi giữ xe Quận 12 TP.HCM', 'chỗ đậu xe Quận 12'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận 12 TP.HCM. Bãi xe gần Trường Chinh, Nguyễn Ảnh Thủ, BigC.',
+  },
+  'tan-phu': {
+    name: 'Tân Phú',
+    nameVi: 'Quận Tân Phú',
+    keywords: ['bãi đỗ xe Tân Phú', 'bãi giữ xe Tân Phú TP.HCM', 'chỗ đậu xe Đầm Sen Tân Phú'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận Tân Phú TP.HCM. Bãi xe gần Lũy Bán Bích, Hòa Bình, Tân Hương.',
+  },
+  'go-vap': {
+    name: 'Gò Vấp',
+    nameVi: 'Quận Gò Vấp',
+    keywords: ['bãi đỗ xe Gò Vấp', 'bãi giữ xe Gò Vấp TP.HCM', 'chỗ đậu xe Gò Vấp'],
+    description: 'Tìm bãi đỗ xe ô tô, xe máy tại Quận Gò Vấp TP.HCM. Bãi xe gần Nguyễn Kiệm, Phan Văn Trị, Quang Trung.',
+  },
 };
 
 // Generate static params for all districts
@@ -87,11 +129,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title,
     description: config.description,
     keywords: config.keywords,
-    alternates: { canonical: `https://mapgo.vn/bai-xe/${slug}` },
+    alternates: { canonical: `https://mapgo.vn/bai-do-xe/${slug}` },
     openGraph: {
       title,
       description: config.description,
-      url: `https://mapgo.vn/bai-xe/${slug}`,
+      url: `https://mapgo.vn/bai-do-xe/${slug}`,
     },
   };
 }
@@ -102,15 +144,18 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
   if (!config) notFound();
 
   // Lấy bãi xe theo quận từ DB
-  let spots: { id: string; name: string; address: string; carSlots: number }[] = [];
+  let spots: { id: string; name: string; address: string; carSlots: number; type: string }[] = [];
   try {
     spots = await prisma.parkingSpot.findMany({
       where: {
         status: { in: ['active', 'ACTIVE'] },
-        type: 'parking',
-        address: { contains: config.name },
+        type: 'PARKING_LOT',  // Fix: DB dùng PARKING_LOT không phải 'parking'
+        OR: [
+          { address: { contains: config.name } },
+          { address: { contains: config.nameVi } },
+        ],
       },
-      select: { id: true, name: true, address: true, carSlots: true },
+      select: { id: true, name: true, address: true, carSlots: true, type: true },
       take: 20,
     });
   } catch (e) {
@@ -125,7 +170,7 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
       <nav style={{ fontSize: 14, color: '#888', marginBottom: 16 }}>
         <Link href="/" style={{ color: '#6366f1' }}>MapGo.vn</Link>
         {' › '}
-        <Link href="/bai-xe/quan-1" style={{ color: '#6366f1' }}>Bãi đỗ xe</Link>
+        <Link href="/bai-do-xe/quan-1" style={{ color: '#6366f1' }}>Bãi đỗ xe</Link>
         {' › '}
         <span>{config.name}</span>
       </nav>
@@ -212,7 +257,7 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
           {ALL_DISTRICTS.filter(([s]) => s !== slug).map(([s, cfg]) => (
             <Link
               key={s}
-              href={`/bai-xe/${s}`}
+              href={`/bai-do-xe/${s}`}
               style={{
                 padding: '6px 16px', borderRadius: 999,
                 background: '#ede9fe', color: '#5b21b6',
@@ -252,7 +297,7 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
             '@type': 'ItemList',
             name: `Bãi đỗ xe ${config.name} TP.HCM`,
             description: config.description,
-            url: `https://mapgo.vn/bai-xe/${slug}`,
+            url: `https://mapgo.vn/bai-do-xe/${slug}`,
             numberOfItems: spots.length,
             itemListElement: spots.slice(0, 10).map((s, i) => ({
               '@type': 'ListItem',

@@ -35,27 +35,71 @@ export default function ImageGallery({ images, altPrefix = 'Hình ảnh' }: Imag
     else setCurrentIndex(index);
   };
 
+  const isVideo = (url: string) => {
+    if (!url) return false;
+    return url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.ogg') || url.includes('/videos/') || url.includes('video');
+  };
+
+  const currentMedia = images[currentIndex];
+  const isCurrentVideo = isVideo(currentMedia);
+
   return (
     <div style={{ position: 'relative', width: '100%', borderRadius: 'var(--radius-lg, 12px)', overflow: 'hidden' }}>
-      {/* Main Image */}
+      {/* Main Media (Image or Video) */}
       <div
         style={{
           width: '100%',
           height: '350px',
           position: 'relative',
           overflow: 'hidden',
+          background: '#0a0a0f',
         }}
       >
-        <img
-          src={images[currentIndex]}
-          alt={`${altPrefix} ${currentIndex + 1}`}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            transition: 'opacity 0.3s ease',
-          }}
-        />
+        {isCurrentVideo ? (
+          <video
+            src={currentMedia}
+            controls
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <img
+            src={currentMedia}
+            alt={`${altPrefix} ${currentIndex + 1}`}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              transition: 'opacity 0.3s ease',
+            }}
+          />
+        )}
+
+        {/* Video badge if video */}
+        {isCurrentVideo && (
+          <div style={{
+            position: 'absolute', top: '12px', left: '12px',
+            background: 'rgba(239, 68, 68, 0.9)',
+            backdropFilter: 'blur(8px)',
+            color: '#ffffff',
+            fontSize: '12px',
+            fontWeight: 700,
+            padding: '5px 12px',
+            borderRadius: '20px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+            zIndex: 10,
+          }}>
+            🎬 Video Review Thực Tế
+          </div>
+        )}
+
 
         {/* Gradient overlay */}
         <div

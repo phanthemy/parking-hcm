@@ -16,9 +16,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Only allow image files for safety
-    if (!file.type.startsWith('image/')) {
-      return NextResponse.json({ error: 'File must be an image' }, { status: 400 });
+    // Allow image and video files for slide media
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      return NextResponse.json({ error: 'File must be an image or video' }, { status: 400 });
     }
 
     const url = await uploadFile(file);

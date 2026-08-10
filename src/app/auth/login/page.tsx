@@ -32,8 +32,15 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      await login(email, password);
-      router.push('/');
+      const loggedUser = await login(email, password);
+      const userRole = loggedUser?.role?.toString().toUpperCase();
+      if (userRole === 'ADMIN') {
+        router.push('/admin');
+      } else if (userRole === 'BUSINESS') {
+        router.push('/business/dashboard');
+      } else {
+        router.push('/');
+      }
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
       setError(apiErr.message || t('login_error'));

@@ -2,8 +2,10 @@ import { MetadataRoute } from 'next';
 import prisma from '@/lib/prisma';
 
 const DISTRICT_SLUGS = [
-  'quan-1', 'quan-3', 'quan-5', 'quan-7', 'quan-10',
-  'binh-thanh', 'phu-nhuan', 'tan-binh', 'thu-duc', 'binh-tan',
+  'quan-1', 'quan-3', 'quan-4', 'quan-5', 'quan-6', 'quan-7', 'quan-8',
+  'quan-10', 'quan-11', 'quan-12',
+  'binh-thanh', 'phu-nhuan', 'tan-binh', 'tan-phu', 'go-vap',
+  'thu-duc', 'binh-tan',
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -29,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Landing pages theo Quận
   const districtUrls = DISTRICT_SLUGS.map((slug) => ({
-    url: `${baseUrl}/bai-xe/${slug}`,
+    url: `${baseUrl}/bai-do-xe/${slug}`,
     lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.9,

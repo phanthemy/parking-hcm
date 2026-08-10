@@ -13,6 +13,7 @@ interface MapComponentProps {
   style?: React.CSSProperties;
   showUserLocation?: boolean;
   userLocation?: [number, number] | null;
+  showBans?: boolean;
 }
 
 export interface MapHandle {
@@ -50,11 +51,15 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
   style,
   showUserLocation = true,
   userLocation,
+  showBans,
 }, ref) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const spotMarkersRef = useRef<L.Marker[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clusterGroupRef = useRef<any>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const banMarkersRef = useRef<(L.CircleMarker | L.Marker)[]>([]);
   const routeLayerRef = useRef<L.Polyline | null>(null);
   const routeInfoRef = useRef<L.Control | null>(null);
   const navWatchIdRef = useRef<number | null>(null);
@@ -381,17 +386,52 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
     updateUserMarker();
   }, [showUserLocation, userLocation]);
 
-  // 4. Render Spot Markers (Only re-run when spots or selectedSpotId change)
+  // 4. Render Spot Markers with Clustering
   useEffect(() => {
     if (!mapInstanceRef.current) return;
 
     const updateSpotMarkers = async () => {
       const L = (await import('leaflet')).default;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const MCluster = await import('leaflet.markercluster' as any);
+      await import('leaflet.markercluster/dist/MarkerCluster.css');
+      await import('leaflet.markercluster/dist/MarkerCluster.Default.css');
       const map = mapInstanceRef.current!;
 
-      // Clear previous spot markers
-      spotMarkersRef.current.forEach((m) => m.remove());
+      // Clear previous cluster group
+      if (clusterGroupRef.current) {
+        clusterGroupRef.current.remove();
+        clusterGroupRef.current = null;
+      }
       spotMarkersRef.current = [];
+
+      // Create styled cluster group
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const L2 = L as any;
+      const cluster = L2.markerClusterGroup({
+        maxClusterRadius: 48,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        iconCreateFunction: (c: any) => {
+          const cnt = c.getChildCount();
+          return L.divIcon({
+            html: `<div style="
+              width:36px;height:36px;
+              background:linear-gradient(135deg,rgba(99,102,241,0.92),rgba(139,92,246,0.92));
+              border:2px solid rgba(255,255,255,0.7);
+              border-radius:50%;
+              display:flex;align-items:center;justify-content:center;
+              font-size:13px;font-weight:700;color:#fff;
+              box-shadow:0 2px 12px rgba(99,102,241,0.6);
+              backdrop-filter:blur(4px);
+            ">${cnt}</div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18],
+            className: '',
+          });
+        },
+      });
 
       spots.forEach((spot) => {
         const isSelected = selectedSpotId === spot.id;
@@ -410,18 +450,66 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
           className: '',
         });
 
-        const marker = L.marker([spot.latitude, spot.longitude], { icon }).addTo(map);
-
-        marker.on('click', () => {
-          if (onSpotClick) onSpotClick(spot);
-        });
-
+        const marker = L.marker([spot.latitude, spot.longitude], { icon });
+        marker.on('click', () => { if (onSpotClick) onSpotClick(spot); });
+        cluster.addLayer(marker);
         spotMarkersRef.current.push(marker);
       });
+
+      cluster.addTo(map);
+      clusterGroupRef.current = cluster;
+
+      void MCluster; // suppress unused warning
     };
 
     updateSpotMarkers();
   }, [spots, selectedSpotId, onSpotClick]);
+
+  // 5. Render Ban Markers
+  useEffect(() => {
+    if (!mapInstanceRef.current || !showBans) return;
+
+    let isMounted = true;
+    const fetchBans = async () => {
+      const L = (await import('leaflet')).default;
+      const map = mapInstanceRef.current!;
+
+      try {
+        const res = await fetch('/api/bans?swLat=10.5&swLng=106.4&neLat=11.1&neLng=107.1');
+        const data = await res.json();
+        
+        if (!isMounted) return;
+
+        data.forEach((ban: any) => {
+          const circle = L.circleMarker([ban.lat, ban.lng], { radius: 16, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.2, weight: 2.5, dashArray: '5 4' });
+          
+          const popupHtml = `<div style="font-family:sans-serif;min-width:180px"><div style="font-size:15px;font-weight:700;color:#ef4444;margin-bottom:4px">🚫 Cấm đậu xe</div><div style="font-size:13px;color:#ccc">${ban.street}</div><div style="font-size:12px;color:#f87171;margin-top:4px">⏰ ${ban.banTimeRanges}</div><div style="font-size:11px;color:#9ca3af;margin-top:2px">${ban.banDays === 'ALL' ? 'Tất cả các ngày' : ban.banDays === 'WEEKDAY' ? 'Thứ 2-6' : 'T7-CN'} • ${ban.banType === 'NO_STOPPING' ? 'Cấm dừng' : ban.banType === 'TIME_LIMITED' ? 'Giới hạn giờ' : 'Cấm đậu'}</div><div style="font-size:10px;color:#6b7280;margin-top:6px;font-style:italic">⚠️ Dữ liệu cộng đồng — xác minh biển báo thực tế trước khi đậu</div></div>`;
+          circle.bindPopup(popupHtml);
+          circle.addTo(map);
+          banMarkersRef.current.push(circle);
+
+          const icon = L.divIcon({
+            html: '<div style="font-size:20px;">🚫</div>',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+            className: ''
+          });
+          const iconMarker = L.marker([ban.lat, ban.lng], { icon });
+          iconMarker.addTo(map);
+          banMarkersRef.current.push(iconMarker);
+        });
+      } catch (err) {
+        console.error('Failed to fetch bans', err);
+      }
+    };
+    fetchBans();
+
+    return () => {
+      isMounted = false;
+      banMarkersRef.current.forEach(m => m.remove());
+      banMarkersRef.current = [];
+    };
+  }, [showBans]);
 
   return (
     <div

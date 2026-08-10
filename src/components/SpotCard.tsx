@@ -15,7 +15,75 @@ interface SpotCardProps {
 
 export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardProps) {
   const { t } = useLocale();
-  const [imgError, setImgError] = React.useState(false);
+  const [failedUrls, setFailedUrls] = React.useState<string[]>([]);
+  const [isVisible, setIsVisible] = React.useState(false);
+  const [activeImageIndex, setActiveImageIndex] = React.useState(0);
+  const [touchStartX, setTouchStartX] = React.useState<number | null>(null);
+  const cardRef = React.useRef<HTMLDivElement>(null);
+
+  // Filter out any broken image URLs dynamically
+  const validImages = React.useMemo(() => {
+    return (spot.images || []).filter(url => !failedUrls.includes(url));
+  }, [spot.images, failedUrls]);
+
+  const hasValidImages = validImages.length > 0;
+
+  // IntersectionObserver: chỉ load Street View / map khi card xuất hiện trên màn hình
+  React.useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setIsVisible(true); observer.disconnect(); } },
+      { rootMargin: '100px' }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleImageError = (url: string) => {
+    setFailedUrls(prev => [...prev, url]);
+  };
+
+  const handlePrevImg = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (validImages.length === 0) return;
+    setActiveImageIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+  };
+
+  const handleNextImg = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (validImages.length === 0) return;
+    setActiveImageIndex((prev) => (prev + 1) % validImages.length);
+  };
+
+  const handleDotClick = (e: React.MouseEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveImageIndex(index);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || validImages.length <= 1) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 35) {
+      if (diff > 0) {
+        setActiveImageIndex((prev) => (prev + 1) % validImages.length);
+      } else {
+        setActiveImageIndex((prev) => (prev - 1 + validImages.length) % validImages.length);
+      }
+    }
+    setTouchStartX(null);
+  };
+
+
+
   const handleDirections = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -32,14 +100,24 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
     }
   };
 
-  const typeLabel = SPOT_TYPE_LABELS[spot.type] || spot.type;
+  // Map spot type to i18n key for full translation support
+  const TYPE_KEY_MAP: Record<string, 'parking'|'restaurant'|'cafe'|'restroom'|'service'|'garage'|'carwash'> = {
+    PARKING_LOT: 'parking',
+    RESTAURANT: 'restaurant',
+    CAFE: 'cafe',
+    RESTROOM: 'restroom',
+    SERVICE: 'service',
+    GARAGE: 'garage',
+    CARWASH: 'carwash',
+  };
   const typeIcon = SPOT_TYPE_ICONS[spot.type] || '📍';
+  const typeLabel = TYPE_KEY_MAP[spot.type] ? t(TYPE_KEY_MAP[spot.type]) : (SPOT_TYPE_LABELS[spot.type] || spot.type);
   const hasImage = spot.images && spot.images.length > 0;
   const rating = (spot.rating || 0).toFixed(1);
   const distanceText = spot.distance != null ? `${spot.distance.toFixed(1)} km` : null;
 
   const cardContent = (
-    <div style={{
+    <div ref={cardRef} style={{
         background: '#1a1a24',
         border: '1px solid rgba(255,255,255,0.08)',
         borderRadius: '14px',
@@ -56,19 +134,203 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
           e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
-        {/* Thumbnail 16:9 */}
-        <div style={{ position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden', background: '#1c1c28' }}>
-          {hasImage && !imgError ? (
-            <img
-              src={spot.images[0]}
-              alt=""
-              onError={() => setImgError(true)}
-              style={{
+        {/* Thumbnail 16:9 Carousel */}
+        <div
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          style={{ position: 'relative', width: '100%', paddingTop: '56.25%', overflow: 'hidden', background: '#1c1c28' }}
+        >
+          {hasValidImages ? (
+            <>
+              {(() => {
+                const currentMedia = validImages[activeImageIndex % validImages.length];
+                const isVideo = currentMedia?.endsWith('.mp4') || currentMedia?.endsWith('.webm') || currentMedia?.includes('/videos/');
+                
+                if (isVideo) {
+                  return (
+                    <>
+                      <video
+                        src={currentMedia}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        style={{
+                          position: 'absolute', top: 0, left: 0,
+                          width: '100%', height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                      <div style={{
+                        position: 'absolute', top: '8px', right: '8px',
+                        background: 'rgba(239, 68, 68, 0.9)',
+                        backdropFilter: 'blur(6px)',
+                        color: '#fff', fontSize: '10px', fontWeight: 700,
+                        padding: '2px 7px', borderRadius: '8px',
+                        zIndex: 12,
+                      }}>
+                        🎬 Video
+                      </div>
+                    </>
+                  );
+                }
+
+                return (
+                  <img
+                    src={currentMedia}
+                    alt={spot.name}
+                    onError={() => handleImageError(currentMedia)}
+                    style={{
+                      position: 'absolute', top: 0, left: 0,
+                      width: '100%', height: '100%',
+                      objectFit: 'cover',
+                      transition: 'opacity 0.2s ease-in-out',
+                    }}
+                  />
+                );
+              })()}
+
+
+              {/* Prev Image Arrow Button */}
+              {validImages.length > 1 && (
+                <button
+                  onClick={handlePrevImg}
+                  style={{
+                    position: 'absolute',
+                    left: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(0,0,0,0.6)',
+                    backdropFilter: 'blur(4px)',
+                    WebkitBackdropFilter: 'blur(4px)',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    zIndex: 12,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                  }}
+                  aria-label="Ảnh trước"
+                >
+                  ‹
+                </button>
+              )}
+
+              {/* Next Image Arrow Button */}
+              {validImages.length > 1 && (
+                <button
+                  onClick={handleNextImg}
+                  style={{
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(0,0,0,0.6)',
+                    backdropFilter: 'blur(4px)',
+                    WebkitBackdropFilter: 'blur(4px)',
+                    color: '#ffffff',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    zIndex: 12,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)',
+                  }}
+                  aria-label="Ảnh kế tiếp"
+                >
+                  ›
+                </button>
+              )}
+
+              {/* Photo Count Badge */}
+              {validImages.length > 1 && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  right: '8px',
+                  background: 'rgba(0,0,0,0.7)',
+                  backdropFilter: 'blur(6px)',
+                  WebkitBackdropFilter: 'blur(6px)',
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  color: '#f0f0f0',
+                  zIndex: 12,
+                  border: '1px solid rgba(255,255,255,0.15)',
+                }}>
+                  📷 {(activeImageIndex % validImages.length) + 1}/{validImages.length}
+                </div>
+              )}
+
+              {/* Slide Dots Indicator */}
+              {validImages.length > 1 && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: '8px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  gap: '4px',
+                  zIndex: 12,
+                  background: 'rgba(0,0,0,0.45)',
+                  padding: '3px 8px',
+                  borderRadius: '10px',
+                  backdropFilter: 'blur(4px)',
+                }}>
+                  {validImages.map((_, idx) => (
+                    <div
+                      key={idx}
+                      onClick={(e) => handleDotClick(e, idx)}
+                      style={{
+                        width: idx === (activeImageIndex % validImages.length) ? '14px' : '5px',
+                        height: '5px',
+                        borderRadius: '3px',
+                        background: idx === (activeImageIndex % validImages.length) ? '#3b82f6' : 'rgba(255,255,255,0.45)',
+                        transition: 'all 0.25s ease',
+                        cursor: 'pointer',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          ) : spot.latitude && spot.longitude ? (
+            /* Real Google Satellite View fallback (No API Key required) */
+            isVisible ? (
+              <iframe
+                title={spot.name}
+                loading="lazy"
+                src={`https://maps.google.com/maps?q=${spot.latitude},${spot.longitude}&z=18&t=k&output=embed`}
+                style={{
+                  position: 'absolute', top: 0, left: 0,
+                  width: '100%', height: '100%',
+                  border: 'none',
+                  pointerEvents: 'none',
+                }}
+              />
+            ) : (
+              <div style={{
                 position: 'absolute', top: 0, left: 0,
                 width: '100%', height: '100%',
-                objectFit: 'cover',
-              }}
-            />
+                background: 'linear-gradient(135deg, #1a1a28, #0f0f1a)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '28px', opacity: 0.4,
+              }}>{typeIcon}</div>
+            )
           ) : (
             <div style={{
               position: 'absolute', top: 0, left: 0,
@@ -80,6 +342,8 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
               {typeIcon}
             </div>
           )}
+
+
 
           {/* Overlay badges — small pills */}
           <div style={{
@@ -101,7 +365,7 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
             </span>
             {spot.isPremium && (
               <span style={{
-                background: 'rgba(139,92,246,0.6)',
+                background: 'rgba(201,168,76,0.75)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
                 padding: '3px 8px',
@@ -110,7 +374,7 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
                 fontWeight: 600,
                 color: '#fff',
               }}>
-                ✨ Premium
+                ✨ {t('premium')}
               </span>
             )}
           </div>
@@ -201,8 +465,8 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
                 fontWeight: 600,
                 border: 'none',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
-                color: '#fff',
+                background: 'linear-gradient(135deg, #C9A84C, #9AAAB8)',
+                color: '#0D0D0A',
                 cursor: 'pointer',
                 transition: 'opacity 0.2s',
               }}

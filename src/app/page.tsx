@@ -4,8 +4,11 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import SpotCard from '@/components/SpotCard';
+import ImageGallery from '@/components/ImageGallery';
 import LanguageSelector from '@/components/LanguageSelector';
+import ReportBanModal from '@/components/ReportBanModal';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import api from '@/lib/api';
 import type { Spot, SpotType } from '@/lib/types';
@@ -15,6 +18,7 @@ const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
 
 export default function HomePage() {
   const { locale, setLocale, t } = useLocale();
+  const { user, isAuthenticated } = useAuth();
   const { latitude, longitude } = useGeolocation();
   const [spots, setSpots] = useState<Spot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,7 +29,11 @@ export default function HomePage() {
   const [bottomSheetState, setBottomSheetState] = useState<'peek' | 'full' | 'detail'>('peek');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isRouting, setIsRouting] = useState(false);
+  const [showBanReport, setShowBanReport] = useState(false);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [streetViewFullscreen, setStreetViewFullscreen] = useState(false);
   const mapComponentRef = useRef<MapHandle>(null);
+
 
   // Bottom sheet gesture ref
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -56,9 +64,42 @@ export default function HomePage() {
     }
   }, [activeFilter, searchQuery, latitude, longitude, hasCarParking]);
 
+  // Fetch count cho TẤT CẢ categories cùng lúc, không phụ thuộc filter đang chọn
+  const [allCounts, setAllCounts] = useState<Record<string, number>>({});
+  const fetchAllCounts = useCallback(async () => {
+    try {
+      const baseParams = new URLSearchParams();
+      if (searchQuery) baseParams.set('search', searchQuery);
+      if (latitude) baseParams.set('lat', String(latitude));
+      if (longitude) baseParams.set('lng', String(longitude));
+      if (hasCarParking) baseParams.set('hasCarParking', '1');
+      baseParams.set('limit', '300');
+
+      const data = await api.get<{ spots: Spot[] }>(`/api/spots?${baseParams.toString()}`);
+      const all = data.spots || [];
+      const counts: Record<string, number> = { all: all.length };
+      for (const s of all) {
+        const k = (s.type || '').toUpperCase();
+        counts[k] = (counts[k] || 0) + 1;
+      }
+      setAllCounts(counts);
+    } catch { /* ignore */ }
+  }, [searchQuery, latitude, longitude, hasCarParking]);
+
+  useEffect(() => { fetchAllCounts(); }, [fetchAllCounts]);
+
   useEffect(() => {
     fetchSpots();
   }, [fetchSpots]);
+
+  // Fix Leaflet white space khi sidebar collapse/expand
+  // Leaflet cần biết container thay đổi kích thước để re-render tiles
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new Event('resize'));
+    }, 350); // sau khi CSS transition 0.3s kết thúc
+    return () => clearTimeout(timer);
+  }, [sidebarCollapsed]);
 
   // Dedicated search function — always resets state & forces fresh fetch
   const doSearch = useCallback(() => {
@@ -220,27 +261,76 @@ export default function HomePage() {
     { id: 'RESTAURANT', name: t('restaurant'), icon: '🍜' },
     { id: 'CAFE', name: t('cafe'), icon: '☕' },
     { id: 'RESTROOM', name: t('restroom'), icon: '🚻' },
+    { id: 'CARWASH', name: t('carwash'), icon: '🚿' },
+    { id: 'GARAGE', name: t('garage'), icon: '🔧' },
     { id: 'SERVICE', name: t('service'), icon: '🛒' },
   ];
 
-  // Đếm số lượng theo từng category để hiện trong chip
-  const chipCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: spots.length };
-    for (const spot of spots) {
-      const key = (spot.type || '').toUpperCase();
-      counts[key] = (counts[key] || 0) + 1;
-    }
-    return counts;
-  }, [spots]);
+  // chipCounts: dùng allCounts (không filter) để show ngay khi load, không đợi tương tác
+  // Khi đang lọc category, chip active show count filtered, chip khác show count từ allCounts
+  const getChipCount = (id: string): number => {
+    if (id === 'all') return allCounts['all'] ?? 0;
+    const isActive = activeFilter === id;
+    if (isActive) return spots.length; // số kết quả đang lọc
+    return allCounts[id] ?? 0; // tổng theo category, không phụ thuộc filter
+  };
 
   return (
     <div className="page-map-layout">
+
+      {/* STREET VIEW FULLSCREEN MODAL */}
+      {streetViewFullscreen && selectedSpot && selectedSpot.latitude && selectedSpot.longitude && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 99999, background: '#000',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {/* Floating close button — nổi bật, dễ thấy */}
+          <button
+            onClick={() => setStreetViewFullscreen(false)}
+            style={{
+              position: 'absolute', top: '16px', right: '16px', zIndex: 100001,
+              background: '#e53935',
+              border: '3px solid #fff',
+              color: '#fff',
+              width: '48px', height: '48px',
+              borderRadius: '50%',
+              fontSize: '22px', fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.6)',
+              lineHeight: 1,
+            }}
+          >✕</button>
+
+          {/* Spot name chip */}
+          <div style={{
+            position: 'absolute', top: '18px', left: '16px', zIndex: 100001,
+            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(10px)',
+            padding: '8px 14px', borderRadius: '20px',
+            color: '#fff', fontWeight: 600, fontSize: '13px',
+            maxWidth: 'calc(100% - 90px)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            📍 {selectedSpot.name}
+          </div>
+
+          {/* Full iframe */}
+          <iframe
+            src={`https://www.google.com/maps/embed/v1/streetview?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&location=${selectedSpot.latitude},${selectedSpot.longitude}&fov=90&pitch=10`}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            allowFullScreen
+          />
+        </div>
+      )}
+
+
       {/* MOBILE HEADER / SEARCH */}
       <div className="floating-search">
-        <div className="mobile-brand-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', padding: '0 4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src="/logo.png" alt="MapGo" style={{ width: '32px', height: '32px', borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }} />
-            <span style={{ fontSize: '17px', fontWeight: 700, color: '#ffffff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', letterSpacing: '-0.3px' }}>MapGo.vn</span>
+        <div className="mobile-brand-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '0 2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <img src="/logo.png" alt="MapGo" style={{ width: '26px', height: '26px', borderRadius: '50%', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }} />
+            <span style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', letterSpacing: '-0.3px' }}>MapGo.vn</span>
           </div>
           <LanguageSelector compact={true} align="right" />
         </div>
@@ -259,50 +349,102 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* MOBILE SERVICE SELECTOR — compact bar + dropdown */}
       <div className="floating-chips">
-        {categories.map((c) => {
-          const isActive = activeFilter === c.id;
-          const count = chipCounts[c.id === 'all' ? 'all' : c.id] ?? 0;
-          return (
-            <div
-              key={c.id}
-              className={`floating-chip ${isActive ? 'active' : ''}`}
-              onClick={() => setActiveFilter(c.id as any)}
-              style={isActive ? {
-                background: 'linear-gradient(135deg,rgba(99,102,241,0.5),rgba(139,92,246,0.5))',
-                borderColor: '#818cf8',
+        {/* Row 1: Active filter badge + Chon dich vu toggle */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%' }}>
+          {/* Toggle button - shows active filter or total count */}
+          <div
+            className={`mobile-service-toggle ${mobileFilterOpen ? 'open' : ''} ${activeFilter !== 'all' ? 'filtered' : ''}`}
+            onClick={() => setMobileFilterOpen(v => !v)}
+            style={{ flex: 1 }}
+          >
+            {activeFilter === 'all' ? (
+              <>
+                <span>{t('choose_service')}</span>
+                <span style={{ opacity: 0.75, fontWeight: 400 }}>({getChipCount('all')})</span>
+              </>
+            ) : (() => {
+              const cat = categories.find(c => c.id === activeFilter);
+              return cat ? (
+                <>
+                  <span>{cat.icon} {cat.name}</span>
+                  <span style={{ opacity: 0.85, fontWeight: 400 }}>({getChipCount(activeFilter)})</span>
+                  <span style={{ marginLeft: 'auto', fontSize: '10px', opacity: 0.7, cursor: 'pointer' }}
+                    onClick={(e) => { e.stopPropagation(); setActiveFilter('all'); setMobileFilterOpen(false); }}
+                  >✕</span>
+                </>
+              ) : null;
+            })()}
+            <span style={{ fontSize: '10px', marginLeft: activeFilter === 'all' ? 'auto' : '4px', transition: 'transform 0.2s', display: 'inline-block', transform: mobileFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+          </div>
+
+          {/* Admin panel button if logged in as Admin */}
+          {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
+            <Link
+              href="/admin"
+              style={{
+                flexShrink: 0,
+                padding: '6px 12px',
+                borderRadius: '20px',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 color: '#fff',
+                fontSize: '12px',
                 fontWeight: 700,
-                boxShadow: '0 0 10px rgba(99,102,241,0.5)',
-              } : { opacity: 0.75 }}
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
             >
-              {isActive && <span style={{ marginRight: 2 }}>✓</span>}
-              {c.icon} {c.name}
-              {count > 0 && (
-                <span style={{
-                  marginLeft: 5,
-                  background: isActive ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
-                  borderRadius: 99, padding: '0px 6px',
-                  fontSize: '11px', fontWeight: 600,
-                }}>{count}</span>
-              )}
-            </div>
-          );
-        })}
-        <div
-          className={`floating-chip ${hasCarParking ? 'active' : ''}`}
-          onClick={() => setHasCarParking(v => !v)}
-          style={hasCarParking ? {
-            background: 'rgba(234,179,8,0.3)',
-            borderColor: '#eab308',
-            color: '#fde047',
-            fontWeight: 700,
-            boxShadow: '0 0 10px rgba(234,179,8,0.4)',
-          } : { opacity: 0.75 }}
-        >
-          {hasCarParking && <span style={{ marginRight: 2 }}>✓</span>}
-          🚗 Có bãi ô tô
+              👑 Admin
+            </Link>
+          )}
+
+          {/* Ban report button */}
+          <div className="mobile-ban-btn" onClick={() => setShowBanReport(true)} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 8px', background: 'rgba(0,0,0,0.7)', border: '1px solid #ef4444', borderRadius: '5px', color: '#ef4444', cursor: 'pointer' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="11" fill="#1565C0"/>
+              <text x="8" y="16" fontSize="12" fontWeight="bold" fill="white" fontFamily="Arial, sans-serif">P</text>
+              <line x1="4" y1="20" x2="20" y2="4" stroke="#EF4444" strokeWidth="2.8" strokeLinecap="round"/>
+            </svg>
+            <span style={{ fontWeight: 600, fontSize: '13px' }}>{t('ban_btn')}</span>
+          </div>
         </div>
+
+        {/* Row 2: Dropdown — show when open */}
+        {mobileFilterOpen && (
+          <div className="mobile-service-panel">
+            {categories.filter(c => c.id !== 'all').map((c) => {
+              const isActive = activeFilter === c.id;
+              const count = getChipCount(c.id);
+              return (
+                <div
+                  key={c.id}
+                  className={`mobile-service-item ${isActive ? 'active' : ''}`}
+                  onClick={() => { setActiveFilter(c.id as any); setMobileFilterOpen(false); }}
+                >
+                  <span style={{ fontSize: '18px' }}>{c.icon}</span>
+                  <span style={{ fontSize: '12px', fontWeight: isActive ? 700 : 400 }}>{c.name}</span>
+                  {count > 0 && (
+                    <span className="mobile-service-count">{count}</span>
+                  )}
+                </div>
+              );
+            })}
+            {/* Co bai o to */}
+            <div
+              className={`mobile-service-item ${hasCarParking ? 'active' : ''}`}
+              onClick={() => { setHasCarParking(v => !v); setMobileFilterOpen(false); }}
+              style={hasCarParking ? { borderColor: '#eab308', background: 'rgba(234,179,8,0.15)' } : {}}
+            >
+              <span style={{ fontSize: '18px' }}>🚗</span>
+              <span style={{ fontSize: '12px' }}>Có bãi ô tô</span>
+              {hasCarParking && <span className="mobile-service-count" style={{ background: '#eab308' }}>✓</span>}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* DESKTOP SIDEBAR */}
@@ -313,7 +455,26 @@ export default function HomePage() {
               <img src="/logo.png" alt="MapGo" style={{ width: '38px', height: '38px', borderRadius: '50%' }} />
               <span style={{ fontSize: '18px', fontWeight: 700 }}>MapGo.vn</span>
             </div>
-            <LanguageSelector compact={true} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
+                <Link
+                  href="/admin"
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '16px',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#fff',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    textDecoration: 'none',
+                    boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
+                  }}
+                >
+                  👑 Admin
+                </Link>
+              )}
+              <LanguageSelector compact={true} />
+            </div>
           </div>
           <div className="search-bar" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}>
             <input
@@ -329,7 +490,7 @@ export default function HomePage() {
         <div className="sidebar-chips">
           {categories.map((c) => {
             const isActive = activeFilter === c.id;
-            const count = chipCounts[c.id === 'all' ? 'all' : c.id] ?? 0;
+            const count = getChipCount(c.id);
             return (
               <div
                 key={c.id}
@@ -338,11 +499,12 @@ export default function HomePage() {
                 style={{
                   fontSize: '12px', padding: '6px 12px',
                   ...(isActive ? {
-                    background: 'linear-gradient(135deg,rgba(99,102,241,0.4),rgba(139,92,246,0.4))',
-                    borderColor: '#818cf8',
-                    color: '#fff',
+                    background: 'linear-gradient(135deg,rgba(201,168,76,0.5),rgba(155,120,45,0.45))',
+                    borderColor: '#E8C870',
+                    color: '#F5E6A0',
                     fontWeight: 700,
-                  } : { opacity: 0.7 }),
+                    boxShadow: '0 0 10px rgba(201,168,76,0.4)',
+                  } : {}),
                 }}
               >
                 {isActive && '✓ '}{c.icon} {c.name}
@@ -363,19 +525,56 @@ export default function HomePage() {
             style={{ fontSize: '12px', padding: '6px 12px', ...(hasCarParking ? {
               background: 'rgba(234,179,8,0.25)', borderColor: '#eab308',
               color: '#fde047', fontWeight: 700,
-            } : { opacity: 0.7 }) }}
+            } : {}) }}
           >
             {hasCarParking && '✓ '}🚗 Có bãi ô tô
           </div>
         </div>
 
+        {/* Nút Báo biển cấm đậu — nổi bật cho tài xế */}
+        <div
+          onClick={() => setShowBanReport(true)}
+          style={{
+            margin: '10px 0 4px',
+            padding: '11px 16px',
+            borderRadius: 12,
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.18), rgba(124,58,237,0.18))',
+            border: '1px solid rgba(239,68,68,0.45)',
+            cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 10,
+            transition: 'all 0.2s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'linear-gradient(135deg,rgba(239,68,68,0.32),rgba(124,58,237,0.32))')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'linear-gradient(135deg,rgba(239,68,68,0.18),rgba(124,58,237,0.18))')}
+        >
+          <span style={{ fontSize: 22 }}>🚫</span>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5' }}>Báo biển cấm đậu xe</div>
+            <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>Chụp ảnh + gim vị trí — chia sẻ với tài xế khác</div>
+          </div>
+          <span style={{ marginLeft: 'auto', fontSize: 18, color: '#ef4444' }}>›</span>
+        </div>
+
         <div className="sidebar-results">
           {selectedSpot ? (
             <div className="spot-detail-sidebar">
-              <button className="btn btn-ghost" onClick={() => setSelectedSpot(null)} style={{ marginBottom: '12px' }}>
-                ◀ {t('back')}
+              <button
+                className="btn-back-prominent"
+                onClick={() => setSelectedSpot(null)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 20px', marginBottom: '12px',
+                  borderRadius: 99, border: 'none',
+                  background: '#fff', color: '#0d0d12',
+                  fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                }}
+              >
+                &#9664; {t('back')}
               </button>
-              <img src={selectedSpot.images?.[0] || 'https://via.placeholder.com/400x200?text=No+Image'} alt={selectedSpot.name} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px', marginBottom: '16px' }} />
+              <div style={{ marginBottom: '16px' }}>
+                <ImageGallery images={selectedSpot.images || []} altPrefix={selectedSpot.name} />
+              </div>
               <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px' }}>{selectedSpot.name}</h2>
               <p style={{ color: '#a0a0b0', marginBottom: '16px' }}>{selectedSpot.address}</p>
               
@@ -396,6 +595,29 @@ export default function HomePage() {
                   <p style={{ color: '#a0a0b0', fontSize: '14px' }}>{selectedSpot.description}</p>
                 </div>
               )}
+
+
+              <div className="streetview-section">
+
+                  <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '10px', color: 'var(--text-secondary)' }}>📍 Nhìn bên ngoài địa điểm</h3>
+
+                  <div className="streetview-iframe-wrapper">
+                    <iframe
+                      className="streetview-iframe"
+                      loading="lazy"
+                      allowFullScreen
+                      src={`https://www.google.com/maps/embed/v1/streetview?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&location=${selectedSpot.latitude},${selectedSpot.longitude}&fov=90&pitch=10`}
+                    ></iframe>
+                  </div>
+                  <button
+                    onClick={() => setStreetViewFullscreen(true)}
+                    className="streetview-btn"
+                    style={{ marginTop: '8px' }}
+                  >
+                    <span>⛶</span> Xem toàn màn hình
+                  </button>
+                </div>
+
             </div>
           ) : (
             <>
@@ -444,6 +666,7 @@ export default function HomePage() {
           selectedSpotId={selectedSpot?.id}
           onSpotClick={handleMarkerClick}
           userLocation={latitude && longitude ? [latitude, longitude] : null}
+          showBans={true}
           style={{ width: '100%', height: '100%', borderRadius: 0 }}
         />
       </div>
@@ -527,32 +750,57 @@ export default function HomePage() {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
-            style={{ cursor: 'grab', padding: '12px 0' }}
           >
             <div className="bottom-sheet-handle-bar" />
+            <button
+              className="bs-arrow-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (bottomSheetState === 'detail') { setSelectedSpot(null); setBottomSheetState('peek'); }
+                else setBottomSheetState(s => s === 'peek' ? 'full' : 'peek');
+              }}
+            >
+              <span className="bs-arrow-icon">
+                {bottomSheetState === 'peek' ? '▲' : '▼'}
+              </span>
+              <span className="bs-arrow-label">
+                {bottomSheetState === 'peek' ? t('expand') : t('collapse')}
+              </span>
+            </button>
           </div>
           
           <div className="bottom-sheet-content">
             {bottomSheetState === 'detail' && selectedSpot ? (
               <div className="spot-detail-sheet" style={{ position: 'relative' }}>
-                {/* X Close button */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); setSelectedSpot(null); setBottomSheetState('peek'); }}
-                  style={{
-                    position: 'absolute', top: '10px', right: '10px', zIndex: 10,
-                    width: '32px', height: '32px', borderRadius: '50%',
-                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
-                    border: 'none', color: '#fff', fontSize: '16px',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
-                >
-                  ✕
-                </button>
-                <img 
-                  src={selectedSpot.images?.[0] || 'https://via.placeholder.com/400x200?text=No+Image'} 
-                  className="spot-hero" 
-                  alt={selectedSpot.name} 
-                />
+                {/* Sticky back bar */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 16px',
+                  background: 'rgba(13,13,18,0.95)', backdropFilter: 'blur(12px)',
+                  borderBottom: '1px solid rgba(255,255,255,0.08)',
+                  position: 'sticky', top: 0, zIndex: 20,
+                  marginBottom: 8,
+                }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSelectedSpot(null); setBottomSheetState('peek'); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '10px 20px', borderRadius: 99, border: 'none',
+                      background: '#fff', color: '#0d0d12',
+                      fontSize: 14, fontWeight: 800, cursor: 'pointer',
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.5)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    &#9664; {t('back')}
+                  </button>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {selectedSpot?.name}
+                  </span>
+                </div>
+                <div style={{ marginBottom: '12px', padding: '0 4px' }}>
+                  <ImageGallery images={selectedSpot.images || []} altPrefix={selectedSpot.name} />
+                </div>
                 <div className="spot-info">
                   <div className="spot-name">{selectedSpot.name}</div>
                   <div className="spot-meta">{selectedSpot.address}</div>
@@ -596,17 +844,65 @@ export default function HomePage() {
                       </a>
                     )}
                   </div>
+
+
+                  <div className="streetview-section">
+
+                      <h3 style={{ fontSize: '14px', fontWeight: 600, marginBottom: '10px', color: 'var(--text-secondary)' }}>📍 Nhìn bên ngoài địa điểm</h3>
+
+                      <div className="streetview-iframe-wrapper">
+                        <iframe
+                          className="streetview-iframe"
+                          loading="lazy"
+                          allowFullScreen
+                          src={`https://www.google.com/maps/embed/v1/streetview?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&location=${selectedSpot.latitude},${selectedSpot.longitude}&fov=90&pitch=10`}
+                        ></iframe>
+                      </div>
+                      <button
+                        onClick={() => setStreetViewFullscreen(true)}
+                        className="streetview-btn"
+                        style={{ marginTop: '8px' }}
+                      >
+                        <span>⛶</span> Xem toàn màn hình
+                      </button>
+                    </div>
+
                 </div>
               </div>
             ) : (
               <>
-                <div className="bottom-sheet-title">
-                  {spots.length} {t('spots_nearby')}
+                <div className="bottom-sheet-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>
+                    {allCounts['all'] && allCounts['all'] > spots.length
+                      ? `${t('showing')} ${spots.length}/${allCounts['all']} ${t('spots_label')}`
+                      : `${spots.length} ${t('spots_nearby')}`}
+                  </span>
+                  {allCounts['all'] && allCounts['all'] > spots.length && (
+                    <span style={{ fontSize: 11, color: '#6b6b80' }}>{t('nearest_label')}</span>
+                  )}
                 </div>
                 {isLoading ? (
                   <div style={{ textAlign: 'center', padding: '20px' }}>{t('loading')}</div>
                 ) : spots.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {/* Banner báo biển cấm đậu — luôn ở đầu danh sách */}
+                    <div
+                      onClick={() => setShowBanReport(true)}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '12px 14px', borderRadius: 12,
+                        background: 'linear-gradient(135deg,rgba(239,68,68,0.15),rgba(124,58,237,0.15))',
+                        border: '1px solid rgba(239,68,68,0.4)',
+                        cursor: 'pointer', flexShrink: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 22 }}>🚫</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5' }}>{t('report_ban_title')}</div>
+                        <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 1 }}>{t('report_ban_desc')}</div>
+                      </div>
+                      <span style={{ color: '#ef4444', fontSize: 16 }}>›</span>
+                    </div>
                     {spots.map((spot) => (
                       <div key={spot.id}>
                         <SpotCard spot={spot} onDirections={handleDirections} onCardClick={handleMarkerClick} />
@@ -698,6 +994,19 @@ export default function HomePage() {
           MapGo.vn giúp bạn tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng sạch sẽ gần đây tại Quận 1, Quận 3, Quận 7, TP Thủ Đức, Bình Thạnh, Gò Vấp, Phú Nhuận, Quận 10 và toàn bộ TP.HCM. Hỗ trợ chỉ đường GPS trực tiếp trên bản đồ miễn phí 24/7.
         </p>
       </div>
+
+      {/* Modal báo biển cấm đậu — luôn render, fallback tọa độ trung tâm HCM nếu chưa có GPS */}
+      {showBanReport && (
+        <ReportBanModal
+          lat={latitude ?? 10.7769}
+          lng={longitude ?? 106.7009}
+          onClose={() => setShowBanReport(false)}
+          onSuccess={() => {
+            setShowBanReport(false);
+            alert('✅ Cảm ơn! Báo cáo đã được ghi nhận. Khi đủ 3 người xác nhận, biển báo sẽ hiện trên bản đồ.');
+          }}
+        />
+      )}
     </div>
   );
 }

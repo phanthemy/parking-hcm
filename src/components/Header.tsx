@@ -54,14 +54,14 @@ export default function Header() {
           <Link href="/" style={{ fontSize: '14px', opacity: 0.8, transition: 'opacity 0.2s', color: '#fff' }}>
             {t('map')}
           </Link>
-          {isAuthenticated && user?.role === 'business' && (
+          {isAuthenticated && user?.role?.toString().toUpperCase() === 'BUSINESS' && (
             <Link href="/business/dashboard" style={{ fontSize: '14px', opacity: 0.8, color: '#fff' }}>
                {t('manage')}
             </Link>
           )}
-          {isAuthenticated && user?.role === 'admin' && (
-            <Link href="/admin" style={{ fontSize: '14px', opacity: 0.8, color: '#fff' }}>
-              Admin
+          {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
+            <Link href="/admin" style={{ fontSize: '14px', opacity: 0.8, color: '#eab308', fontWeight: 700 }}>
+              👑 Admin
             </Link>
           )}
 
@@ -134,7 +134,7 @@ export default function Header() {
           >
             🗺️ {t('map')}
           </Link>
-          {isAuthenticated && user?.role === 'business' && (
+          {isAuthenticated && user?.role?.toString().toUpperCase() === 'BUSINESS' && (
             <Link
               href="/business/dashboard"
               onClick={() => setMenuOpen(false)}
@@ -143,13 +143,13 @@ export default function Header() {
                📊 {t('manage')}
             </Link>
           )}
-          {isAuthenticated && user?.role === 'admin' && (
+          {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
             <Link
               href="/admin"
               onClick={() => setMenuOpen(false)}
-              style={{ fontSize: '18px', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ fontSize: '18px', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#eab308', fontWeight: 700 }}
             >
-              ⚙️ Admin
+              👑 Quản trị Admin
             </Link>
           )}
           <div style={{ padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

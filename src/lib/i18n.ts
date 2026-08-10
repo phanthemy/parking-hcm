@@ -27,6 +27,8 @@ export const translations = {
     cafe: 'Cà phê',
     restroom: 'Vệ sinh',
     service: 'Dịch vụ',
+    carwash: 'Rửa xe',
+    garage: 'Cứu hộ/Sửa xe',
 
     // Spot card & detail
     directions: 'Chỉ đường',
@@ -171,6 +173,15 @@ export const translations = {
     type_cafe: '☕ Café',
     type_restroom: '🚻 Nhà vệ sinh',
     type_service: '🔧 Dịch vụ',
+    showing: 'Hiển thị',
+    spots_label: 'địa điểm',
+    nearest_label: 'gần bạn nhất',
+    report_ban_title: 'Báo biển cấm đậu xe',
+    report_ban_desc: 'Chia sẻ vị trí cấm với tài xế khác',
+    choose_service: 'Chọn dịch vụ',
+    expand: 'Xem thêm',
+    collapse: 'Thu gọn',
+    ban_btn: 'Cấm đậu',
   },
   en: {
     // Search & filters
@@ -182,6 +193,8 @@ export const translations = {
     cafe: 'Cafe',
     restroom: 'Restroom',
     service: 'Service',
+    carwash: 'Car Wash',
+    garage: 'Rescue/Repair',
 
     // Spot card & detail
     directions: 'Directions',
@@ -326,6 +339,15 @@ export const translations = {
     type_cafe: '☕ Cafe',
     type_restroom: '🚻 Restroom',
     type_service: '🔧 Service',
+    showing: 'Showing',
+    spots_label: 'spots',
+    nearest_label: 'nearest first',
+    report_ban_title: 'Report No Parking Sign',
+    report_ban_desc: 'Share restricted zones with other drivers',
+    choose_service: 'Choose service',
+    expand: 'Expand',
+    collapse: 'Collapse',
+    ban_btn: 'No Parking',
   },
   zh: {
     // Chinese (中文)
@@ -337,6 +359,8 @@ export const translations = {
     cafe: '咖啡馆',
     restroom: '洗手间',
     service: '服务',
+    carwash: '洗车',
+    garage: '救援/修车',
 
     directions: '路线',
     go_now: '立即前往',
@@ -473,6 +497,15 @@ export const translations = {
     type_cafe: '☕ 咖啡馆',
     type_restroom: '🚻 洗手间',
     type_service: '🔧 服务',
+    showing: '显示',
+    spots_label: '个地点',
+    nearest_label: '最近优先',
+    report_ban_title: '举报禁停标志',
+    report_ban_desc: '与其他司机分享禁停位置',
+    choose_service: '选择服务',
+    expand: '展开',
+    collapse: '收起',
+    ban_btn: '禁止停车',
   },
   ru: {
     // Russian (Русский)
@@ -484,6 +517,8 @@ export const translations = {
     cafe: 'Кафе',
     restroom: 'Туалет',
     service: 'Сервис',
+    carwash: 'Мойка авто',
+    garage: 'Помощь/Ремонт',
 
     directions: 'Маршрут',
     go_now: 'Поехали',
@@ -620,6 +655,15 @@ export const translations = {
     type_cafe: '☕ Кафе',
     type_restroom: '🚻 Туалет',
     type_service: '🔧 Сервис',
+    showing: 'Показано',
+    spots_label: 'мест',
+    nearest_label: 'ближайшие',
+    report_ban_title: 'Сообщить о знаке запрета стоянки',
+    report_ban_desc: 'Поделиться запрещёнными зонами с другими водителями',
+    choose_service: 'Выбрать сервис',
+    expand: 'Развернуть',
+    collapse: 'Свернуть',
+    ban_btn: 'Запрет',
   },
   fr: {
     // French (Français)
@@ -631,6 +675,8 @@ export const translations = {
     cafe: 'Café',
     restroom: 'Toilettes',
     service: 'Services',
+    carwash: 'Lavage auto',
+    garage: 'Dépannage/Réparation',
 
     directions: 'Itinéraire',
     go_now: 'Y aller',
@@ -767,6 +813,15 @@ export const translations = {
     type_cafe: '☕ Café',
     type_restroom: '🚻 Toilettes',
     type_service: '🔧 Services',
+    showing: 'Affichage',
+    spots_label: 'lieux',
+    nearest_label: 'les plus proches',
+    report_ban_title: 'Signaler une interdiction',
+    report_ban_desc: 'Partager les zones interdites avec d’autres conducteurs',
+    choose_service: 'Choisir service',
+    expand: 'Agrandir',
+    collapse: 'Réduire',
+    ban_btn: 'Interdit',
   },
   ar: {
     // Arabic (العربية)
@@ -778,6 +833,8 @@ export const translations = {
     cafe: 'مقهى',
     restroom: 'دورة مياه',
     service: 'خدمة',
+    carwash: 'غسيل سيارة',
+    garage: 'إنقاذ/إصلاح',
 
     directions: 'الاتجاهات',
     go_now: 'انطلق الآن',
@@ -914,6 +971,15 @@ export const translations = {
     type_cafe: '☕ مقهى',
     type_restroom: '🚻 دورة مياه',
     type_service: '🔧 خدمة',
+    showing: 'عرض',
+    spots_label: 'أماكن',
+    nearest_label: 'الأقرب',
+    report_ban_title: 'الإبلاغ عن لافتة حظر الوقوف',
+    report_ban_desc: 'شارك مناطق الحظر مع سائقين آخرين',
+    choose_service: 'اختر الخدمة',
+    expand: 'توسيع',
+    collapse: 'طي',
+    ban_btn: 'حظر وقوف',
   },
 } as const;
 

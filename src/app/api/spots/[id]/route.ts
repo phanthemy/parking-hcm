@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const data = await req.json();
     const userId = authResult.user.id;
-    const userRole = authResult.user.role;
+    const userRole = authResult.user.role?.toString().toUpperCase();
 
     // Check ownership
     const spot = await prisma.parkingSpot.findUnique({ where: { id } });
@@ -69,22 +69,50 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Forbidden: You do not own this spot' }, { status: 403 });
     }
 
-    // Don't allow updating user ID or certain protected fields here
-    delete data.userId;
+    // Update media images/videos if passed
+    if (Array.isArray(data.images)) {
+      await prisma.parkingImage.deleteMany({ where: { parkingSpotId: id } });
+      if (data.images.length > 0) {
+        await prisma.parkingImage.createMany({
+          data: data.images.filter((url: any) => typeof url === 'string' && url.trim().length > 0).map((url: string) => ({
+            url: url.trim(),
+            parkingSpotId: id,
+          })),
+        });
+      }
+      delete data.images;
+    }
+
+    const updateData: any = { ...data };
+    if (data.latitude !== undefined) updateData.lat = parseFloat(data.latitude);
+    if (data.longitude !== undefined) updateData.lng = parseFloat(data.longitude);
+    if (data.pricePerHourCar !== undefined) updateData.pricePerHour = parseFloat(data.pricePerHourCar);
+    delete updateData.latitude;
+    delete updateData.longitude;
+    delete updateData.pricePerHourCar;
+    delete updateData.pricePerHourBike;
+
+    delete updateData.userId;
     if (userRole !== 'ADMIN') {
-      delete data.status;
-      delete data.isPremium;
+      delete updateData.status;
+      delete updateData.isPremium;
     }
 
     const updatedSpot = await prisma.parkingSpot.update({
       where: { id },
-      data
+      data: updateData,
+      include: { images: true }
     });
 
-    return NextResponse.json(updatedSpot);
+    return NextResponse.json({
+      ...updatedSpot,
+      latitude: updatedSpot.lat,
+      longitude: updatedSpot.lng,
+      images: updatedSpot.images?.map((img: any) => img.url) || [],
+    });
   } catch (error: any) {
     console.error('Update spot error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Internal server error' }, { status: 500 });
   }
 }
 
