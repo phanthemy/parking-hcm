@@ -183,11 +183,25 @@ export async function PUT(request: NextRequest) {
   const body = await request.json();
   const { postId, name, address, phone, type, pricePerHour, images, lat, lng } = body;
 
+  // Get original post content for building description
+  let description = '';
+  let postContent = '';
+  if (postId) {
+    const post = await prisma.facebookPost.findUnique({ where: { id: postId } });
+    postContent = post?.content || '';
+  }
+
+  // Build structured description from content
+  if (postContent) {
+    description = buildDescription(postContent);
+  }
+
   // Create new parking spot
   const spot = await prisma.parkingSpot.create({
     data: {
       name: name || 'Bãi xe mới',
       address: address || '',
+      description: description || null,
       phone: phone || null,
       type: type || 'PARKING_LOT',
       pricePerHour: pricePerHour || 0,
@@ -211,4 +225,61 @@ export async function PUT(request: NextRequest) {
   }
 
   return NextResponse.json({ spot });
+}
+
+// Build structured description with price table from raw FB post text
+function buildDescription(text: string): string {
+  const parts: string[] = [];
+
+  // Extract ALL price entries: "Xe máy: 150.000 VNĐ/tháng", etc.
+  const priceLines: string[] = [];
+  const priceRegex = /((?:xe\s*(?:máy|hơi|tải|khách|ô tô|3 gác|ba gác)(?:\s*\d+\w*)?(?:\s*\(.*?\))?)\s*:?\s*[\d.,]+\s*(?:VNĐ|vnđ|đồng|đ|k|triệu|tr)\s*\/\s*(?:đêm|ngày|tháng|giờ))/gi;
+  let match;
+  while ((match = priceRegex.exec(text)) !== null) {
+    priceLines.push(match[1].trim());
+  }
+
+  // Also try pattern: "10.000 VNĐ/đêm" standalone
+  const standalonePrice = /(\d[\d.,]*)\s*(VNĐ|vnđ|đồng|đ)\s*\/\s*(đêm|ngày|tháng|giờ)/gi;
+  while ((match = standalonePrice.exec(text)) !== null) {
+    const ctx = text.substring(Math.max(0, match.index - 50), match.index + match[0].length);
+    const vehicleMatch = ctx.match(/(xe\s*(?:máy|hơi|tải|khách|ô tô)[^:]*)/i);
+    if (vehicleMatch && !priceLines.some(l => l.includes(match![0]))) {
+      priceLines.push(`${vehicleMatch[1].trim()}: ${match[0]}`);
+    }
+  }
+
+  if (priceLines.length > 0) {
+    parts.push('📋 BẢNG GIÁ:');
+    priceLines.forEach(line => {
+      parts.push(`• ${line}`);
+    });
+  }
+
+  // Extract contact info
+  const phoneMatch = text.match(/(?:liên hệ|lh|hotline|zalo|sdt)\s*:?\s*(0[\d\s.\-]{8,14}(?:\s*\([^)]*\))?)/i);
+  if (phoneMatch) {
+    parts.push(`\n📞 Liên hệ: ${phoneMatch[1].trim()}`);
+  }
+
+  // Extract address
+  const addrMatch = text.match(/(?:địa chỉ|đ\/c|📍)\s*:?\s*([^\n]{10,150})/i);
+  if (addrMatch) {
+    parts.push(`📍 ${addrMatch[1].trim()}`);
+  }
+
+  // Features
+  const features: string[] = [];
+  if (/mái che/i.test(text)) features.push('Mái che');
+  if (/camera/i.test(text)) features.push('Camera giám sát');
+  if (/bảo vệ/i.test(text)) features.push('Bảo vệ 24/7');
+  if (/24\s*\/?\s*7|24h/i.test(text)) features.push('Mở cửa 24/7');
+  if (/rộng|thoáng/i.test(text)) features.push('Bãi rộng rãi');
+  if (/cho thuê đất/i.test(text)) features.push('Cho thuê đất');
+
+  if (features.length > 0) {
+    parts.push(`\n✨ Tiện ích: ${features.join(', ')}`);
+  }
+
+  return parts.join('\n');
 }

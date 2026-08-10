@@ -592,7 +592,9 @@ export default function HomePage() {
               {selectedSpot.description && (
                 <div style={{ marginBottom: '24px' }}>
                   <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>{t('info')}</h3>
-                  <p style={{ color: '#a0a0b0', fontSize: '14px' }}>{selectedSpot.description}</p>
+                  <div style={{ color: '#a0a0b0', fontSize: '14px', whiteSpace: 'pre-wrap', lineHeight: '1.7', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', padding: '12px 16px' }}>
+                    {selectedSpot.description}
+                  </div>
                 </div>
               )}
 
