@@ -79,6 +79,11 @@ export default function AdminFacebookPage() {
   const [geoResult, setGeoResult] = useState<{ lat: number; lng: number; formattedAddress: string } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
 
+  // Quick add spot modal
+  const [quickAdd, setQuickAdd] = useState(false);
+  const [quickForm, setQuickForm] = useState({ name: '', address: '', phone: '', type: 'PARKING_LOT', coords: '', pricePerHour: 0 });
+  const [quickGeo, setQuickGeo] = useState<{ lat: number; lng: number } | null>(null);
+
   useEffect(() => {
     const role = user?.role?.toString().toUpperCase();
     if (!authLoading && (!isAuthenticated || role !== 'ADMIN')) {
@@ -237,6 +242,48 @@ export default function AdminFacebookPage() {
     setEditExtracted(null);
   };
 
+  // Parse coords from text like "10.839, 106.654" or pasted Google Maps
+  const parseCoords = (text: string): { lat: number; lng: number } | null => {
+    const match = text.match(/([\d.]+)\s*[,\s]\s*([\d.]+)/);
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+      if (lat > 8 && lat < 24 && lng > 100 && lng < 115) return { lat, lng };
+      if (lng > 8 && lng < 24 && lat > 100 && lat < 115) return { lat: lng, lng: lat };
+    }
+    return null;
+  };
+
+  const handleQuickAdd = async () => {
+    const coords = parseCoords(quickForm.coords);
+    const finalGeo = coords || quickGeo;
+    if (!finalGeo) {
+      alert('⚠️ Chưa có tọa độ! Dán tọa độ (VD: 10.839, 106.654) hoặc click bản đồ.');
+      return;
+    }
+    if (!quickForm.name.trim()) {
+      alert('⚠️ Nhập tên bãi xe!');
+      return;
+    }
+    try {
+      await api.put('/api/admin/facebook/extract', {
+        name: quickForm.name,
+        address: quickForm.address || `${finalGeo.lat.toFixed(6)}, ${finalGeo.lng.toFixed(6)}`,
+        phone: quickForm.phone,
+        type: quickForm.type,
+        pricePerHour: quickForm.pricePerHour,
+        lat: finalGeo.lat,
+        lng: finalGeo.lng,
+      });
+      setQuickAdd(false);
+      setQuickForm({ name: '', address: '', phone: '', type: 'PARKING_LOT', coords: '', pricePerHour: 0 });
+      setQuickGeo(null);
+      alert('✅ Đã tạo bãi xe mới!');
+    } catch (err: any) {
+      alert('Lỗi: ' + (err.message || 'Thử lại'));
+    }
+  };
+
   const statusColors: Record<string, string> = {
     pending: '#f59e0b',
     approved: '#10b981',
@@ -335,6 +382,16 @@ export default function AdminFacebookPage() {
                 style={{ fontSize: '12px', padding: '8px 14px' }}
               >
                 ✅ Duyệt tất cả
+              </button>
+              <button
+                onClick={() => setQuickAdd(true)}
+                style={{
+                  fontSize: '12px', padding: '8px 14px', borderRadius: '8px', border: 'none',
+                  background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff',
+                  fontWeight: 600, cursor: 'pointer'
+                }}
+              >
+                ➕ Thêm bãi xe
               </button>
             </div>
 
@@ -603,6 +660,163 @@ export default function AdminFacebookPage() {
           </>
         )}
       </main>
+
+      {/* Quick Add Spot Modal */}
+      {quickAdd && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          zIndex: 9997, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: '#13131a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px',
+            width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.8)'
+          }}>
+            <div style={{
+              padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>➕ Thêm bãi xe nhanh</h3>
+              <button onClick={() => setQuickAdd(false)}
+                style={{ background: 'none', border: 'none', color: '#a0a0b0', fontSize: '24px', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {/* Coords input */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>📍 Tọa độ (dán từ Google Maps)</label>
+                <input type="text" value={quickForm.coords}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setQuickForm({ ...quickForm, coords: v });
+                    const c = parseCoords(v);
+                    if (c) setQuickGeo(c);
+                  }}
+                  placeholder="VD: 10.839317, 106.654991"
+                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                {quickGeo && (
+                  <p style={{ fontSize: '11px', color: '#10b981', marginTop: '4px' }}>✅ Tọa độ: {quickGeo.lat.toFixed(6)}, {quickGeo.lng.toFixed(6)}</p>
+                )}
+              </div>
+
+              {/* Mini map for click-to-pin */}
+              <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <div style={{ padding: '6px 12px', background: 'rgba(139,92,246,0.1)' }}>
+                  <p style={{ fontSize: '11px', color: '#a78bfa', fontWeight: 600, margin: 0 }}>
+                    {quickGeo ? `📍 ${quickGeo.lat.toFixed(5)}, ${quickGeo.lng.toFixed(5)}` : '👆 Click bản đồ hoặc dán tọa độ ở trên'}
+                  </p>
+                </div>
+                <div
+                  ref={(el) => {
+                    if (!el || (el as any).__qmapInit) {
+                      if ((el as any).__qmapInstance && quickGeo) {
+                        (el as any).__qmapInstance.setView([quickGeo.lat, quickGeo.lng], 17);
+                        (el as any).__qmapMarker?.setLatLng([quickGeo.lat, quickGeo.lng]);
+                      }
+                      return;
+                    }
+                    (el as any).__qmapInit = true;
+                    if (!document.getElementById('leaflet-css')) {
+                      const link = document.createElement('link');
+                      link.id = 'leaflet-css';
+                      link.rel = 'stylesheet';
+                      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                      document.head.appendChild(link);
+                    }
+                    const initMap = () => {
+                      const L = (window as any).L;
+                      if (!L) return;
+                      const lat = quickGeo?.lat || 10.82;
+                      const lng = quickGeo?.lng || 106.69;
+                      const map = L.map(el).setView([lat, lng], quickGeo ? 17 : 12);
+                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
+                      const pin = L.divIcon({ html: '<div style="font-size:28px;margin-top:-14px;margin-left:-5px;">📍</div>', iconSize: [30, 30], className: '' });
+                      const marker = L.marker([lat, lng], { icon: pin, draggable: true }).addTo(map);
+                      map.on('click', (e: any) => {
+                        marker.setLatLng(e.latlng);
+                        setQuickGeo({ lat: e.latlng.lat, lng: e.latlng.lng });
+                        setQuickForm(prev => ({ ...prev, coords: `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}` }));
+                      });
+                      marker.on('dragend', () => {
+                        const p = marker.getLatLng();
+                        setQuickGeo({ lat: p.lat, lng: p.lng });
+                        setQuickForm(prev => ({ ...prev, coords: `${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}` }));
+                      });
+                      (el as any).__qmapInstance = map;
+                      (el as any).__qmapMarker = marker;
+                      setTimeout(() => map.invalidateSize(), 200);
+                    };
+                    if ((window as any).L) setTimeout(initMap, 100);
+                    else {
+                      const s = document.createElement('script');
+                      s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                      s.onload = () => setTimeout(initMap, 100);
+                      document.head.appendChild(s);
+                    }
+                  }}
+                  style={{ width: '100%', height: '200px' }}
+                />
+              </div>
+
+              {/* Name & Type */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Tên bãi xe *</label>
+                  <input type="text" value={quickForm.name}
+                    onChange={e => setQuickForm({ ...quickForm, name: e.target.value })}
+                    placeholder="VD: Bãi xe Bà Điểm"
+                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Loại</label>
+                  <select value={quickForm.type}
+                    onChange={e => setQuickForm({ ...quickForm, type: e.target.value })}
+                    style={{ width: '100%', padding: '10px 14px', background: '#1c1c28', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }}>
+                    <option value="PARKING_LOT">🅿️ Bãi đỗ xe</option>
+                    <option value="CARWASH">🚿 Rửa xe</option>
+                    <option value="GARAGE">🔧 Garage</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Address & Phone */}
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Địa chỉ</label>
+                <input type="text" value={quickForm.address}
+                  onChange={e => setQuickForm({ ...quickForm, address: e.target.value })}
+                  placeholder="Nhập địa chỉ (tùy chọn)"
+                  style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>SĐT</label>
+                  <input type="text" value={quickForm.phone}
+                    onChange={e => setQuickForm({ ...quickForm, phone: e.target.value })}
+                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Giá/giờ</label>
+                  <input type="number" value={quickForm.pricePerHour}
+                    onChange={e => setQuickForm({ ...quickForm, pricePerHour: parseInt(e.target.value) || 0 })}
+                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                <button onClick={() => setQuickAdd(false)}
+                  style={{ padding: '10px 20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.2)', background: 'transparent', color: '#a0a0b0', fontSize: '14px', cursor: 'pointer' }}>
+                  ✕ Hủy
+                </button>
+                <button onClick={handleQuickAdd}
+                  style={{ padding: '10px 24px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', color: '#fff', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
+                  ➕ Tạo bãi xe
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Smart Extraction Modal */}
       {extractModal && (

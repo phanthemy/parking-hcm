@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 // GET: Lấy danh sách bài viết Facebook đã crawl
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const status = searchParams.get('status') || 'all'; // all, pending, approved, rejected
+  const status = searchParams.get('status') || 'all';
   const page = parseInt(searchParams.get('page') || '1');
-  const limit = parseInt(searchParams.get('limit') || '20');
+  const limit = parseInt(searchParams.get('limit') || '15');
 
   const where = status !== 'all' ? { status } : {};
 
@@ -16,7 +14,7 @@ export async function GET(request: NextRequest) {
     prisma.facebookPost.findMany({
       where,
       include: {
-        images: true,
+        images: { select: { id: true, url: true, type: true } },
         matchedSpot: { select: { id: true, name: true } }
       },
       orderBy: { createdAt: 'desc' },
