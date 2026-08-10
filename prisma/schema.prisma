@@ -21,6 +21,7 @@ model User {
 
 model ParkingSpot {
   id           String           @id @default(cuid())
+  slug         String?          @unique // SEO-friendly URL slug
   name         String
   address      String
   description  String?

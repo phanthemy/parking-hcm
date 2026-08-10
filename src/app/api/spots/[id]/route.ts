@@ -6,8 +6,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     const { id } = await params;
 
-    const spot = await prisma.parkingSpot.findUnique({
-      where: { id },
+    // Support both ID and slug lookup
+    const isCuid = /^[a-z0-9]{20,}$/i.test(id);
+    const spot = await prisma.parkingSpot.findFirst({
+      where: isCuid ? { id } : { slug: id },
       include: {
         images: true,
         reviews: {

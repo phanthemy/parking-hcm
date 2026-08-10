@@ -12,18 +12,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://mapgo.vn';
   const now = new Date();
 
-  let spots: { id: string; updatedAt: Date }[] = [];
+  let spots: { id: string; slug: string | null; updatedAt: Date }[] = [];
   try {
     spots = await prisma.parkingSpot.findMany({
       where: { status: { in: ['active', 'ACTIVE'] } },
-      select: { id: true, updatedAt: true },
+      select: { id: true, slug: true, updatedAt: true },
     });
   } catch (e) {
     console.error('Sitemap DB query error:', e);
   }
 
   const spotUrls = spots.map((spot) => ({
-    url: `${baseUrl}/spot/${spot.id}`,
+    url: `${baseUrl}/bai-xe/${spot.slug || spot.id}`,
     lastModified: spot.updatedAt || now,
     changeFrequency: 'weekly' as const,
     priority: 0.8,
