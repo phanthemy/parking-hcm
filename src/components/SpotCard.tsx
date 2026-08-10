@@ -308,38 +308,24 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
                 </div>
               )}
             </>
-          ) : spot.latitude && spot.longitude ? (
-            /* Real Google Satellite View fallback (No API Key required) */
-            isVisible ? (
-              <iframe
-                title={spot.name}
-                loading="lazy"
-                src={`https://maps.google.com/maps?q=${spot.latitude},${spot.longitude}&z=18&t=k&output=embed`}
-                style={{
-                  position: 'absolute', top: 0, left: 0,
-                  width: '100%', height: '100%',
-                  border: 'none',
-                  pointerEvents: 'none',
-                }}
-              />
-            ) : (
-              <div style={{
-                position: 'absolute', top: 0, left: 0,
-                width: '100%', height: '100%',
-                background: 'linear-gradient(135deg, #1a1a28, #0f0f1a)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '28px', opacity: 0.4,
-              }}>{typeIcon}</div>
-            )
           ) : (
             <div style={{
               position: 'absolute', top: 0, left: 0,
               width: '100%', height: '100%',
-              background: 'linear-gradient(135deg, #1e1e2d, #12121a)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '32px', opacity: 0.5,
+              background: '#1a1a24'
             }}>
-              {typeIcon}
+              <img 
+                src="/images/parking-default.jpg" 
+                alt={`${spot.name} - Bãi đỗ xe`}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+              <div style={{
+                position: 'absolute', bottom: '8px', right: '8px',
+                background: 'rgba(0,0,0,0.6)', color: '#fff',
+                padding: '2px 8px', borderRadius: '10px', fontSize: '10px',
+              }}>
+                Ảnh minh họa
+              </div>
             </div>
           )}
 
