@@ -64,10 +64,18 @@ export default function AdminFacebookPage() {
   // Lightbox state
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
 
-  // Spot search for matching
-  const [matchingPostId, setMatchingPostId] = useState<string | null>(null);
-  const [spotSearch, setSpotSearch] = useState('');
-  const [spotResults, setSpotResults] = useState<{ id: string; name: string; address: string }[]>([]);
+  // Smart extraction modal
+  const [extractModal, setExtractModal] = useState<{
+    postId: string;
+    extracted: {
+      name: string; address: string; phone: string; pricePerHour: number;
+      priceMonthly: string; type: string; features: string[];
+    };
+    existingSpots: { id: string; name: string; address: string }[];
+    postImages: string[];
+    loading: boolean;
+  } | null>(null);
+  const [editExtracted, setEditExtracted] = useState<any>(null);
 
   useEffect(() => {
     const role = user?.role?.toString().toUpperCase();
@@ -120,7 +128,6 @@ export default function AdminFacebookPage() {
       alert('Lỗi: ' + (err.message || 'Thử lại'));
     } finally {
       setActionLoading(null);
-      setMatchingPostId(null);
     }
   };
 
@@ -155,18 +162,49 @@ export default function AdminFacebookPage() {
 
   const handleDeleteConfig = async (id: string) => {
     if (!confirm('Xóa nhóm này?')) return;
-    await api.delete('/api/admin/facebook/configs', { data: { id } });
+    await fetch('/api/admin/facebook/configs', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     fetchConfigs();
   };
 
-  // Spot search
-  const searchSpots = async (q: string) => {
-    setSpotSearch(q);
-    if (q.length < 2) { setSpotResults([]); return; }
+  // Smart extract & assign
+  const handleExtract = async (postId: string) => {
+    setExtractModal({ postId, extracted: { name: '', address: '', phone: '', pricePerHour: 0, priceMonthly: '', type: 'PARKING_LOT', features: [] }, existingSpots: [], postImages: [], loading: true });
     try {
-      const res = await api.get<{ spots: any[] }>(`/api/spots?search=${q}&limit=5`);
-      setSpotResults((res.spots || []).map((s: any) => ({ id: s.id, name: s.name, address: s.address })));
-    } catch { setSpotResults([]); }
+      const res = await api.post<any>('/api/admin/facebook/extract', { postId });
+      setExtractModal({ postId, ...res, loading: false });
+      setEditExtracted({ ...res.extracted });
+    } catch {
+      alert('Không thể trích xuất. Thử lại.');
+      setExtractModal(null);
+    }
+  };
+
+  const handleCreateSpot = async () => {
+    if (!extractModal || !editExtracted) return;
+    try {
+      await api.put('/api/admin/facebook/extract', {
+        postId: extractModal.postId,
+        name: editExtracted.name,
+        address: editExtracted.address,
+        phone: editExtracted.phone,
+        type: editExtracted.type,
+        pricePerHour: editExtracted.pricePerHour,
+        images: extractModal.postImages
+      });
+      setExtractModal(null);
+      setEditExtracted(null);
+      fetchPosts();
+      alert('✅ Đã tạo bãi xe mới và gán bài viết!');
+    } catch (err: any) {
+      alert('Lỗi: ' + (err.message || 'Thử lại'));
+    }
+  };
+
+  const handleAssignExisting = async (spotId: string) => {
+    if (!extractModal) return;
+    await handleAction(extractModal.postId, 'approve', spotId);
+    setExtractModal(null);
+    setEditExtracted(null);
   };
 
   const statusColors: Record<string, string> = {
@@ -356,12 +394,12 @@ export default function AdminFacebookPage() {
                             </>
                           )}
                           
-                          {/* Match with Spot button */}
+                          {/* Smart Extract & Assign button */}
                           <button
-                            onClick={() => setMatchingPostId(matchingPostId === post.id ? null : post.id)}
+                            onClick={() => handleExtract(post.id)}
                             style={{
                               padding: '6px 14px', borderRadius: '8px', border: '1px solid rgba(59,130,246,0.4)',
-                              background: matchingPostId === post.id ? 'rgba(59,130,246,0.15)' : 'transparent',
+                              background: 'transparent',
                               color: '#3b82f6', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
                             }}
                           >
@@ -379,43 +417,6 @@ export default function AdminFacebookPage() {
                             🗑️
                           </button>
                         </div>
-
-                        {/* Spot Matching Dropdown */}
-                        {matchingPostId === post.id && (
-                          <div style={{
-                            marginTop: '12px', padding: '12px', background: 'rgba(59,130,246,0.08)',
-                            borderRadius: '10px', border: '1px solid rgba(59,130,246,0.2)'
-                          }}>
-                            <input
-                              type="text"
-                              placeholder="Tìm bãi xe để gán..."
-                              value={spotSearch}
-                              onChange={e => searchSpots(e.target.value)}
-                              style={{
-                                width: '100%', padding: '8px 12px', background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px',
-                                color: '#fff', fontSize: '13px'
-                              }}
-                            />
-                            {spotResults.length > 0 && (
-                              <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                {spotResults.map(s => (
-                                  <button
-                                    key={s.id}
-                                    onClick={() => handleAction(post.id, 'approve', s.id)}
-                                    style={{
-                                      padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
-                                      background: 'rgba(255,255,255,0.04)', color: '#fff', cursor: 'pointer',
-                                      textAlign: 'left', fontSize: '13px'
-                                    }}
-                                  >
-                                    🅿️ <strong>{s.name}</strong> — <span style={{ opacity: 0.5, fontSize: '11px' }}>{s.address}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </div>
 
                       {/* Images Grid */}
@@ -572,6 +573,146 @@ export default function AdminFacebookPage() {
           </>
         )}
       </main>
+
+      {/* Smart Extraction Modal */}
+      {extractModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
+          zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }}>
+          <div style={{
+            background: '#13131a', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '16px',
+            width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.8)'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+            }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700 }}>🔗 Gán bãi xe từ bài viết</h3>
+              <button onClick={() => { setExtractModal(null); setEditExtracted(null); }}
+                style={{ background: 'none', border: 'none', color: '#a0a0b0', fontSize: '24px', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            {extractModal.loading ? (
+              <div style={{ padding: '60px', textAlign: 'center' }}>
+                <p style={{ fontSize: '32px' }}>🔍</p>
+                <p style={{ opacity: 0.6 }}>Đang trích xuất thông tin...</p>
+              </div>
+            ) : editExtracted && (
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Auto-extracted info */}
+                <div style={{
+                  padding: '12px 16px', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.1))',
+                  border: '1px solid rgba(16,185,129,0.2)'
+                }}>
+                  <p style={{ fontSize: '12px', color: '#10b981', fontWeight: 600, margin: '0 0 8px 0' }}>
+                    🤖 AI đã tự trích xuất thông tin — chỉnh sửa nếu cần:
+                  </p>
+                  {editExtracted.features?.length > 0 && (
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      {editExtracted.features.map((f: string, i: number) => (
+                        <span key={i} style={{
+                          padding: '2px 8px', borderRadius: '12px', fontSize: '11px',
+                          background: 'rgba(59,130,246,0.15)', color: '#93c5fd'
+                        }}>{f}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Editable fields */}
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Tên bãi xe</label>
+                    <input type="text" value={editExtracted.name}
+                      onChange={e => setEditExtracted({ ...editExtracted, name: e.target.value })}
+                      style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Loại</label>
+                    <select value={editExtracted.type}
+                      onChange={e => setEditExtracted({ ...editExtracted, type: e.target.value })}
+                      style={{ width: '100%', padding: '10px 14px', background: '#1c1c28', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }}>
+                      <option value="PARKING_LOT">🅿️ Bãi đỗ xe</option>
+                      <option value="CARWASH">🚿 Rửa xe</option>
+                      <option value="GARAGE">🔧 Garage</option>
+                      <option value="SERVICE">🏢 Dịch vụ khác</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Địa chỉ</label>
+                  <input type="text" value={editExtracted.address}
+                    onChange={e => setEditExtracted({ ...editExtracted, address: e.target.value })}
+                    style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Số điện thoại</label>
+                    <input type="text" value={editExtracted.phone}
+                      onChange={e => setEditExtracted({ ...editExtracted, phone: e.target.value })}
+                      style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', color: '#a0a0b0', marginBottom: '4px' }}>Giá {editExtracted.priceMonthly || ''}</label>
+                    <input type="number" value={editExtracted.pricePerHour}
+                      onChange={e => setEditExtracted({ ...editExtracted, pricePerHour: parseInt(e.target.value) || 0 })}
+                      style={{ width: '100%', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: '#fff', fontSize: '14px' }} />
+                  </div>
+                </div>
+
+                {/* Post images */}
+                {extractModal.postImages.length > 0 && (
+                  <div>
+                    <p style={{ fontSize: '12px', color: '#a0a0b0', marginBottom: '8px' }}>📸 Ảnh sẽ được thêm ({extractModal.postImages.length})</p>
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto' }}>
+                      {extractModal.postImages.map((url, i) => (
+                        <img key={i} src={url} alt="" style={{ width: '70px', height: '70px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Existing spots match */}
+                {extractModal.existingSpots.length > 0 && (
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                    <p style={{ fontSize: '13px', fontWeight: 600, color: '#f59e0b', marginBottom: '8px' }}>
+                      ⚠️ Có thể trùng với bãi xe đã có:
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {extractModal.existingSpots.map(s => (
+                        <button key={s.id} onClick={() => handleAssignExisting(s.id)} style={{
+                          padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(245,158,11,0.3)',
+                          background: 'rgba(245,158,11,0.08)', color: '#fff', cursor: 'pointer', textAlign: 'left', fontSize: '13px'
+                        }}>
+                          🅿️ <strong>{s.name}</strong> — <span style={{ opacity: 0.5, fontSize: '11px' }}>{s.address}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action buttons */}
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                  <button onClick={() => { setExtractModal(null); setEditExtracted(null); }}
+                    className="btn-secondary" style={{ padding: '10px 20px', fontSize: '14px' }}>
+                    ✕ Hủy
+                  </button>
+                  <button onClick={handleCreateSpot}
+                    className="btn-primary" style={{ padding: '10px 24px', fontSize: '14px', fontWeight: 700 }}>
+                    ➕ Tạo bãi xe mới
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Lightbox */}
       {lightboxImg && (

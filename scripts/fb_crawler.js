@@ -137,14 +137,53 @@ function findMediaDeep(obj, post, depth = 0) {
   }
 }
 
-// Fuzzy match
-async function matchWithSpot(text) {
-  const spots = await prisma.parkingSpot.findMany({ select: { id: true, name: true } });
+// Smart classify: OFFER (chủ bãi đăng) vs SEEK (người tìm bãi)
+function classifyPost(text) {
   const tl = text.toLowerCase();
-  for (const s of spots) {
-    if (s.name.length > 5 && tl.includes(s.name.toLowerCase())) return s.id;
+  
+  // SEEK patterns: people looking for parking
+  const seekPatterns = [
+    /(?:em|mình|tôi|mọi người|ai|anh chị|cả nhà|mn)\s+(?:cần|muốn|đang)?\s*(?:tìm|kiếm|hỏi)/i,
+    /có\s+(?:bãi|chỗ)\s+(?:nào|gì)/i,
+    /(?:tìm|kiếm)\s+(?:bãi|chỗ)\s+(?:giữ|gửi|đậu)/i,
+    /(?:chỉ giúp|giúp mình|cho .* hỏi|xin .* vị trí)/i,
+    /(?:mong|nhờ)\s+(?:anh|chị|ae|mọi người|ad)/i,
+    /(?:khu vực|gần|quanh)\s+.*\s+có\s+(?:bãi|chỗ)/i,
+    /cần tìm\s+(?:bãi|chỗ)/i,
+    /(?:em|mình)\s+(?:cần|kiếm|tìm)/i,
+  ];
+  
+  // OFFER patterns: owners advertising their parking lot
+  const offerPatterns = [
+    /(?:nhận giữ|nhận gửi|cho thuê|bãi .* bên em|bãi .* nhà mình|bãi xe .* mời)/i,
+    /(?:bãi giữ xe|bãi đậu|bãi xe)\s+(?:ô tô|xe máy)?\s*(?:24|rộng|sạch|an toàn|có mái)/i,
+    /(?:giá|phí)\s*:?\s*\d+/i,
+    /(?:liên hệ|lh|sdt|hotline|zalo)\s*:?\s*0\d{8,9}/i,
+    /0\d{8,9}/,
+    /(?:khai trương|giảm giá|khuyến mãi|slot|chỗ trống)/i,
+    /(?:địa chỉ|đ\/c)\s*:?\s*.{5,}/i,
+    /(?:bảng giá|giá .* tháng|giá .* ngày|\/tháng|\/ngày|vnđ)/i,
+    /(?:mái che|camera|bảo vệ|an ninh|24\/7|24\/24)/i,
+    /(?:tuyển|tuyển nhân viên)/i,
+  ];
+  
+  let seekScore = 0;
+  let offerScore = 0;
+  
+  for (const p of seekPatterns) {
+    if (p.test(tl)) seekScore++;
   }
-  return null;
+  for (const p of offerPatterns) {
+    if (p.test(tl)) offerScore++;
+  }
+  
+  // Bonus for images (owners usually post photos)
+  // This is checked by caller
+  
+  if (seekScore > offerScore) return 'seek';
+  if (offerScore > 0) return 'offer';
+  if (seekScore > 0) return 'seek';
+  return 'unknown';
 }
 
 // Save post to DB
@@ -154,6 +193,27 @@ async function savePost(post, groupUrl) {
   const existing = await prisma.facebookPost.findUnique({ where: { fbPostId: String(post.postId) } }).catch(()=>null);
   if (existing) return null;
 
+  // Auto-classify
+  const category = classifyPost(post.text);
+  
+  // Auto-reject SEEK posts (people looking for parking = spam for our purposes)
+  if (category === 'seek') {
+    return prisma.facebookPost.create({
+      data: {
+        fbPostId: String(post.postId),
+        groupUrl,
+        content: post.text.substring(0, 5000),
+        authorName: post.author || null,
+        postDate: new Date(),
+        isComment: false,
+        status: 'rejected',
+        matchedSpotId: null,
+        images: { create: [] }
+      }
+    });
+  }
+
+  // For OFFER posts: download images
   const savedImages = [];
   for (let i = 0; i < post.images.length && i < 6; i++) {
     const filename = `fb_${post.postId}_${i+1}.jpg`;
