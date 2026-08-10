@@ -695,9 +695,9 @@ export default function AdminFacebookPage() {
                     </button>
                   </div>
 
-                  {/* Geocode Result + Mini Map */}
-                  {geoResult && (
-                    <div style={{ marginTop: '10px', borderRadius: '10px', overflow: 'hidden', border: '1px solid rgba(16,185,129,0.3)' }}>
+                  {/* Interactive Map - Always visible */}
+                  <div style={{ marginTop: '10px', borderRadius: '10px', overflow: 'hidden', border: `1px solid ${geoResult ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.15)'}` }}>
+                    {geoResult ? (
                       <div style={{ padding: '8px 12px', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '16px' }}>✅</span>
                         <div style={{ flex: 1 }}>
@@ -706,22 +706,101 @@ export default function AdminFacebookPage() {
                         </div>
                         <span style={{ fontSize: '11px', color: '#6b7280' }}>{geoResult.lat.toFixed(5)}, {geoResult.lng.toFixed(5)}</span>
                       </div>
-                      <iframe
-                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || 'AIzaSyCaf1H1dOg1sQvCE0-UHiXogHSlcRe0FTg'}&q=${geoResult.lat},${geoResult.lng}&zoom=17&maptype=roadmap`}
-                        style={{ width: '100%', height: '180px', border: 'none' }}
-                        allowFullScreen
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
+                    ) : (
+                      <div style={{ padding: '8px 12px', background: 'rgba(245,158,11,0.1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '16px' }}>👆</span>
+                        <p style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 600, margin: 0 }}>
+                          {geoLoading ? '🔍 Đang tìm tọa độ...' : 'Click vào bản đồ để chọn vị trí bãi xe'}
+                        </p>
+                      </div>
+                    )}
+                    <div
+                      id="extract-map-container"
+                      ref={(el) => {
+                        if (!el) return;
+                        // Prevent re-init
+                        if ((el as any).__mapInit) {
+                          // Update marker position if geoResult changed
+                          const map = (el as any).__mapInstance;
+                          const marker = (el as any).__mapMarker;
+                          if (map && geoResult) {
+                            map.setView([geoResult.lat, geoResult.lng], 17);
+                            if (marker) marker.setLatLng([geoResult.lat, geoResult.lng]);
+                          }
+                          return;
+                        }
+                        (el as any).__mapInit = true;
 
-                  {geoLoading && (
-                    <p style={{ fontSize: '12px', color: '#f59e0b', marginTop: '8px' }}>🔍 Đang tìm tọa độ từ địa chỉ...</p>
-                  )}
+                        // Load Leaflet CSS
+                        if (!document.getElementById('leaflet-css')) {
+                          const link = document.createElement('link');
+                          link.id = 'leaflet-css';
+                          link.rel = 'stylesheet';
+                          link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                          document.head.appendChild(link);
+                        }
 
-                  {!geoResult && !geoLoading && editExtracted.address && (
-                    <p style={{ fontSize: '11px', color: '#6b7280', marginTop: '6px' }}>💡 Nhấn "Tìm vị trí" hoặc rời ô địa chỉ để tự tìm tọa độ</p>
-                  )}
+                        // Load Leaflet JS then init map
+                        const initMap = () => {
+                          const L = (window as any).L;
+                          if (!L) return;
+                          
+                          const centerLat = geoResult?.lat || 10.78;
+                          const centerLng = geoResult?.lng || 106.69;
+                          const zoom = geoResult ? 17 : 13;
+
+                          const map = L.map(el, { zoomControl: true }).setView([centerLat, centerLng], zoom);
+                          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap'
+                          }).addTo(map);
+
+                          const pinIcon = L.divIcon({
+                            html: '<div style="font-size:28px;text-align:center;margin-top:-14px;margin-left:-5px;">📍</div>',
+                            iconSize: [30, 30],
+                            className: ''
+                          });
+
+                          const marker = L.marker([centerLat, centerLng], { icon: pinIcon, draggable: true }).addTo(map);
+                          
+                          // Click on map to move pin
+                          map.on('click', (e: any) => {
+                            marker.setLatLng(e.latlng);
+                            setGeoResult({
+                              lat: e.latlng.lat,
+                              lng: e.latlng.lng,
+                              formattedAddress: editExtracted?.address || `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`
+                            });
+                          });
+
+                          // Drag pin
+                          marker.on('dragend', () => {
+                            const pos = marker.getLatLng();
+                            setGeoResult({
+                              lat: pos.lat,
+                              lng: pos.lng,
+                              formattedAddress: editExtracted?.address || `${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}`
+                            });
+                          });
+
+                          (el as any).__mapInstance = map;
+                          (el as any).__mapMarker = marker;
+
+                          // Fix map size after render
+                          setTimeout(() => map.invalidateSize(), 200);
+                        };
+
+                        if ((window as any).L) {
+                          setTimeout(initMap, 100);
+                        } else {
+                          const script = document.createElement('script');
+                          script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                          script.onload = () => setTimeout(initMap, 100);
+                          document.head.appendChild(script);
+                        }
+                      }}
+                      style={{ width: '100%', height: '220px' }}
+                    />
+                  </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
