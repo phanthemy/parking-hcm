@@ -573,7 +573,7 @@ export default function HomePage() {
                 &#9664; {t('back')}
               </button>
               <div style={{ marginBottom: '16px' }}>
-                <ImageGallery images={selectedSpot.images || []} altPrefix={selectedSpot.name} />
+                <ImageGallery images={selectedSpot.images || []} altPrefix={selectedSpot.name} spotType={selectedSpot.type} spotId={selectedSpot.id} />
               </div>
               <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px' }}>{selectedSpot.name}</h2>
               <p style={{ color: '#a0a0b0', marginBottom: '16px' }}>{selectedSpot.address}</p>
@@ -801,7 +801,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <div style={{ marginBottom: '12px', padding: '0 4px' }}>
-                  <ImageGallery images={selectedSpot.images || []} altPrefix={selectedSpot.name} />
+                  <ImageGallery images={selectedSpot.images || []} altPrefix={selectedSpot.name} spotType={selectedSpot.type} spotId={selectedSpot.id} />
                 </div>
                 <div className="spot-info">
                   <div className="spot-name">{selectedSpot.name}</div>

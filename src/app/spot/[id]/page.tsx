@@ -135,7 +135,7 @@ export default function SpotDetailPage() {
         </Link>
 
         {/* Image Gallery */}
-        <ImageGallery images={spot.images} altPrefix={spot.name} />
+        <ImageGallery images={spot.images} altPrefix={spot.name} spotType={spot.type} spotId={spot.id} />
 
         {/* Header Info */}
         <div style={{ marginTop: '24px' }}>

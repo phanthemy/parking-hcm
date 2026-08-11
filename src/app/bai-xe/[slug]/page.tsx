@@ -88,7 +88,7 @@ export default function BaiXeSlugPage() {
 
         {/* Image Gallery */}
         <div style={{ marginBottom: '24px' }}>
-          <ImageGallery images={spot.images || []} altPrefix={spot.name} />
+          <ImageGallery images={spot.images || []} altPrefix={spot.name} spotType={spot.type} spotId={spot.id} />
         </div>
 
         {/* Title & Info */}

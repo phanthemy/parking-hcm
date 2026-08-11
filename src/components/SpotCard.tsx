@@ -6,6 +6,7 @@ import type { Spot } from '@/lib/types';
 import { formatCurrency, formatHours } from '@/lib/format';
 import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
 import { useLocale } from '@/contexts/LocaleContext';
+import { getDefaultImageForSpot } from '@/lib/images';
 
 interface SpotCardProps {
   spot: Spot;
@@ -315,8 +316,8 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
               background: '#1a1a24'
             }}>
               <img 
-                src="/images/parking-default.jpg" 
-                alt={`${spot.name} - Bãi đỗ xe`}
+                src={getDefaultImageForSpot(spot.type, spot.id)} 
+                alt={`${spot.name}`}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
               <div style={{

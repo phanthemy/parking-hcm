@@ -1,16 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+import { getDefaultImageForSpot } from '@/lib/images';
+import { SPOT_TYPE_LABELS } from '@/lib/types';
 
 interface ImageGalleryProps {
   images: string[];
   altPrefix?: string;
+  spotType?: string;
+  spotId?: string;
 }
 
-export default function ImageGallery({ images, altPrefix = 'Hình ảnh' }: ImageGalleryProps) {
+export default function ImageGallery({ images, altPrefix = 'Địa điểm', spotType, spotId }: ImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!images || images.length === 0) {
+    const defaultImg = getDefaultImageForSpot(spotType, spotId);
     return (
       <div
         style={{
@@ -22,8 +27,8 @@ export default function ImageGallery({ images, altPrefix = 'Hình ảnh' }: Imag
         }}
       >
         <img 
-          src="/images/parking-default.jpg" 
-          alt={`${altPrefix} - Bãi đỗ xe`}
+          src={defaultImg} 
+          alt={`${altPrefix}`}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
         />
         <div style={{
