@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const lat = searchParams.get('lat') ? parseFloat(searchParams.get('lat')!) : null;
     const lng = searchParams.get('lng') ? parseFloat(searchParams.get('lng')!) : null;
-    const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : 5; // default 5km
+    const radius = searchParams.get('radius') ? parseFloat(searchParams.get('radius')!) : 50; // default 50km — cover all of HCMC
     const type = searchParams.get('type');
     const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : null;
     const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : null;
