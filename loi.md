@@ -99,6 +99,6 @@
 - **Nguyên nhân**: Fallback image trong `SpotCard.tsx` và `ImageGallery.tsx` chỉ dùng duy nhất 1 ảnh `parking-default.jpg`, dẫn đến nhà vệ sinh, quán cà phê, garage... đều hiện hình bãi đỗ xe ngoài trời gây phản cảm và vô lý.
 - **Fix**: 
   1. Tạo bộ ảnh đại diện riêng cho từng danh mục (`PARKING_LOT`, `CAFE`, `RESTAURANT`, `RESTROOM`, `GARAGE`, `CARWASH`, `SERVICE`).
-  2. Tạo module `src/lib/images.ts` với hàm `getDefaultImageForSpot(type, spotId)` chọn ảnh theo đúng loại hình dịch vụ + phân bổ hash ID để các địa điểm không trùng ảnh hoàn toàn.
-  3. Chạy script seed gán ảnh chuẩn danh mục vào DB `ParkingImage` cho 408 địa điểm.
-- **Bài học**: Tuyệt đối không dùng 1 ảnh đại diện chung duy nhất cho các dịch vụ khác nhau; mỗi danh mục phải có hình ảnh riêng phù hợp ngữ cảnh.
+  2. Mở rộng kho ảnh lên 100+ ảnh chất lượng cao độc lập (Unsplash HD CDN + local category images).
+  3. Xây dựng hàm `getDefaultImageForSpot(type, spotId)` và script seed DB đảm bảo 408 địa điểm hiển thị hình ảnh phong phú, đa dạng, không bị lặp lại đơn điệu.
+- **Bài học**: Tuyệt đối không dùng 1-2 ảnh trùng lặp duy nhất cho hàng trăm địa điểm; phải dùng kho ảnh đa dạng đúng danh mục.
