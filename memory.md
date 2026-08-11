@@ -101,3 +101,21 @@ cool-bohr/
 - Production: `baidoxe.nextapp.vn` / `parking.nextapp.vn`
 - Method: SCP + SSH + `npm run build` + `pm2 restart parking-hcm`
 
+---
+
+## 2026-08-11: Chuẩn hóa bộ ảnh đại diện theo từng danh mục dịch vụ
+
+### Quyết định & Đã thực hiện:
+- **Tạo bộ ảnh đại diện chuẩn theo 7 danh mục**:
+  - `PARKING_LOT`: Bãi xe ô tô/xe máy ngoài trời & nhà xe tầng
+  - `CAFE`: Quán cà phê hiện đại có bãi đỗ xe
+  - `RESTAURANT`: Nhà hàng ẩm thực có bãi đậu xe
+  - `RESTROOM`: Công trình nhà vệ sinh công cộng sạch đẹp
+  - `GARAGE`: Xưởng sửa chữa xe ô tô/xe máy chuyên nghiệp
+  - `CARWASH`: Trung tâm rửa xe & chăm sóc xe
+  - `SERVICE`: Khu dịch vụ tiện ích tổng hợp
+- **Xử lý phân bổ ảnh**:
+  - Viết module `src/lib/images.ts` dùng hash ID của địa điểm để phân bổ biến thể ảnh trong cùng loại, giúp các card không bị lặp lại 100% giống hệt nhau.
+  - Seed dữ liệu vào cơ sở dữ liệu `ParkingImage` cho 408 địa điểm.
+  - Cập nhật `SpotCard.tsx`, `ImageGallery.tsx`, trang chi tiết `bai-xe/[slug]`, `spot/[id]`, và `page.tsx`.
+

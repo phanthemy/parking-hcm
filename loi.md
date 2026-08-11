@@ -89,3 +89,16 @@
 - **Nguyên nhân**: FAB position `fixed; bottom: 90px` → nằm đúng vùng action buttons của bottom sheet detail
 - **Fix**: Chỉ hiện FAB khi `bottomSheetState === 'peek'`, ẩn khi detail/full
 - **Bài học**: Floating buttons phải kiểm tra overlap với tất cả trạng thái bottom sheet
+
+---
+
+## 2026-08-11: Lỗi hiển thị ảnh đại diện danh mục
+
+## Lỗi 17: Tất cả địa điểm (Quán ăn, Café, WC, Sửa xe, Bãi xe...) dùng chung 1 ảnh bãi xe outdoor
+- **Thời điểm**: 2026-08-11
+- **Nguyên nhân**: Fallback image trong `SpotCard.tsx` và `ImageGallery.tsx` chỉ dùng duy nhất 1 ảnh `parking-default.jpg`, dẫn đến nhà vệ sinh, quán cà phê, garage... đều hiện hình bãi đỗ xe ngoài trời gây phản cảm và vô lý.
+- **Fix**: 
+  1. Tạo bộ ảnh đại diện riêng cho từng danh mục (`PARKING_LOT`, `CAFE`, `RESTAURANT`, `RESTROOM`, `GARAGE`, `CARWASH`, `SERVICE`).
+  2. Tạo module `src/lib/images.ts` với hàm `getDefaultImageForSpot(type, spotId)` chọn ảnh theo đúng loại hình dịch vụ + phân bổ hash ID để các địa điểm không trùng ảnh hoàn toàn.
+  3. Chạy script seed gán ảnh chuẩn danh mục vào DB `ParkingImage` cho 408 địa điểm.
+- **Bài học**: Tuyệt đối không dùng 1 ảnh đại diện chung duy nhất cho các dịch vụ khác nhau; mỗi danh mục phải có hình ảnh riêng phù hợp ngữ cảnh.
