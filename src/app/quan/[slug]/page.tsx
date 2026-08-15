@@ -42,12 +42,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Không tìm thấy' };
   }
 
-  const title = `Bãi đỗ xe ${districtName} - Quán ăn, Café có chỗ đỗ xe | MapGo.vn`;
-  const description = `Danh sách bãi đỗ xe ô tô, xe máy, quán ăn có bãi đỗ xe, quán cafe và tiện ích tại ${districtName}, TP.HCM. Tìm nhanh, chỉ đường GPS miễn phí.`;
+  const title = `Bãi đỗ xe ${districtName} - Giữ xe ô tô, xe máy, Quán ăn có chỗ đậu xe | MapGo.vn`;
+  const description = `Tìm bãi đỗ xe, bãi giữ xe ô tô xe máy tại ${districtName}, TP.HCM. Danh sách quán ăn có bãi đỗ xe, quán cafe có chỗ giữ xe, nhà vệ sinh công cộng. Giá giữ xe, giờ mở cửa, chỉ đường GPS miễn phí.`;
 
   return {
     title,
     description,
+    keywords: [
+      `bãi đỗ xe ${districtName}`,
+      `bãi giữ xe ${districtName}`,
+      `giữ xe ô tô ${districtName}`,
+      `giữ xe máy ${districtName}`,
+      `đậu xe ${districtName}`,
+      `chỗ đậu xe ${districtName}`,
+      `chỗ giữ xe ${districtName}`,
+      `bãi đỗ xe gần đây ${districtName}`,
+      `giá giữ xe ${districtName}`,
+      `bãi xe giá rẻ ${districtName}`,
+      `quán ăn có bãi đỗ xe ${districtName}`,
+      `quán ăn có chỗ giữ xe ${districtName}`,
+      `quán cafe đậu xe ô tô ${districtName}`,
+      `quán cafe có chỗ giữ xe ${districtName}`,
+      `nhà vệ sinh công cộng ${districtName}`,
+      `trạm xăng ${districtName}`,
+      `rửa xe ${districtName}`,
+      `bãi đỗ xe ô tô 24h ${districtName}`,
+      `gửi xe qua đêm ${districtName}`,
+    ],
     openGraph: {
       title,
       description,

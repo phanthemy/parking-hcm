@@ -27,13 +27,39 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     
     const typeLabel = SPOT_TYPE_LABELS[spot.type as keyof typeof SPOT_TYPE_LABELS] || 'Bãi đỗ xe';
     const title = `${spot.name} - ${typeLabel} tại ${district}`;
-    const description = `${spot.name} - ${spot.address}. ${spot.description || ''} Xem chi tiết giá, giờ mở cửa và chỉ đường GPS trên MapGo.vn.`;
+    
+    // Mô tả SEO chi tiết hơn
+    const priceInfo = spot.pricePerHour > 0 ? ` Giá từ ${spot.pricePerHour.toLocaleString('vi-VN')}đ/giờ.` : '';
+    const hoursInfo = spot.openTime && spot.closeTime ? ` Mở cửa ${spot.openTime} - ${spot.closeTime}.` : '';
+    const description = `${spot.name} - ${typeLabel} tại ${spot.address}.${priceInfo}${hoursInfo} ${spot.description || ''} Xem chi tiết giá giữ xe, giờ mở cửa và chỉ đường GPS trên MapGo.vn.`.trim();
 
     const imageUrl = spot.images?.[0]?.url;
+
+    // Keywords động theo loại spot + quận
+    const typeKeywords: Record<string, string[]> = {
+      'PARKING_LOT': ['bãi đỗ xe', 'bãi giữ xe', 'chỗ đậu xe', 'chỗ giữ xe', 'gửi xe'],
+      'RESTAURANT': ['quán ăn có bãi đỗ xe', 'nhà hàng có chỗ đậu xe', 'quán ăn có chỗ giữ xe'],
+      'CAFE': ['quán cafe có bãi đỗ xe', 'quán cà phê có chỗ giữ xe', 'quán cafe đậu xe ô tô'],
+      'RESTROOM': ['nhà vệ sinh công cộng', 'toilet gần đây', 'WC công cộng'],
+      'SERVICE': ['trạm xăng', 'rửa xe', 'sửa xe', 'dịch vụ xe'],
+    };
+    const spotKeywords = (typeKeywords[spot.type] || ['bãi đỗ xe']).flatMap(kw => [
+      `${kw} ${district}`,
+      `${kw} gần đây`,
+    ]);
 
     return {
       title,
       description,
+      keywords: [
+        spot.name,
+        `${typeLabel} ${district}`,
+        `${typeLabel} ${spot.address.split(',')[0]}`,
+        ...spotKeywords,
+        `giá giữ xe ${district}`,
+        `giữ xe ô tô ${district}`,
+        `giữ xe máy ${district}`,
+      ],
       openGraph: {
         title,
         description,
