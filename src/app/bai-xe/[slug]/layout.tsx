@@ -37,7 +37,7 @@ async function SpotStructuredData({ slug }: { slug: string }) {
   try {
     const spot = await prisma.parkingSpot.findFirst({
       where: { slug },
-      select: { name: true, address: true, description: true, lat: true, lng: true, phone: true, openTime: true, closeTime: true }
+      select: { name: true, address: true, description: true, lat: true, lng: true, phone: true, openTime: true, closeTime: true, pricePerHour: true }
     });
     if (!spot) return null;
 
@@ -48,6 +48,7 @@ async function SpotStructuredData({ slug }: { slug: string }) {
       geo: { '@type': 'GeoCoordinates', latitude: spot.lat, longitude: spot.lng },
       telephone: spot.phone || undefined,
       openingHours: `Mo-Su ${spot.openTime}-${spot.closeTime}`,
+      priceRange: spot.pricePerHour ? `${spot.pricePerHour} VND` : 'Liên hệ',
       description: spot.description || `${spot.name} tại ${spot.address}`,
       url: `https://mapgo.vn/bai-xe/${slug}`,
     };

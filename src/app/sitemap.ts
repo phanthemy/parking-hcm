@@ -48,6 +48,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly' as const,
   }));
 
+  const additionalUrls = [
+    { url: `${baseUrl}/bai-do-xe-tphcm`, priority: 0.95 },
+    { url: `${baseUrl}/blog`, priority: 0.7 },
+    { url: `${baseUrl}/blog/bai-do-xe-tphcm`, priority: 0.85 },
+    { url: `${baseUrl}/blog/bai-giu-xe-o-to-qua-dem`, priority: 0.85 },
+    { url: `${baseUrl}/blog/gia-gui-xe-o-to-tphcm`, priority: 0.85 },
+    { url: `${baseUrl}/blog/nha-ve-sinh-cong-cong-tphcm`, priority: 0.85 },
+    { url: `${baseUrl}/blog/quan-an-co-bai-do-xe`, priority: 0.85 },
+  ].map((p) => ({
+    ...p,
+    lastModified: now,
+    changeFrequency: 'weekly' as const,
+  }));
+
   return [
     {
       url: baseUrl,
@@ -59,6 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/auth/login`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.3 },
     { url: `${baseUrl}/auth/register`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.3 },
     // SEO Landing pages — high priority
+    ...additionalUrls,
     ...districtUrls,
     ...categoryUrls,
     // Individual spot pages
