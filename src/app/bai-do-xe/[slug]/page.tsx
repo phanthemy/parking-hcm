@@ -124,11 +124,25 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const config = DISTRICT_CONFIG[slug];
   if (!config) return {};
 
-  const title = `Bãi đỗ xe ${config.name} TP.HCM – Tìm nhanh qua GPS | MapGo`;
+  const title = `Bãi đỗ xe ${config.name} TP.HCM – Giữ xe ô tô xe máy | MapGo`;
+  // Tự động bổ sung keywords giữ xe/đậu xe/gửi xe cho mỗi quận
+  const autoKeywords = [
+    `giữ xe ô tô ${config.nameVi}`,
+    `giữ xe máy ${config.nameVi}`,
+    `gửi xe ${config.nameVi}`,
+    `đậu xe ${config.nameVi}`,
+    `chỗ giữ xe ${config.nameVi}`,
+    `giá giữ xe ${config.nameVi}`,
+    `bãi xe giá rẻ ${config.nameVi}`,
+    `quán ăn có chỗ giữ xe ${config.nameVi}`,
+    `quán cafe đậu xe ô tô ${config.nameVi}`,
+    `bãi đỗ xe 24h ${config.nameVi}`,
+    `gửi xe qua đêm ${config.nameVi}`,
+  ];
   return {
     title,
     description: config.description,
-    keywords: config.keywords,
+    keywords: [...config.keywords, ...autoKeywords],
     alternates: { canonical: `https://mapgo.vn/bai-do-xe/${slug}` },
     openGraph: {
       title,
