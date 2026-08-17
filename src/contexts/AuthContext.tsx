@@ -12,7 +12,7 @@ export interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (name: string, email: string, password: string, role: 'driver' | 'business') => Promise<void>;
   logout: () => void;
 }
@@ -22,7 +22,7 @@ export const AuthContext = createContext<AuthContextType>({
   token: null,
   isLoading: true,
   isAuthenticated: false,
-  login: async () => {},
+  login: async () => ({} as User),
   register: async () => {},
   logout: () => {},
 });
@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
     setToken(data.token);
     setUser(data.user);
+    return data.user;
   }, []);
 
   const register = useCallback(

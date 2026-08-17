@@ -1,4 +1,4 @@
-export type SpotType = 'PARKING_LOT' | 'RESTAURANT' | 'CAFE' | 'RESTROOM' | 'SERVICE';
+export type SpotType = 'PARKING_LOT' | 'RESTAURANT' | 'CAFE' | 'RESTROOM' | 'SERVICE' | 'GARAGE' | 'CARWASH';
 
 export interface Spot {
   id: string;
@@ -97,6 +97,8 @@ export const SPOT_TYPE_LABELS: Record<SpotType, string> = {
   CAFE: 'Café',
   RESTROOM: 'Vệ sinh',
   SERVICE: 'Dịch vụ',
+  GARAGE: 'Cứu hộ/Sửa xe',
+  CARWASH: 'Rửa xe',
 };
 
 export const SPOT_TYPE_ICONS: Record<SpotType, string> = {
@@ -104,5 +106,7 @@ export const SPOT_TYPE_ICONS: Record<SpotType, string> = {
   RESTAURANT: '🍜',
   CAFE: '☕',
   RESTROOM: '🚻',
-  SERVICE: '🔧',
+  SERVICE: '🏢',
+  GARAGE: '🔧',
+  CARWASH: '🛀',
 };

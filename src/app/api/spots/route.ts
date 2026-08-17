@@ -13,9 +13,10 @@ export async function GET(req: NextRequest) {
     const minPrice = searchParams.get('minPrice') ? parseFloat(searchParams.get('minPrice')!) : null;
     const maxPrice = searchParams.get('maxPrice') ? parseFloat(searchParams.get('maxPrice')!) : null;
     const search = searchParams.get('search');
-    const sort = searchParams.get('sort') || 'distance'; // distance/price/rating
+    const sort = searchParams.get('sort') || 'distance';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
+    const hasCarParking = searchParams.get('hasCarParking') === '1';
 
     // Base query
     const where: any = {};
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
     where.status = { in: ['active', 'ACTIVE'] };
 
     if (type) where.type = type;
+    if (hasCarParking) where.carSlots = { gt: 0 };
     if (minPrice !== null || maxPrice !== null) {
       where.basePricePerHour = {};
       if (minPrice !== null) where.basePricePerHour.gte = minPrice;
@@ -153,32 +155,82 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authResult = await requireRole(req, ['BUSINESS', 'ADMIN']);
+    // Allow any authenticated user (USER, BUSINESS, ADMIN) to post
+    const authResult = await authMiddleware(req);
     if (authResult.error) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return NextResponse.json({ error: 'Vui lòng đăng nhập để đăng tin' }, { status: 401 });
     }
 
     const data = await req.json();
     const userId = authResult.user.id;
 
-    const newSpot = await prisma.parkingSpot.create({
-      data: {
-        ...data,
-        userId,
-        status: 'PENDING', // usually pending until admin approves, but instruction says ACTIVE for auto-post then admin reviews later, let's use ACTIVE as requested: "tạo spot mới, status = ACTIVE (tự đăng, admin duyệt sau)"
-        // Correcting this based on instructions
-      }
-    });
-    
-    // Update status to ACTIVE if the requirement meant it literally. Instruction: "tạo spot mới, status = ACTIVE (tự đăng, admin duyệt sau)"
-    const activeSpot = await prisma.parkingSpot.update({
-      where: { id: newSpot.id },
-      data: { status: 'ACTIVE' }
-    });
+    // Validate required fields
+    if (!data.name || !data.address) {
+      return NextResponse.json({ error: 'Tên và địa chỉ là bắt buộc' }, { status: 400 });
+    }
 
-    return NextResponse.json(activeSpot, { status: 201 });
+    // Map frontend field names → DB schema field names
+    const spotData: any = {
+      name: data.name,
+      type: data.type || 'PARKING_LOT',
+      address: data.address,
+      // Frontend gửi latitude/longitude, DB dùng lat/lng
+      lat: parseFloat(data.latitude) || parseFloat(data.lat) || 10.7769,
+      lng: parseFloat(data.longitude) || parseFloat(data.lng) || 106.7009,
+      description: data.description || null,
+      phone: data.phone || null,
+      website: data.website || null,
+      carSlots: parseInt(data.carSlots) || 0,
+      bikeSlots: parseInt(data.bikeSlots) || 0,
+      // Frontend gửi pricePerHourCar, DB chỉ có pricePerHour
+      pricePerHour: parseFloat(data.pricePerHourCar) || parseFloat(data.pricePerHour) || 0,
+      openTime: data.openTime || '06:00',
+      closeTime: data.closeTime || '22:00',
+      ownerId: userId, // DB dùng ownerId không phải userId
+      status: 'ACTIVE', // Hiện ngay trên bản đồ, admin review sau
+      isPremium: false,
+    };
+
+    const newSpot = await prisma.parkingSpot.create({ data: spotData });
+
+    // Tạo BusinessProfile nếu có dịch vụ/menu/ưu đãi
+    const hasProfile = data.services || (data.menu && data.menu.length > 0) || (data.promotions && data.promotions.length > 0);
+    if (hasProfile) {
+      await prisma.businessProfile.create({
+        data: {
+          parkingSpotId: newSpot.id,
+          services: Array.isArray(data.services)
+            ? data.services.join(', ')
+            : (typeof data.services === 'string' ? data.services : null),
+          menuDescription: data.menu?.length
+            ? data.menu.map((m: any) => `${m.name}: ${m.price?.toLocaleString()}đ${m.description ? ' — ' + m.description : ''}`).join('\n')
+            : null,
+          specialOffers: data.promotions?.length
+            ? `${data.promotions[0].title}: ${data.promotions[0].description}`
+            : null,
+        }
+      }).catch(() => {}); // ignore nếu có lỗi tạo profile
+    }
+
+    // Lưu hình ảnh & video review thực tế nếu chủ cửa hàng tải lên
+    if (Array.isArray(data.images) && data.images.length > 0) {
+      await prisma.parkingImage.createMany({
+        data: data.images.filter((url: any) => typeof url === 'string' && url.trim().length > 0).map((url: string) => ({
+          url: url.trim(),
+          parkingSpotId: newSpot.id,
+        })),
+      }).catch(() => {});
+    }
+
+
+    return NextResponse.json({
+      ...newSpot,
+      latitude: newSpot.lat,
+      longitude: newSpot.lng,
+      message: '✅ Đã đăng tin thành công! Địa điểm đã hiển thị trên bản đồ.',
+    }, { status: 201 });
   } catch (error: any) {
-    console.error('Create spot error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Create spot error:', error?.message || error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }

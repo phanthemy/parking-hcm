@@ -58,7 +58,15 @@ export default function BusinessPostPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [newSpotId, setNewSpotId] = useState<string | null>(null);
   const { t } = useLocale();
+
+  // Redirect về login nếu chưa đăng nhập
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/auth/login?redirect=/business/post');
+    }
+  }, [authLoading, isAuthenticated, router]);
 
   // Auto-fill GPS from browser
   const getLocation = () => {
@@ -100,8 +108,8 @@ export default function BusinessPostPage() {
     e.preventDefault();
     setError('');
 
-    if (!form.name || !form.address || !form.phone) {
-      setError(t('required_fields_error'));
+    if (!form.name || !form.address) {
+      setError('Vui lòng nhập đầy đủ Tên địa điểm và Địa chỉ');
       return;
     }
 
@@ -111,15 +119,15 @@ export default function BusinessPostPage() {
         name: form.name,
         type: form.type,
         address: form.address,
-        latitude: parseFloat(form.latitude) || 10.7769,
-        longitude: parseFloat(form.longitude) || 106.7009,
+        latitude: parseFloat(form.latitude) || 10.7769,   // frontend vẫn gửi latitude
+        longitude: parseFloat(form.longitude) || 106.7009, // API sẽ map → lat/lng
         description: form.description,
         phone: form.phone,
         website: form.website,
         carSlots: parseInt(form.carSlots) || 0,
         bikeSlots: parseInt(form.bikeSlots) || 0,
-        pricePerHourCar: parseInt(form.pricePerHourCar) || undefined,
-        pricePerHourBike: parseInt(form.pricePerHourBike) || undefined,
+        pricePerHourCar: parseFloat(form.pricePerHourCar) || 0,
+        pricePerHourBike: parseFloat(form.pricePerHourBike) || 0,
         openTime: form.openTime,
         closeTime: form.closeTime,
         services: form.services
@@ -138,11 +146,12 @@ export default function BusinessPostPage() {
           : [],
       };
 
-      await api.post('/api/spots', body);
+      const res = await api.post('/api/spots', body) as any;
+      setNewSpotId(res?.id || null);
       setSuccess(true);
     } catch (err: unknown) {
       const apiErr = err as { message?: string };
-      setError(apiErr.message || t('post_error'));
+      setError(apiErr.message || 'Đăng tin thất bại, vui lòng thử lại');
     } finally {
       setIsSubmitting(false);
     }
@@ -173,18 +182,27 @@ export default function BusinessPostPage() {
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Header />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
-          <div className="card" style={{ padding: '40px', textAlign: 'center', maxWidth: '400px' }}>
-            <p style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</p>
-             <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>{t('post_success')}</h2>
-            <p style={{ fontSize: '14px', opacity: 0.6, marginBottom: '24px' }}>
-               {t('post_pending')}
-            </p>
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-              <Link href="/business/dashboard">
-                <button className="btn-primary">📊 {t('to_dashboard')}</button>
+          <div className="card" style={{ padding: '40px', textAlign: 'center', maxWidth: '440px' }}>
+            <p style={{ fontSize: '52px', marginBottom: '12px' }}>🎉</p>
+            <h2 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '8px' }}>Đăng tin thành công!</h2>
+            <div style={{
+              background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)',
+              borderRadius: 10, padding: '12px 16px', marginBottom: '20px'
+            }}>
+              <p style={{ fontSize: '14px', color: '#34d399', margin: 0, lineHeight: 1.6 }}>
+                ✅ Địa điểm của bạn đã <strong>hiển thị ngay trên bản đồ</strong>.<br/>
+                Admin sẽ review và gắn nhãn Verified sau.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <Link href={newSpotId ? `/?highlight=${newSpotId}` : '/'}>
+                <button className="btn-primary" style={{ padding: '10px 20px' }}>🗺️ Xem trên bản đồ</button>
               </Link>
-              <button className="btn-secondary" onClick={() => { setSuccess(false); setForm(initialFormData); }}>
-                ➕ {t('post_another')}
+              <Link href="/business/dashboard">
+                <button className="btn-secondary" style={{ padding: '10px 20px' }}>📊 Dashboard</button>
+              </Link>
+              <button className="btn-secondary" style={{ padding: '10px 20px' }} onClick={() => { setSuccess(false); setForm(initialFormData); setNewSpotId(null); }}>
+                ➕ Đăng thêm
               </button>
             </div>
           </div>
