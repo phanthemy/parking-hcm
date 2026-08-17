@@ -17,33 +17,35 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://mapgo.vn"),
   title: {
-    default: "Bãi đỗ xe TP.HCM – Tìm bãi giữ xe ô tô, quán ăn, WC gần đây | MapGo.vn",
+    default: "Bãi giữ xe TP.HCM – Tìm bãi gửi xe, chỗ đậu xe ô tô gần đây | MapGo.vn",
     template: "%s | MapGo.vn",
   },
-  description: "Bãi đỗ xe TP.HCM ❱ Tìm nhanh 408+ bãi giữ xe ô tô xe máy gần đây, quán ăn có chỗ đậu xe, quán cafe có bãi xe, nhà vệ sinh công cộng. Bản đồ GPS miễn phí 24/7.",
+  description: "Bãi giữ xe TP.HCM ❱ Tìm 408+ bãi giữ xe ô tô xe máy, chỗ đậu xe ô tô gần đây, bãi gửi xe qua đêm, quán ăn có bãi xe, WC công cộng. Bản đồ GPS Sài Gòn miễn phí 24/7.",
   keywords: [
-    // Head terms — ưu tiên rank cao nhất
+    // Head terms miền Nam — ưu tiên hàng đầu
+    "bãi giữ xe",
+    "bãi giữ xe TP.HCM",
+    "bãi giữ xe ô tô",
+    "bãi giữ xe gần đây",
+    "chỗ đậu xe ô tô",
+    "bãi gửi xe",
+    "bãi gửi xe ô tô TP.HCM",
+    "bãi gửi xe qua đêm",
     "bãi đỗ xe",
     "bãi đỗ xe TP.HCM",
-    "bãi đỗ xe gần đây",
     "bãi đỗ xe ô tô",
-    "bãi giữ xe ô tô",
-    "bãi giữ xe TP.HCM",
-    "tìm bãi đỗ xe",
-    "chỗ đậu xe ô tô",
-    "bãi đỗ xe ô tô gần đây",
+    "tìm bãi giữ xe",
+    "giá gửi xe ô tô TP.HCM",
     "parking TPHCM",
-    // Long-tail — dễ rank
+    // Long-tail & Tiện ích
     "quán ăn có chỗ đậu ô tô Quận 1",
-    "quán ăn có bãi đỗ xe TP.HCM",
-    "quán cafe có bãi xe ô tô Phú Nhuận",
+    "quán ăn có bãi giữ xe TP.HCM",
+    "quán cafe có chỗ đậu xe ô tô",
     "nhà vệ sinh công cộng gần Bến Thành",
     "nhà vệ sinh gần đây TP.HCM",
-    "bãi đỗ xe Quận 1",
-    "bãi đỗ xe Quận 7",
-    "bãi đỗ xe TP Thủ Đức",
-    "bãi giữ xe ô tô qua đêm",
-    "giá gửi xe ô tô TP.HCM",
+    "bãi giữ xe Quận 1",
+    "bãi giữ xe Quận 7",
+    "bãi giữ xe TP Thủ Đức",
     "chỉ đường bãi xe GPS",
     "bản đồ tiện ích Sài Gòn"
   ],
@@ -65,8 +67,8 @@ export const metadata: Metadata = {
     canonical: "https://mapgo.vn",
   },
   openGraph: {
-    title: "Bãi đỗ xe TP.HCM – Tìm bãi giữ xe ô tô, quán ăn có bãi xe, WC gần đây | MapGo.vn",
-    description: "Bãi đỗ xe TP.HCM ❱ Tìm nhanh 408+ bãi giữ xe ô tô xe máy gần đây, quán ăn có chỗ đậu xe, quán cafe có bãi xe, nhà vệ sinh công cộng. Bản đồ GPS miễn phí 24/7.",
+    title: "Bãi giữ xe TP.HCM – Tìm bãi gửi xe, chỗ đậu xe ô tô gần đây | MapGo.vn",
+    description: "Bãi giữ xe TP.HCM ❱ Tìm 408+ bãi giữ xe ô tô xe máy, chỗ đậu xe ô tô gần đây, bãi gửi xe qua đêm, quán ăn có bãi xe, WC công cộng. Bản đồ GPS Sài Gòn miễn phí 24/7.",
     url: "https://mapgo.vn",
     siteName: "MapGo.vn",
     images: [
@@ -82,8 +84,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Bãi đỗ xe TP.HCM – Tìm bãi giữ xe ô tô gần đây | MapGo.vn",
-    description: "Bãi đỗ xe TP.HCM ❱ 408+ bãi giữ xe ô tô xe máy, quán ăn có chỗ đậu xe, quán cafe có bãi xe, WC công cộng. Bản đồ GPS miễn phí!",
+    title: "Bãi giữ xe TP.HCM – Tìm chỗ đậu xe ô tô gần đây | MapGo.vn",
+    description: "Bãi giữ xe TP.HCM ❱ 408+ bãi giữ xe ô tô xe máy, chỗ đậu xe ô tô, bãi gửi xe qua đêm, WC công cộng. Bản đồ GPS miễn phí!",
     images: ["https://mapgo.vn/logo.png"],
   },
   icons: {
