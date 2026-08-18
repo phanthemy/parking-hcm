@@ -122,6 +122,45 @@ const jsonLdOrganization = {
   "sameAs": []
 };
 
+const jsonLdFAQ = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Làm sao tìm bãi đỗ xe gần nhất trên MapGo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bạn chỉ cần mở bản đồ MapGo.vn, cho phép truy cập vị trí, hệ thống sẽ hiển thị các bãi đỗ xe ô tô, xe máy gần bạn nhất kèm chỉ đường GPS trực tiếp."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "MapGo có cung cấp giá gửi xe không?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Một số bãi xe có giá tham khảo do cộng đồng cập nhật. Giá thực tế có thể thay đổi tùy thời điểm, vui lòng xác nhận tại điểm đỗ."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Làm sao tìm nhà vệ sinh công cộng gần nhất TP.HCM?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Trên MapGo.vn, chọn bộ lọc 'Nhà vệ sinh công cộng' để xem các vị trí gần bạn nhất, kèm khoảng cách và chỉ đường."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Bãi giữ xe ô tô qua đêm ở TP.HCM tìm ở đâu?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Bạn có thể lọc các bãi giữ xe mở cửa 24/7 trên MapGo.vn hoặc xem danh mục bãi giữ xe qua đêm để tìm vị trí có bảo vệ an toàn."
+      }
+    }
+  ]
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -133,6 +172,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
         />
       </head>
       <body>

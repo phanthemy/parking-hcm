@@ -6,6 +6,7 @@ const DISTRICT_SLUGS = [
   'quan-10', 'quan-11', 'quan-12',
   'binh-thanh', 'phu-nhuan', 'tan-binh', 'tan-phu', 'go-vap',
   'thu-duc', 'binh-tan',
+  'binh-chanh', 'hoc-mon', 'cu-chi', 'nha-be', 'can-gio',
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

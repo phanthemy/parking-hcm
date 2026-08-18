@@ -993,11 +993,32 @@ export default function HomePage() {
         <h1>Bãi giữ xe TP.HCM — Tìm bãi gửi xe, chỗ đậu xe ô tô, quán ăn có bãi xe, nhà vệ sinh công cộng gần đây | MapGo.vn</h1>
         <h2>Bãi giữ xe ô tô gần đây — Bản đồ tìm chỗ đậu xe ô tô, bãi gửi xe máy, quán cafe có chỗ đậu xe, WC công cộng tại Sài Gòn</h2>
         <p>
-          MapGo.vn là bản đồ bãi giữ xe TP.HCM với hơn 408 bãi giữ xe ô tô, xe máy, bãi gửi xe qua đêm và chỗ đậu xe an toàn tại Quận 1, Quận 2, Quận 3, Quận 4, Quận 5, Quận 6, Quận 7, Quận 8, Quận 10, Quận 11, Quận 12, Bình Thạnh, Phú Nhuận, Tân Bình, Tân Phú, Gò Vấp, TP Thủ Đức, Bình Tân, Nhà Bè, Hóc Môn, Củ Chi và toàn bộ TP.HCM.
+          MapGo.vn là bản đồ bãi giữ xe TP.HCM với hơn 408 bãi giữ xe ô tô, xe máy, bãi gửi xe qua đêm và chỗ đậu xe an toàn tại Quận 1, Quận 2, Quận 3, Quận 4, Quận 5, Quận 6, Quận 7, Quận 8, Quận 10, Quận 11, Quận 12, Bình Thạnh, Phú Nhuận, Tân Bình, Tân Phú, Gò Vấp, TP Thủ Đức, Bình Tân, Nhà Bè, Hóc Môn, Củ Chi, Bình Chánh, Cần Giờ và toàn bộ 22 quận huyện TP.HCM.
         </p>
         <p>
           Hỗ trợ tìm kiếm nhanh quán ăn có chỗ đậu xe ô tô, quán cafe có bãi giữ xe rộng rãi, tiệm rửa xe, garage sửa xe ô tô, nhà vệ sinh công cộng sạch sẽ gần nhất. Bản đồ chỉ đường GPS trực tiếp miễn phí 24/7. Cập nhật bảng giá gửi xe ô tô TP.HCM và điểm báo biển cấm đậu xe mới nhất 2026.
         </p>
+
+        {/* Semantic FAQ matching Schema.org */}
+        <section>
+          <h3>Câu hỏi thường gặp về bãi giữ xe & tiện ích MapGo</h3>
+          <article>
+            <h4>Làm sao tìm bãi đỗ xe gần nhất trên MapGo?</h4>
+            <p>Bạn chỉ cần mở bản đồ MapGo.vn, cho phép truy cập vị trí, hệ thống sẽ hiển thị các bãi đỗ xe ô tô, xe máy gần bạn nhất kèm chỉ đường GPS trực tiếp.</p>
+          </article>
+          <article>
+            <h4>MapGo có cung cấp giá gửi xe không?</h4>
+            <p>Một số bãi xe có giá tham khảo do cộng đồng cập nhật. Giá thực tế có thể thay đổi tùy thời điểm, vui lòng xác nhận tại điểm đỗ.</p>
+          </article>
+          <article>
+            <h4>Làm sao tìm nhà vệ sinh công cộng gần nhất TP.HCM?</h4>
+            <p>Trên MapGo.vn, chọn bộ lọc 'Nhà vệ sinh công cộng' để xem các vị trí gần bạn nhất, kèm khoảng cách và chỉ đường.</p>
+          </article>
+          <article>
+            <h4>Bãi giữ xe ô tô qua đêm ở TP.HCM tìm ở đâu?</h4>
+            <p>Bạn có thể lọc các bãi giữ xe mở cửa 24/7 trên MapGo.vn hoặc xem danh mục bãi giữ xe qua đêm để tìm vị trí có bảo vệ an toàn.</p>
+          </article>
+        </section>
       </div>
 
       {/* Modal báo biển cấm đậu — luôn render, fallback tọa độ trung tâm HCM nếu chưa có GPS */}
