@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
+import { isAddressInDistrict } from '@/lib/district';
 
 // Mapping slug -> tên quận huyện đẹp + từ khóa SEO + nội dung độc nhất
 const DISTRICT_CONFIG: Record<string, {
@@ -202,21 +203,19 @@ export default async function BaiXeDistrictPage({ params }: { params: Promise<{ 
   const config = DISTRICT_CONFIG[slug];
   if (!config) notFound();
 
-  // Lấy bãi xe theo quận từ DB
+  // Lấy bãi xe theo quận chuẩn xác từ DB (tránh lỗi nhầm 'Hiệp Bình Chánh' sang 'Bình Chánh' hay 'Quận 1' sang 'Quận 10, 11, 12')
   let spots: { id: string; slug: string | null; name: string; address: string; carSlots: number | null; bikeSlots: number | null; type: string; pricePerHour: number | null }[] = [];
   try {
-    spots = await prisma.parkingSpot.findMany({
+    const allSpots = await prisma.parkingSpot.findMany({
       where: {
         status: { in: ['active', 'ACTIVE'] },
         type: { in: ['PARKING_LOT', 'parking'] },
-        OR: [
-          { address: { contains: config.name } },
-          { address: { contains: config.nameVi } },
-        ],
       },
       select: { id: true, slug: true, name: true, address: true, carSlots: true, bikeSlots: true, type: true, pricePerHour: true },
-      take: 40,
+      orderBy: { carSlots: 'desc' },
     });
+
+    spots = allSpots.filter((s) => isAddressInDistrict(s.address, slug)).slice(0, 40);
   } catch (e) {
     console.error('Landing page DB error:', e);
   }

@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import prisma from '@/lib/prisma';
+import { getDistrictFromAddress } from '@/lib/district';
 
 export const metadata: Metadata = {
   title: 'Quán cafe có chỗ đậu xe ô tô TP.HCM – Cà phê có bãi giữ xe | MapGo.vn',
@@ -32,13 +33,8 @@ export default async function CafeCoBaiXePage() {
     console.error('DB error:', e);
   }
 
-  const parseDistrict = (address: string) => {
-    const m = address.match(/(Qu[aậ]n\s*\d+|Bình Thạnh|Phú Nhuận|Tân Bình|Gò Vấp|Bình Tân|Thủ Đức|TP Thủ Đức|Quận [A-ZĐa-z]+)/i);
-    return m ? m[0] : 'Khu vực khác';
-  };
-
   const byDistrict = spots.reduce((acc, spot) => {
-    const d = parseDistrict(spot.address);
+    const d = getDistrictFromAddress(spot.address);
     if (!acc[d]) acc[d] = [];
     acc[d].push(spot);
     return acc;

@@ -11,10 +11,7 @@ export const metadata: Metadata = {
   },
 };
 
-const extractDistrict = (address: string) => {
-  const match = address.match(/(Quận \d+|Quận [A-ZĐ]+|Bình Thạnh|Thủ Đức|Gò Vấp|Phú Nhuận|Tân Bình|Tân Phú|Bình Tân|Huyện [A-ZĐ]+)/i);
-  return match ? match[0] : 'Khác';
-};
+import { getDistrictFromAddress } from '@/lib/district';
 
 const createSlug = (text: string) => {
   return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/\s+/g, '-');
@@ -34,7 +31,7 @@ export default async function BaiDoXeTpHcm() {
   let spotsWithPrice = 0;
 
   spots.forEach(spot => {
-    const district = extractDistrict(spot.address);
+    const district = getDistrictFromAddress(spot.address);
     if (!districts[district]) districts[district] = [];
     districts[district].push(spot);
 
