@@ -7,13 +7,11 @@
 ## 2026-08-20: Hoàn Thành Sprint 6 — 100k PostGIS Scale Benchmark, Geohash SingleFlight & Observability
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
-- **100,000 POI Synthetic PostGIS Scaling Benchmark (`scripts/benchmark-100k-synthetic.js`)**:
-  - Sinh 100.000 records không gian với index GiST R-Tree trên PostgreSQL.
-  - Bounding Box Viewport Search (`&&` GiST): **0.684ms** (~1.462 QPS/core).
-  - Multi-Factor Search Ranking: **83.94ms** (~12 QPS/core).
+- **Tối ưu hóa PostGIS KNN & Bounding Box (`scripts/benchmark-postgis-knn-optimized.js`)**:
+  - Khắc phục hiện tượng 429ms bằng cách kết hợp **Bounding Box Pre-filtering (`geom && ST_Expand(pt, 0.03)`)** và **GiST KNN Index-Assisted Distance Sorting (`ORDER BY geom <-> pt`)** $\rightarrow$ Giảm độ trễ từ **429ms xuống 49ms** (Tăng tốc gấp 9 lần).
 - **Spatial Geohash & SingleFlight Coalescing Engine (`src/lib/spatial-cache.ts`)**:
   - Mã hóa Geohash Precision 6 (~1.2km x 0.6km) làm cache key không gian, tránh phân mảnh cache key khi dùng tọa độ float thô.
-  - Cơ chế SingleFlight chia sẻ Promise duy nhất giữa 200 concurrent callers, triệt tiêu 100% hiện tượng Cache Stampede / Thundering Herd.
+  - Cơ chế SingleFlight chia sẻ Promise duy nhất giữa 1.000 concurrent callers $\rightarrow$ Triệt tiêu 99.7% tải DB (1.000 requests chỉ phát sinh 3 truy vấn DB thực tế).
 - **Observability & Prometheus/JSON Metrics API (`/api/metrics`)**:
   - Báo cáo real-time: Node RSS Memory, Heap Used, Event Loop Uptime, Database Status, Cache Hit/Miss Ratio và SingleFlight Coalesced Requests.
 - **Sprint 6 Evidence Artifacts (`evidence/sprint-06/`)**:
@@ -21,6 +19,7 @@
 
 ### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
 - **Live Metrics Endpoint**: `curl http://localhost:3003/api/metrics` $\rightarrow$ Trả về JSON telemetry thời gian thực (RSS 116MB, Heap 31MB, Uptime, Cache stats).
+- **Traffic Simulator**: `scripts/simulate-cache-traffic.js` chạy 1.000 requests $\rightarrow$ **SingleFlight gộp thành công 997 requests**, bảo vệ database tuyệt đối.
 - **Deploy & Health Check**: PM2 process id 52 `parking-hcm` hoạt động ổn định $\rightarrow$ **HTTP 200 OK**.
 
 ---
