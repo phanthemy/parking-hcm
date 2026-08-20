@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 3 — Local SEO Platform & Crawl Simulation
+
+### 1. Quyết định kỹ thuật & Kiến trúc:
+- **Granular JSON-LD Node Architecture (`src/lib/seo/nodes.ts`)**:
+  - Tách rời các builder độc lập: `buildWebSiteNode`, `buildOrganizationNode`, `buildBreadcrumbNode`, `buildParkingFacilityNode`, `buildFaqNodeFromData`, `buildDistrictCollectionNode`, `buildSearchActionNode`.
+- **Dynamic Real-Data FAQ Generator (`src/lib/seo/faq-generator.ts`)**:
+  - Sinh FAQ ngữ cảnh tự động từ thuộc tính database thật: Giờ mở cửa/24-7, Bảng giá xe máy/ô tô/qua đêm, Chiều cao giới hạn hầm (m), Trạm sạc xe điện EV.
+- **Smart Nearby Engine (`src/lib/nearby.ts`)**:
+  - Truy vấn 5 POI gần nhất theo công thức Haversine để tạo ma trận Internal Linking ngữ cảnh.
+- **Crawl Simulation Engine (Mini Screaming Frog) (`scripts/crawl-simulation.js`)**:
+  - Tự động cào toàn bộ cây URL (Robots, Sitemap, Homepage, Category, District, Blog).
+  - Kiểm tra mã HTTP 200, độ dài Title & Meta Description, Canonical URL, sự tồn tại và tính hợp lệ của Schema JSON-LD, số lượng liên kết nội bộ.
+- **SEO Integration Test Suite (`scripts/test-seo-integration.js`)**:
+  - 5/5 Integration test suites kiểm thử trực tiếp mã nguồn HTML trả về từ server.
+- **Sprint 3 Evidence Artifacts (`evidence/sprint-03/`)**:
+  - Xuất bản `CHANGELOG.md` và `crawl-simulation-report.json`.
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **Automated Integration Tests**: `scripts/test-seo-integration.js` (5 test suites) $\rightarrow$ **100% Passed**.
+- **Crawl Simulation**: `scripts/crawl-simulation.js` cào 10 URLs $\rightarrow$ **100% Passed (10/10 URLs, HTTP 200, Valid Titles, Canonicals & Schemas)**.
+- **Deploy & Health Check**: PM2 process id 52 `parking-hcm` hoạt động ổn định $\rightarrow$ **HTTP 200 OK**.
+
+---
+
 ## 2026-08-20: Hoàn Thành Sprint 2 — SEO Engine, Schema Graph & Dynamic Sitemap
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
