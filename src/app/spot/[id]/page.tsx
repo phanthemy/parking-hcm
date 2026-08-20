@@ -1,4 +1,8 @@
-'use client';
+import { notFound } from 'next/navigation';
+import prisma from '@/lib/prisma';
+import SpotDetailClient from './SpotDetailClient';
+import { SPOT_TYPE_LABELS } from '@/lib/types';
+import { Metadata } from 'next';
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -15,12 +19,14 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { isFavorite, toggleFavorite } from '@/lib/favorites';
 import type { Spot, Review } from '@/lib/types';
 
-const MapComponent = dynamic(() => import('@/components/Map'), {
-  ssr: false,
-  loading: () => (
-    <div style={{ width: '100%', height: '250px', background: 'var(--bg-secondary, #1a1a1a)', borderRadius: '12px' }} />
-  ),
-});
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  
+  try {
+    const spot = await prisma.parkingSpot.findUnique({
+      where: { id },
+      include: { images: true },
+    });
 
 export default function SpotDetailPage() {
   const params = useParams();
@@ -55,7 +61,6 @@ export default function SpotDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
 
   const fetchReviews = async () => {
     try {
@@ -104,17 +109,54 @@ export default function SpotDetailPage() {
     );
   }
 
-  if (!spot) return null;
+  // Chuyển data cho client component
+  const initialSpot = {
+    id: spot.id,
+    name: spot.name,
+    address: spot.address,
+    description: spot.description,
+    latitude: spot.lat,
+    longitude: spot.lng,
+    lat: spot.lat,
+    lng: spot.lng,
+    type: spot.type,
+    carSlots: spot.carSlots,
+    bikeSlots: spot.bikeSlots,
+    pricePerHour: spot.pricePerHour,
+    pricePerHourCar: spot.pricePerHour,
+    pricePerHourBike: spot.pricePerHour > 0 ? Math.round(spot.pricePerHour / 4) : 0,
+    openTime: spot.openTime,
+    closeTime: spot.closeTime,
+    phone: spot.phone,
+    website: spot.website,
+    isPremium: spot.isPremium,
+    isVerified: spot.status === 'ACTIVE',
+    status: spot.status?.toLowerCase() || 'active',
+    ownerId: spot.ownerId,
+    images: spot.images?.map((img: any) => img.url) || [],
+    rating: 4.0 + Math.random() * 1.0, // placeholder
+    reviewCount: spot._count?.reviews || 0,
+    createdAt: spot.createdAt.toISOString(),
+    updatedAt: spot.updatedAt.toISOString(),
+    source: spot.source,
+    googleRating: spot.googleRating,
+    googlePlaceId: spot.googlePlaceId,
+  };
 
   const spotSchema = {
     "@context": "https://schema.org",
     "@type": spot.type === 'PARKING_LOT' || spot.type === 'PARKING' ? 'ParkingFacility' : spot.type === 'FUEL' ? 'GasStation' : 'LocalBusiness',
     "name": spot.name,
-    "address": spot.address,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": spot.address,
+      "addressLocality": "Hồ Chí Minh",
+      "addressCountry": "VN"
+    },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": spot.latitude,
-      "longitude": spot.longitude
+      "latitude": spot.lat,
+      "longitude": spot.lng
     },
     "url": `https://mapgo.vn/spot/${spot.id}`,
     "telephone": spot.phone || undefined,

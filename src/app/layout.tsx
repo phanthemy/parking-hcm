@@ -47,7 +47,13 @@ export const metadata: Metadata = {
     "bãi giữ xe Quận 7",
     "bãi giữ xe TP Thủ Đức",
     "chỉ đường bãi xe GPS",
-    "bản đồ tiện ích Sài Gòn"
+    "bản đồ tiện ích Sài Gòn",
+    "app giữ xe Sài Gòn",
+    // === Long-tail ===
+    "bãi đỗ xe gần đây mở cửa 24/7",
+    "chỗ gửi xe đi chơi Sài Gòn",
+    "giữ xe ô tô dài ngày",
+    "đỗ xe ở đâu khi đi ăn Quận 1",
   ],
   authors: [{ name: "MapGo Team", url: "https://mapgo.vn" }],
   creator: "MapGo.vn",

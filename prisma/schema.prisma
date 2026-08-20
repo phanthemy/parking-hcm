@@ -40,6 +40,11 @@ model ParkingSpot {
   ownerId      String?
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
+  sourceId      String?   // ID gốc từ Google Maps hoặc OSM (dùng dedup)
+  source        String?   // "GOOGLE_MAPS", "OSM", "MANUAL"
+  lastSyncedAt  DateTime? // Lần sync cuối cùng
+  googleRating  Float?    // Rating từ Google Maps
+  googlePlaceId String?   // Google Place ID (deep link)
   images       ParkingImage[]
   reviews      Review[]
   profile      BusinessProfile?

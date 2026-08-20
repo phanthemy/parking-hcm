@@ -17,7 +17,10 @@
     "scrape:cafe": "node scrape-overpass.js cafe 10.7769 106.7009 5",
     "scrape:toilet": "node scrape-overpass.js toilet 10.7769 106.7009 5",
     "enrich": "node enrich-full-addresses.js",
-    "fix:districts": "node clean-district-strings.js"
+    "fix:districts": "node clean-district-strings.js",
+    "sync:auto": "node scripts/auto-sync.js",
+    "sync:google": "node scripts/google-places-sync.js",
+    "sync:dry": "node scripts/auto-sync.js --dry-run"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
