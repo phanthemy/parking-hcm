@@ -48,6 +48,7 @@ export default function SpotDetailPage() {
     } finally {
       setIsLoading(false);
     }
+  };
 
   const fetchReviews = async () => {
     try {
