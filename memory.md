@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 4 — Scale Architecture, PostGIS Spatial Benchmark & OpenAPI 3.0
+
+### 1. Quyết định kỹ thuật & Kiến trúc:
+- **PostGIS GiST & GIN Trigram Spatial Indexing**:
+  - Tạo chỉ mục không gian `idx_places_geom` (GiST) và `idx_places_geog` (GiST) trên bảng `places` (1.977 POIs).
+  - Tạo chỉ mục tìm kiếm tiếng Việt không dấu `idx_places_name_unaccent_trgm` (GIN) và `idx_places_address_unaccent_trgm` (GIN).
+- **Multi-Factor Search Ranking Engine**:
+  - Thuật toán xếp hạng đa nhân tố: `composite_rank_score = Distance (40%) + Rating (25%) + Verified (20%) + Confidence (15%)`.
+- **OpenAPI 3.0 Contract Specification (`project-docs/openapi.yaml`)**:
+  - Chuẩn hóa toàn bộ REST API contracts, parameters, response schemas cho toàn bộ endpoints.
+- **Zero-Downtime Migration & Rollback Strategy (`project-docs/migration-strategy.md`)**:
+  - Xây dựng tài liệu quy trình 3 bước (Dual-Write -> Backfill -> Traffic Switch) và rollback 3 phút.
+- **Sprint 4 Evidence Artifacts (`evidence/sprint-04/`)**:
+  - Xuất bản `CHANGELOG.md` và `spatial-benchmark-report.json`.
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **PostGIS Spatial Benchmarks (`scripts/benchmark-spatial-queries.js`)**:
+  - Bounding Box Viewport Query: **0.252ms** (~3.968 QPS/core).
+  - Unaccent Full-text Trigram Search: **0.165ms** (~6.061 QPS/core).
+  - Multi-Factor Search Ranking Engine: **2.680ms** (~373 QPS/core).
+  - PostGIS Spatial Radius Search (3km): **10.636ms** (~94 QPS/core).
+- **Deploy & Health Check**: PM2 process id 52 `parking-hcm` hoạt động ổn định $\rightarrow$ **HTTP 200 OK**.
+
+---
+
 ## 2026-08-20: Hoàn Thành Sprint 3 — Local SEO Platform & Crawl Simulation
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
