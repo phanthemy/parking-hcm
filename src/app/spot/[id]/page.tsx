@@ -1,8 +1,4 @@
-import { notFound } from 'next/navigation';
-import prisma from '@/lib/prisma';
-import SpotDetailClient from './SpotDetailClient';
-import { SPOT_TYPE_LABELS } from '@/lib/types';
-import { Metadata } from 'next';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
@@ -18,15 +14,6 @@ import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
 import { useLocale } from '@/contexts/LocaleContext';
 import { isFavorite, toggleFavorite } from '@/lib/favorites';
 import type { Spot, Review } from '@/lib/types';
-
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { id } = await params;
-  
-  try {
-    const spot = await prisma.parkingSpot.findUnique({
-      where: { id },
-      include: { images: true },
-    });
 
 export default function SpotDetailPage() {
   const params = useParams();
