@@ -428,78 +428,78 @@ export default function HomePage() {
       )}
 
 
-      {/* MOBILE FLOATING HEADER (3 TẦNG TỐI GIẢN CHUẨN GOOGLE MAPS / WAZE) */}
+      {/* MOBILE FLOATING HEADER (SIÊU MỎNG ~110PX CHUẨN GOOGLE MAPS / WAZE) */}
       <div className="floating-search" style={{
         position: 'fixed',
-        top: '12px',
+        top: '8px',
         left: '50%',
-        transform: 'translateX(-50%)',
-        width: 'calc(100% - 24px)',
+        transform: isNavigating ? 'translate(-50%, -60px)' : 'translate(-50%, 0)',
+        opacity: isNavigating ? 0 : 1,
+        pointerEvents: isNavigating ? 'none' : 'auto',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        width: 'calc(100% - 20px)',
         maxWidth: '460px',
         zIndex: 100,
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
-        pointerEvents: 'auto',
+        gap: '4px',
       }}>
-        {/* TẦNG 1: BRAND HEADER & TIỆN ÍCH PHỤ (GỌN GÀNG, KHÔNG TRANH THỊ GIÁC) */}
+        {/* TẦNG 1: BRAND HEADER & TIỆN ÍCH PHỤ (GỌN GÀNG 28PX) */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '2px 4px',
+          padding: '0 2px',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src="/logo.png" alt="MapGo" style={{ width: '28px', height: '28px', borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }} />
-            <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.3px', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <img src="/logo.png" alt="MapGo" style={{ width: '24px', height: '24px', borderRadius: '50%', boxShadow: '0 2px 6px rgba(0,0,0,0.4)' }} />
+            <span style={{ fontSize: '15px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.3px', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
               MapGo
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Admin icon nhỏ gọn, không lấn át */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Admin icon nhỏ gọn 28px */}
             {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
               <Link
                 href="/admin"
                 title="Quản trị MapGo"
                 style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '28px',
+                  height: '28px',
                   borderRadius: '50%',
                   background: 'rgba(30, 41, 59, 0.85)',
                   backdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(245,158,11,0.4)',
+                  border: '1px solid rgba(245,158,11,0.35)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   color: '#f59e0b',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   textDecoration: 'none',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
                 }}
               >
                 👑
               </Link>
             )}
 
-            {/* Nút báo cấm đỗ dạng icon tròn tinh tế thay vì nút đỏ to */}
+            {/* Nút báo cấm đỗ icon tròn 28px */}
             <button
               onClick={() => setShowBanReport(true)}
               title="Báo biển cấm đỗ xe"
               style={{
-                width: '32px',
-                height: '32px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 background: 'rgba(30, 41, 59, 0.85)',
                 backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(239,68,68,0.35)',
+                border: '1px solid rgba(239,68,68,0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: '#f87171',
-                fontSize: '14px',
+                fontSize: '13px',
                 cursor: 'pointer',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
               }}
             >
               🚫
@@ -509,19 +509,20 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* TẦNG 2: THANH TÌM KIẾM BO TRÒN (PILL SEARCH BAR) */}
+        {/* TẦNG 2: THANH TÌM KIẾM BO TRÒN COMPACT 38PX */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          background: 'rgba(15, 23, 42, 0.92)',
+          background: 'rgba(15, 23, 42, 0.94)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: '24px',
-          padding: '4px 8px 4px 16px',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+          borderRadius: '20px',
+          padding: '2px 8px 2px 14px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+          height: '38px',
         }}>
-          <span style={{ fontSize: '15px', color: '#94a3b8', marginRight: '8px' }}>🔍</span>
+          <span style={{ fontSize: '14px', color: '#94a3b8', marginRight: '6px' }}>🔍</span>
           <input
             type="text"
             placeholder={t('search_placeholder') || 'Bạn muốn tìm gì? (Bãi xe, quán ăn, WC...)'}
@@ -534,8 +535,8 @@ export default function HomePage() {
               border: 'none',
               outline: 'none',
               color: '#f8fafc',
-              fontSize: '14px',
-              padding: '8px 0',
+              fontSize: '13px',
+              padding: '4px 0',
             }}
           />
           {searchQuery ? (
@@ -545,8 +546,8 @@ export default function HomePage() {
                 background: 'none',
                 border: 'none',
                 color: '#94a3b8',
-                fontSize: '14px',
-                padding: '4px 8px',
+                fontSize: '13px',
+                padding: '2px 6px',
                 cursor: 'pointer',
               }}
             >
@@ -555,10 +556,18 @@ export default function HomePage() {
           ) : null}
         </div>
 
-        {/* TẦNG 3: TRỢ LÝ 1-CHẠM GẦN BẠN (ẨN KHI ĐANG DẪN ĐƯỜNG ĐỂ NHƯỜNG KHÔNG GIAN BẢN ĐỒ) */}
+        {/* TẦNG 3: TRỢ LÝ 1-CHẠM GẦN BẠN (TỰ ĐỘNG ẨN KHI ĐANG DẪN ĐƯỜNG) */}
         {!isRouting && !isNavigating && (
-          <div style={{ marginTop: '2px' }}>
-            <SmartNearbyWidget latitude={latitude} longitude={longitude} onSelectService={handleSelectQuickService} />
+          <div style={{ marginTop: '1px' }}>
+            <SmartNearbyWidget
+              latitude={latitude}
+              longitude={longitude}
+              activeServiceKey={activeFilter !== 'all' ? activeFilter : null}
+              onSelectService={(service, key) => {
+                setActiveFilter(service.category === 'PARKING' ? 'PARKING_LOT' : service.category as any);
+                handleSelectQuickService(service);
+              }}
+            />
           </div>
         )}
       </div>
@@ -797,91 +806,102 @@ export default function HomePage() {
         />
       </div>
 
-      {/* ROUTING NAVIGATION BAR (TỐI GIẢN CHUẨN GOOGLE MAPS / WAZE: 1 PRIMARY CTA DUY NHẤT) */}
+      {/* ROUTING NAVIGATION BAR (COMPACT 96PX CHUẨN GOOGLE MAPS / WAZE: 1 PRIMARY CTA + DRAG HANDLE) */}
       {isRouting && routingDest && (
         <div style={{
           position: 'fixed',
-          bottom: '24px',
+          bottom: '20px',
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 300,
-          background: isNavigating ? 'rgba(6, 78, 59, 0.95)' : 'rgba(15, 23, 42, 0.95)',
+          background: isNavigating ? 'rgba(6, 78, 59, 0.96)' : 'rgba(15, 23, 42, 0.96)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: `1px solid ${isNavigating ? 'rgba(52, 211, 153, 0.4)' : 'rgba(255,255,255,0.12)'}`,
           borderRadius: '20px',
-          padding: '12px 16px',
+          padding: '8px 14px 10px',
           display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          maxWidth: '440px',
-          width: 'calc(100% - 32px)',
+          flexDirection: 'column',
+          maxWidth: '430px',
+          width: 'calc(100% - 24px)',
           boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
+          transition: 'all 0.25s ease',
         }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isNavigating ? '🧭 ' + t('navigating') : '📍 ' + routingDest.name}
-            </div>
-            <div style={{ fontSize: '13px', color: isNavigating ? '#86efac' : '#38bdf8', marginTop: '2px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>
-                {isNavigating && navInfo
-                  ? `🚗 ~${navInfo.dur} phút`
-                  : `🚗 ~${Math.max(1, Math.round((typeof routingDest.distance === 'number' ? routingDest.distance : parseFloat(routingDest.distance || '2.4')) * 2.5))} phút`
-                }
-              </span>
-              <span style={{ opacity: 0.4 }}>•</span>
-              <span style={{ color: '#94a3b8', fontWeight: 400 }}>
-                {isNavigating && navInfo
-                  ? `${navInfo.dist.toFixed(1)} km`
-                  : (typeof routingDest.distance === 'number' ? `${(routingDest.distance as number).toFixed(1)} km` : (routingDest.distance || routingDest.address?.substring(0, 30)))
-                }
-              </span>
-            </div>
-          </div>
+          {/* Drag Handle Indicator */}
+          <div
+            onClick={() => { setBottomSheetState('detail'); setSelectedSpot(routingDest); }}
+            style={{ width: '32px', height: '3px', background: 'rgba(255,255,255,0.25)', borderRadius: '2px', margin: '0 auto 6px', cursor: 'pointer' }}
+          />
 
-          {!isNavigating ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              onClick={() => { setBottomSheetState('detail'); setSelectedSpot(routingDest); }}
+              style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+            >
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {isNavigating ? '🧭 ' + t('navigating') : '📍 ' + routingDest.name}
+              </div>
+              <div style={{ fontSize: '12px', color: isNavigating ? '#86efac' : '#38bdf8', marginTop: '2px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span>
+                  {isNavigating && navInfo
+                    ? `🚗 ~${navInfo.dur} phút`
+                    : `🚗 ~${Math.max(1, Math.round((typeof routingDest.distance === 'number' ? routingDest.distance : parseFloat(routingDest.distance || '2.4')) * 2.5))} phút`
+                  }
+                </span>
+                <span style={{ opacity: 0.4 }}>•</span>
+                <span style={{ color: '#94a3b8', fontWeight: 400 }}>
+                  {isNavigating && navInfo
+                    ? `${navInfo.dist.toFixed(1)} km`
+                    : (typeof routingDest.distance === 'number' ? `${(routingDest.distance as number).toFixed(1)} km` : (routingDest.distance || routingDest.address?.substring(0, 28)))
+                  }
+                </span>
+              </div>
+            </div>
+
+            {!isNavigating ? (
+              <button
+                onClick={startNavMode}
+                style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  padding: '8px 16px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>🟢</span> {t('go_now') || 'Đi ngay'}
+              </button>
+            ) : null}
+
             <button
-              onClick={startNavMode}
+              onClick={() => { isNavigating ? stopNavMode() : (() => { handleClearRoute(); setRoutingDest(null); })(); }}
+              title={isNavigating ? t('stop') : t('cancel')}
               style={{
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                border: 'none',
-                borderRadius: '14px',
-                color: '#fff',
-                padding: '10px 18px',
-                fontSize: '14px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                color: '#94a3b8',
+                fontSize: '13px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
               }}
             >
-              <span>🟢</span> {t('go_now') || 'Đi ngay'}
+              ✕
             </button>
-          ) : null}
-
-          <button
-            onClick={() => { isNavigating ? stopNavMode() : (() => { handleClearRoute(); setRoutingDest(null); })(); }}
-            title={isNavigating ? t('stop') : t('cancel')}
-            style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '50%',
-              width: '36px',
-              height: '36px',
-              color: '#94a3b8',
-              fontSize: '14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            ✕
-          </button>
+          </div>
         </div>
       )}
 

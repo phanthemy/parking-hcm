@@ -440,23 +440,23 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
         const typeColor = SPOT_TYPE_COLORS[spot.type] || '#3B82F6';
 
         const icon = L.divIcon({
-          html: `<div style="
+          html: `<div class="${isSelected ? 'selected-marker-pulse' : ''}" style="
             display: flex;
             align-items: center;
             justify-content: center;
-            width: ${isSelected ? '36px' : '28px'};
-            height: ${isSelected ? '36px' : '28px'};
+            width: ${isSelected ? '36px' : '26px'};
+            height: ${isSelected ? '36px' : '26px'};
             background: ${typeColor};
-            border: 2px solid #ffffff;
+            border: 2.5px solid #ffffff;
             border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4), ${isSelected ? `0 0 14px ${typeColor}` : 'none'};
-            transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'};
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5), ${isSelected ? `0 0 16px ${typeColor}` : 'none'};
+            transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            font-size: ${isSelected ? '16px' : '13px'};
+            font-size: ${isSelected ? '16px' : '12px'};
           ">${typeIcon}</div>`,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
           className: '',
         });
 
