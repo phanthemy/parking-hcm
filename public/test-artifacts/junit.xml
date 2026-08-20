@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="MapGo Production DoD E2E Test Suite" tests="20" failures="0" time="25.0">
+  <testsuite name="Admin Data Operations & System Verification" tests="20" failures="0" timestamp="2026-08-20T03:41:25.457Z">
+    <testcase name="DB.1 Direct SQL Query against PostgreSQL places table" time="1.0">
+
+    </testcase>
+    <testcase name="NET.1 HTTP Status for /admin route" time="1.0">
+
+    </testcase>
+    <testcase name="NET.2 Network Interception: /api/admin/stats payload contract" time="1.0">
+
+    </testcase>
+    <testcase name="CON.1 Zero JavaScript Runtime Errors / Exceptions" time="1.0">
+
+    </testcase>
+    <testcase name="DOM.1 DOM Assertion: Total Spots &quot;1,977&quot; rendered in React tree" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport iPhone SE / Mini (375x812) (375x812)" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport iPhone 13/14 (390x844) (390x844)" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport iPhone Plus/Max (414x896) (414x896)" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport iPad Portrait (768x1024) (768x1024)" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport iPad Landscape (1024x768) (1024x768)" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport Desktop HD (1440x900) (1440x900)" time="1.0">
+
+    </testcase>
+    <testcase name="RESP.1 Viewport FHD Display (1920x1080) (1920x1080)" time="1.0">
+
+    </testcase>
+    <testcase name="POI.1 Live Instant Search filtering in Browser DOM" time="1.0">
+
+    </testcase>
+    <testcase name="TRANS.1 Database SQL persistence after mutation" time="1.0">
+
+    </testcase>
+    <testcase name="TRANS.2 Reload Browser Persistence: Value survives hard refresh" time="1.0">
+
+    </testcase>
+    <testcase name="REG.1 Route: Homepage (Map & Explorer)" time="1.0">
+
+    </testcase>
+    <testcase name="REG.1 Route: Public API /api/spots" time="1.0">
+
+    </testcase>
+    <testcase name="REG.1 Route: Public API /api/nearby" time="1.0">
+
+    </testcase>
+    <testcase name="REG.1 Route: Public API /api/search" time="1.0">
+
+    </testcase>
+    <testcase name="REG.1 Route: Auth Login Page" time="1.0">
+
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>MapGo Production DoD E2E Verification Report</title>
+  <style>
+    body { font-family: Inter, sans-serif; background: #09090b; color: #f8fafc; padding: 30px; margin: 0; }
+    .container { max-width: 960px; margin: 0 auto; }
+    .badge-pass { background: #065f46; color: #34d399; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+    .badge-fail { background: #991b1b; color: #f87171; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+    .card { background: #13131a; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 13px; }
+    th { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛡️ MapGo Production DoD Verification Report</h1>
+    <p style="color: #94a3b8;">Thời gian chạy: 10:41:25 20/8/2026 | Môi trường: Production VPS</p>
+    
+    <div class="card" style="display: flex; gap: 20px; justify-content: space-around; text-align: center;">
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #38bdf8;">20</div>
+        <div style="color: #94a3b8; font-size: 12px;">Tổng số test</div>
+      </div>
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #34d399;">20</div>
+        <div style="color: #94a3b8; font-size: 12px;">Đạt (PASS)</div>
+      </div>
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #34d399;">0</div>
+        <div style="color: #94a3b8; font-size: 12px;">Thất bại (FAIL)</div>
+      </div>
+      <div>
+        <div style="font-size: 32px; font-weight: 800; color: #a5b4fc;">100%</div>
+        <div style="color: #94a3b8; font-size: 12px;">Tỷ lệ thành công</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Chi tiết kết quả các bài kiểm thử:</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Tên bài kiểm thử</th>
+            <th>Trạng thái</th>
+            <th>Bằng chứng & Chi tiết</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+            <tr>
+              <td style="font-weight: 600;">DB.1 Direct SQL Query against PostgreSQL places table</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Total: 1977, Active: 1883, Missing Phone: 1896, Verified: 1</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">NET.1 HTTP Status for /admin route</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">HTTP Status: 200</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">NET.2 Network Interception: /api/admin/stats payload contract</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Status 200, totalSpots: 1977</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">CON.1 Zero JavaScript Runtime Errors / Exceptions</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Console 100% clean</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">DOM.1 DOM Assertion: Total Spots "1,977" rendered in React tree</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">DOM rendered 1,977 correctly</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport iPhone SE / Mini (375x812) (375x812)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-375x812.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport iPhone 13/14 (390x844) (390x844)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-390x844.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport iPhone Plus/Max (414x896) (414x896)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-414x896.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport iPad Portrait (768x1024) (768x1024)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-768x1024.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport iPad Landscape (1024x768) (1024x768)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-1024x768.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport Desktop HD (1440x900) (1440x900)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-1440x900.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">RESP.1 Viewport FHD Display (1920x1080) (1920x1080)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Clean layout, saved: screenshot-1920x1080.png</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">POI.1 Live Instant Search filtering in Browser DOM</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Found spot "Phong Trường Vinh"</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">TRANS.1 Database SQL persistence after mutation</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">DB Phone: 0908200981, DB Verified: true</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">TRANS.2 Reload Browser Persistence: Value survives hard refresh</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">Phone "0908200981" displayed in table after reload</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">REG.1 Route: Homepage (Map & Explorer)</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">HTTP Status 200</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">REG.1 Route: Public API /api/spots</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">HTTP Status 200</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">REG.1 Route: Public API /api/nearby</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">HTTP Status 200</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">REG.1 Route: Public API /api/search</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">HTTP Status 200</td>
+            </tr>
+          
+            <tr>
+              <td style="font-weight: 600;">REG.1 Route: Auth Login Page</td>
+              <td><span class="badge-pass">PASS</span></td>
+              <td style="color: #cbd5e1;">HTTP Status 200</td>
+            </tr>
+          
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
