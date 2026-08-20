@@ -1,0 +1,36 @@
+TAP version 13
+# Subtest: Suite 1: Domain Enums & Integrity
+ok 1 - Suite 1: Domain Enums & Integrity
+  ---
+  duration_ms: 1.313131
+  ...
+# Subtest: Suite 2: Domain Type Guards
+ok 2 - Suite 2: Domain Type Guards
+  ---
+  duration_ms: 0.279282
+  ...
+# Subtest: Suite 3: E-E-A-T Verification & Confidence Calculation
+ok 3 - Suite 3: E-E-A-T Verification & Confidence Calculation
+  ---
+  duration_ms: 0.230521
+  ...
+# Subtest: Suite 4: Dynamic Pricing Matrix Normalization
+ok 4 - Suite 4: Dynamic Pricing Matrix Normalization
+  ---
+  duration_ms: 0.320162
+  ...
+# Subtest: Suite 5: ParkingSpot Entity Instantiation & Validation
+ok 5 - Suite 5: ParkingSpot Entity Instantiation & Validation
+  ---
+  duration_ms: 0.282002
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 18.90539
+✅ ALL DOMAIN LAYER UNIT TESTS PASSED!
