@@ -524,7 +524,7 @@ export default function HomePage() {
           <span style={{ fontSize: '15px', color: '#94a3b8', marginRight: '8px' }}>🔍</span>
           <input
             type="text"
-            placeholder={t('search_placeholder') || 'Tìm bãi xe, cây xăng, cứu hộ...'}
+            placeholder={t('search_placeholder') || 'Bạn muốn tìm gì? (Bãi xe, quán ăn, WC...)'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch()}
@@ -555,10 +555,12 @@ export default function HomePage() {
           ) : null}
         </div>
 
-        {/* TẦNG 3: TRỢ LÝ 1-CHẠM GẦN BẠN (CHIP BAR 1 DÒNG THANH THOÁT) */}
-        <div style={{ marginTop: '2px' }}>
-          <SmartNearbyWidget latitude={latitude} longitude={longitude} onSelectService={handleSelectQuickService} />
-        </div>
+        {/* TẦNG 3: TRỢ LÝ 1-CHẠM GẦN BẠN (ẨN KHI ĐANG DẪN ĐƯỜNG ĐỂ NHƯỜNG KHÔNG GIAN BẢN ĐỒ) */}
+        {!isRouting && !isNavigating && (
+          <div style={{ marginTop: '2px' }}>
+            <SmartNearbyWidget latitude={latitude} longitude={longitude} onSelectService={handleSelectQuickService} />
+          </div>
+        )}
       </div>
 
       {/* DESKTOP SIDEBAR */}
@@ -820,11 +822,20 @@ export default function HomePage() {
             <div style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isNavigating ? '🧭 ' + t('navigating') : '📍 ' + routingDest.name}
             </div>
-            <div style={{ fontSize: '12px', color: isNavigating ? '#86efac' : '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isNavigating && navInfo
-                ? `📏 ${navInfo.dist.toFixed(1)} km • ⏱️ ~${navInfo.dur} phút`
-                : (routingDest.address ? routingDest.address.substring(0, 38) : 'Điểm đến đã chọn')
-              }
+            <div style={{ fontSize: '13px', color: isNavigating ? '#86efac' : '#38bdf8', marginTop: '2px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>
+                {isNavigating && navInfo
+                  ? `🚗 ~${navInfo.dur} phút`
+                  : `🚗 ~${Math.max(1, Math.round((typeof routingDest.distance === 'number' ? routingDest.distance : parseFloat(routingDest.distance || '2.4')) * 2.5))} phút`
+                }
+              </span>
+              <span style={{ opacity: 0.4 }}>•</span>
+              <span style={{ color: '#94a3b8', fontWeight: 400 }}>
+                {isNavigating && navInfo
+                  ? `${navInfo.dist.toFixed(1)} km`
+                  : (typeof routingDest.distance === 'number' ? `${(routingDest.distance as number).toFixed(1)} km` : (routingDest.distance || routingDest.address?.substring(0, 30)))
+                }
+              </span>
             </div>
           </div>
 

@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const lat = parseFloat(searchParams.get('lat') || '10.7769'); // Default: Ben Thanh Market
     const lng = parseFloat(searchParams.get('lng') || '106.7009');
 
-    // Query nearest 1 place for each critical driver category via spatial KNN
+    // Query nearest 1 place for driver categories via spatial KNN
     const query = `
       WITH nearest_parking AS (
         SELECT id, name, category, address, phone, price_info, lat, lon, metadata,
@@ -40,6 +40,30 @@ export async function GET(req: NextRequest) {
         WHERE category = 'CAR_REPAIR' AND status = 'ACTIVE'
         ORDER BY geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
         LIMIT 1
+      ),
+      nearest_restaurant AS (
+        SELECT id, name, category, address, phone, price_info, lat, lon, metadata,
+               ROUND(ST_Distance(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography)::numeric, 0) as distance_meters
+        FROM places
+        WHERE category = 'RESTAURANT' AND status = 'ACTIVE'
+        ORDER BY geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
+        LIMIT 1
+      ),
+      nearest_restroom AS (
+        SELECT id, name, category, address, phone, price_info, lat, lon, metadata,
+               ROUND(ST_Distance(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography)::numeric, 0) as distance_meters
+        FROM places
+        WHERE category = 'RESTROOM' AND status = 'ACTIVE'
+        ORDER BY geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
+        LIMIT 1
+      ),
+      nearest_cafe AS (
+        SELECT id, name, category, address, phone, price_info, lat, lon, metadata,
+               ROUND(ST_Distance(geom::geography, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography)::numeric, 0) as distance_meters
+        FROM places
+        WHERE category = 'CAFE' AND status = 'ACTIVE'
+        ORDER BY geom <-> ST_SetSRID(ST_MakePoint($1, $2), 4326)
+        LIMIT 1
       )
       SELECT * FROM nearest_parking
       UNION ALL
@@ -47,7 +71,13 @@ export async function GET(req: NextRequest) {
       UNION ALL
       SELECT * FROM nearest_ev
       UNION ALL
-      SELECT * FROM nearest_repair;
+      SELECT * FROM nearest_repair
+      UNION ALL
+      SELECT * FROM nearest_restaurant
+      UNION ALL
+      SELECT * FROM nearest_restroom
+      UNION ALL
+      SELECT * FROM nearest_cafe;
     `;
 
     const result = await pool.query(query, [lng, lat]);

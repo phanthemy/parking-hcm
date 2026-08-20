@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import api from '@/lib/api';
 
 interface QuickService {
@@ -44,88 +44,86 @@ export default function SmartNearbyWidget({ latitude, longitude, onSelectService
     fetchQuickAssist();
   }, [latitude, longitude]);
 
-  if (!services) return null;
+  // Adaptive Quick Assist theo ngữ cảnh thời gian trong ngày
+  const sortedItems = useMemo(() => {
+    if (!services) return [];
+    const hour = new Date().getHours();
 
-  const items = [
-    {
-      key: 'parking',
-      icon: '🅿️',
-      title: 'Bãi xe',
-      data: services.parking,
-      color: '#60a5fa',
-      bg: 'rgba(30, 41, 59, 0.85)',
-      border: 'rgba(96, 165, 250, 0.3)',
-    },
-    {
-      key: 'fuel',
-      icon: '⛽',
-      title: 'Cây xăng',
-      data: services.fuel,
-      color: '#fb923c',
-      bg: 'rgba(30, 41, 59, 0.85)',
-      border: 'rgba(251, 146, 60, 0.3)',
-    },
-    {
-      key: 'ev_charging',
-      icon: '⚡',
-      title: 'Trạm sạc',
-      data: services.ev_charging,
-      color: '#34d399',
-      bg: 'rgba(30, 41, 59, 0.85)',
-      border: 'rgba(52, 211, 153, 0.3)',
-    },
-    {
-      key: 'car_repair',
-      icon: '🔧',
-      title: 'Cứu hộ',
-      data: services.car_repair,
-      color: '#c084fc',
-      bg: 'rgba(30, 41, 59, 0.85)',
-      border: 'rgba(192, 132, 252, 0.3)',
-    },
-  ];
+    const allConfigs = [
+      { key: 'parking', icon: '🅿️', label: 'Bãi xe gần nhất', color: '#60a5fa' },
+      { key: 'fuel', icon: '⛽', label: 'Cây xăng gần nhất', color: '#fb923c' },
+      { key: 'ev_charging', icon: '⚡', label: 'Trạm sạc EV gần nhất', color: '#34d399' },
+      { key: 'restaurant', icon: '🍜', label: 'Quán ăn gần nhất', color: '#f43f5e' },
+      { key: 'restroom', icon: '🚻', label: 'WC công cộng gần nhất', color: '#38bdf8' },
+      { key: 'cafe', icon: '☕', label: 'Cà phê gần nhất', color: '#eab308' },
+      { key: 'car_repair', icon: '🔧', label: 'Cứu hộ / Vá vỏ', color: '#c084fc' },
+    ];
+
+    // Ưu tiên theo khung giờ
+    let priorityKeys: string[] = [];
+    if (hour >= 6 && hour < 10) {
+      // Sáng: Ưu tiên Bãi xe, Cà phê, Cây xăng, Trạm sạc
+      priorityKeys = ['parking', 'cafe', 'fuel', 'ev_charging', 'restroom', 'car_repair'];
+    } else if (hour >= 11 && hour < 14) {
+      // Trưa: Ưu tiên Quán ăn, WC, Bãi xe, Cà phê
+      priorityKeys = ['restaurant', 'restroom', 'parking', 'cafe', 'fuel', 'ev_charging'];
+    } else if (hour >= 17 && hour < 22) {
+      // Tối: Ưu tiên Quán ăn, Bãi giữ xe, Cây xăng, Cứu hộ
+      priorityKeys = ['restaurant', 'parking', 'fuel', 'cafe', 'car_repair', 'ev_charging'];
+    } else {
+      // Đêm: Ưu tiên Bãi xe, Cây xăng, Cứu hộ, WC
+      priorityKeys = ['parking', 'fuel', 'car_repair', 'restroom', 'ev_charging'];
+    }
+
+    return priorityKeys
+      .map(key => {
+        const conf = allConfigs.find(c => c.key === key);
+        const data = services[key];
+        return data && conf ? { ...conf, data } : null;
+      })
+      .filter(Boolean) as Array<{ key: string; icon: string; label: string; color: string; data: QuickService }>;
+  }, [services]);
+
+  if (sortedItems.length === 0) return null;
 
   return (
     <div style={{
       display: 'flex',
-      gap: '8px',
+      gap: '6px',
       overflowX: 'auto',
       padding: '2px 0 4px',
       scrollbarWidth: 'none',
       msOverflowStyle: 'none',
       WebkitOverflowScrolling: 'touch',
     }}>
-      {items.map((item) => {
-        if (!item.data) return null;
-        return (
-          <button
-            key={item.key}
-            onClick={() => onSelectService(item.data!)}
-            style={{
-              flex: '0 0 auto',
-              background: item.bg,
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              border: `1px solid ${item.border}`,
-              borderRadius: '20px',
-              padding: '6px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              color: '#ffffff',
-              transition: 'all 0.15s ease',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-            }}
-          >
-            <span style={{ fontSize: '15px' }}>{item.icon}</span>
-            <span style={{ fontSize: '12px', fontWeight: 600, color: '#f1f5f9' }}>{item.title}</span>
-            <span style={{ fontSize: '11px', fontWeight: 700, color: item.color, background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '10px' }}>
-              {item.data.distanceText}
-            </span>
-          </button>
-        );
-      })}
+      {sortedItems.map((item) => (
+        <button
+          key={item.key}
+          onClick={() => onSelectService(item.data)}
+          title={`${item.label}: ${item.data.name} (${item.data.distanceText})`}
+          style={{
+            flex: '0 0 auto',
+            background: 'rgba(20, 26, 38, 0.88)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '18px',
+            padding: '5px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            cursor: 'pointer',
+            color: '#ffffff',
+            transition: 'all 0.15s ease',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+          }}
+        >
+          <span style={{ fontSize: '14px' }}>{item.icon}</span>
+          <span style={{ fontSize: '12px', fontWeight: 700, color: item.color }}>
+            {item.data.distanceText}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }
