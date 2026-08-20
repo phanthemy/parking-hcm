@@ -55,8 +55,11 @@ export default function HomePage() {
   const [startY, setStartY] = useState(0);
   const [currentY, setCurrentY] = useState(0);
 
+  const [visibleLimit, setVisibleLimit] = useState(25);
+
   const fetchSpots = useCallback(async () => {
     setIsLoading(true);
+    setVisibleLimit(25);
     try {
       const params = new URLSearchParams();
       if (activeFilter !== 'all') params.set('type', activeFilter);
@@ -847,11 +850,30 @@ export default function HomePage() {
                 <div style={{ textAlign: 'center', padding: '20px' }}>{t('loading')}</div>
               ) : spots.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {spots.map((spot) => (
+                  {spots.slice(0, visibleLimit).map((spot) => (
                     <div key={spot.id} onClick={() => handleMarkerClick(spot)} style={{ cursor: 'pointer' }}>
                       <SpotCard spot={spot} onDirections={handleDirections} onCardClick={handleMarkerClick} />
                     </div>
                   ))}
+                  {spots.length > visibleLimit && (
+                    <button
+                      onClick={() => setVisibleLimit((prev) => prev + 25)}
+                      style={{
+                        padding: '12px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        borderRadius: '12px',
+                        color: '#38bdf8',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        marginTop: '4px',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      Xem thêm ({spots.length - visibleLimit} địa điểm khác)
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b6b80' }}>
@@ -1236,11 +1258,31 @@ export default function HomePage() {
                       </div>
                       <span style={{ color: '#ef4444', fontSize: 16 }}>›</span>
                     </div>
-                    {spots.map((spot) => (
+                    {spots.slice(0, visibleLimit).map((spot) => (
                       <div key={spot.id}>
                         <SpotCard spot={spot} onDirections={handleDirections} onCardClick={handleMarkerClick} />
                       </div>
                     ))}
+                    {spots.length > visibleLimit && (
+                      <button
+                        onClick={() => setVisibleLimit((prev) => prev + 25)}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '12px',
+                          color: '#38bdf8',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          marginTop: '4px',
+                          marginBottom: '20px',
+                        }}
+                      >
+                        Xem thêm ({spots.length - visibleLimit} địa điểm khác)
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div style={{ textAlign: 'center', padding: '20px', color: '#6b6b80' }}>

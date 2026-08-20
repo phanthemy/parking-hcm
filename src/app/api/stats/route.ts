@@ -36,6 +36,10 @@ export async function GET(req: NextRequest) {
       duplicate_places: parseInt(overview.duplicate_places),
       categories,
       last_sync: overview.last_sync || new Date().toISOString()
+    }, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+      }
     });
   } catch (error: any) {
     console.error('Stats API Error:', error);
