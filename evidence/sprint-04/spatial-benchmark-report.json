@@ -1,0 +1,30 @@
+[
+  {
+    "name": "PostGIS Spatial Radius (3km)",
+    "type": "GiST Index Scan",
+    "planningTimeMs": 5.929,
+    "executionTimeMs": 10.636,
+    "targetThroughput": "94 QPS/core"
+  },
+  {
+    "name": "Bounding Box Viewport Query",
+    "type": "GiST Envelope Scan",
+    "planningTimeMs": 0.177,
+    "executionTimeMs": 0.252,
+    "targetThroughput": "3968 QPS/core"
+  },
+  {
+    "name": "Unaccent Trigram Full-Text Search",
+    "type": "GIN Trigram Scan",
+    "planningTimeMs": 4.27,
+    "executionTimeMs": 0.165,
+    "targetThroughput": "6061 QPS/core"
+  },
+  {
+    "name": "Multi-Factor Ranking Engine",
+    "type": "PostGIS + Dynamic Score Calculation",
+    "planningTimeMs": 0.172,
+    "executionTimeMs": 2.68,
+    "targetThroughput": "373 QPS/core"
+  }
+]

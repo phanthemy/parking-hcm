@@ -1,0 +1,224 @@
+openapi: 3.0.3
+info:
+  title: MapGo Mobility & Spatial API
+  description: High-performance real-time urban mobility & POI API for MapGo.vn (Next.js 15, PostGIS, Prisma).
+  version: 1.0.0
+  contact:
+    name: MapGo Engineering Team
+    url: https://mapgo.vn
+
+servers:
+  - url: https://mapgo.vn/api
+    description: Production Server
+  - url: http://localhost:3003/api
+    description: Local Development Server
+
+paths:
+  /spots:
+    get:
+      summary: Search & filter POIs (Parking, EV, Garage, Gas, Restroom)
+      description: Returns a paginated list of POIs with geospatial distance calculation and multi-factor ranking.
+      parameters:
+        - name: search
+          in: query
+          description: Search term with unaccent support (e.g. 'Diamond Plaza')
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter by spot type
+          schema:
+            type: string
+            enum: [all, PARKING_LOT, EV_CHARGING, FUEL, GARAGE, CAR_WASH, RESTROOM]
+        - name: lat
+          in: query
+          description: Driver GPS latitude
+          schema:
+            type: number
+            format: float
+        - name: lng
+          in: query
+          description: Driver GPS longitude
+          schema:
+            type: number
+            format: float
+        - name: radius
+          in: query
+          description: Search radius in kilometers (default 5km)
+          schema:
+            type: number
+            default: 5
+        - name: sort
+          in: query
+          description: Sorting criterion
+          schema:
+            type: string
+            enum: [distance, price, rating, rank]
+            default: distance
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Paginated POI results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SpotSummary'
+
+  /spots/{id}:
+    get:
+      summary: Get detailed POI by ID or Slug
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Spot ID or SEO Slug
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detailed Spot Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpotDetail'
+        '404':
+          description: Spot not found
+
+  /nearby/quick-assist:
+    get:
+      summary: High-urgency nearby search (EV Charging, Restroom, Garage, Gas)
+      parameters:
+        - name: lat
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: lng
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: category
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [EV_CHARGING, RESTROOM, GARAGE, FUEL, PARKING_LOT]
+      responses:
+        '200':
+          description: List of closest available utility spots within 3km
+
+components:
+  schemas:
+    SpotSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        category:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        distanceKm:
+          type: number
+        pricePerHour:
+          type: number
+        rating:
+          type: number
+        reviewCount:
+          type: integer
+        verified:
+          type: boolean
+        confidenceScore:
+          type: number
+
+    SpotDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        category:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        phone:
+          type: string
+        openTime:
+          type: string
+        closeTime:
+          type: string
+        is247:
+          type: boolean
+        heightLimit:
+          type: number
+        carSlots:
+          type: integer
+        bikeSlots:
+          type: integer
+        hasGuard247:
+          type: boolean
+        hasCCTV:
+          type: boolean
+        hasRoof:
+          type: boolean
+        hasEvCharging:
+          type: boolean
+        pricing:
+          type: array
+          items:
+            type: object
+            properties:
+              vehicleType:
+                type: string
+              priceType:
+                type: string
+              amount:
+                type: number
+              currency:
+                type: string
+        verified:
+          type: boolean
+        verificationMethod:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
