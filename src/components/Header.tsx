@@ -5,11 +5,15 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useLocale } from '@/contexts/LocaleContext';
 import LanguageSelector from '@/components/LanguageSelector';
+import UserRetentionDrawer from '@/components/UserRetentionDrawer';
+import { useUserRetention } from '@/contexts/UserRetentionContext';
 
 export default function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const { t } = useLocale();
+  const { favorites } = useUserRetention();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showDrawer, setShowDrawer] = useState(false);
 
   return (
     <header
@@ -54,6 +58,24 @@ export default function Header() {
           <Link href="/" style={{ fontSize: '14px', opacity: 0.8, transition: 'opacity 0.2s', color: '#fff' }}>
             {t('map')}
           </Link>
+          <button
+            onClick={() => setShowDrawer(true)}
+            style={{
+              background: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.4)',
+              color: '#fbbf24',
+              borderRadius: '12px',
+              padding: '5px 12px',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+          >
+            <span>⭐</span> {favorites.length > 0 ? `Đã lưu (${favorites.length})` : 'Đã lưu'}
+          </button>
           {isAuthenticated && user?.role?.toString().toUpperCase() === 'BUSINESS' && (
             <Link href="/business/dashboard" style={{ fontSize: '14px', opacity: 0.8, color: '#fff' }}>
                {t('manage')}
@@ -134,6 +156,15 @@ export default function Header() {
           >
             🗺️ {t('map')}
           </Link>
+          <div
+            onClick={() => {
+              setMenuOpen(false);
+              setShowDrawer(true);
+            }}
+            style={{ fontSize: '18px', padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', color: '#fbbf24' }}
+          >
+            ⭐ Địa điểm đã lưu ({favorites.length})
+          </div>
           {isAuthenticated && user?.role?.toString().toUpperCase() === 'BUSINESS' && (
             <Link
               href="/business/dashboard"
@@ -180,6 +211,18 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      {/* User Retention Drawer */}
+      <UserRetentionDrawer
+        isOpen={showDrawer}
+        onClose={() => setShowDrawer(false)}
+        onSelectSpot={(spot) => {
+          window.location.href = `/?route_to=${spot.id}&lat=${spot.latitude}&lng=${spot.longitude}&name=${encodeURIComponent(spot.name)}`;
+        }}
+        onNavigateLocation={(lat, lng, name) => {
+          window.location.href = `/?lat=${lat}&lng=${lng}&name=${encodeURIComponent(name)}`;
+        }}
+      />
 
       {/* Inline responsive CSS */}
       <style jsx>{`

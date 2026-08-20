@@ -7,6 +7,8 @@ import { formatCurrency, formatHours } from '@/lib/format';
 import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getCategoryBrand } from '@/lib/images';
+import { useUserRetention } from '@/contexts/UserRetentionContext';
+import CommunityReportModal from './CommunityReportModal';
 
 interface SpotCardProps {
   spot: Spot;
@@ -16,6 +18,9 @@ interface SpotCardProps {
 
 export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardProps) {
   const { t } = useLocale();
+  const { toggleFavorite, checkIsFavorite } = useUserRetention();
+  const isFavorite = checkIsFavorite(spot.id);
+  const [showReportModal, setShowReportModal] = React.useState(false);
   const [failedUrls, setFailedUrls] = React.useState<string[]>([]);
   const [isVisible, setIsVisible] = React.useState(false);
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
@@ -449,12 +454,12 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
           </div>
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
             <button
               onClick={handleDirections}
               style={{
                 flex: 1,
-                padding: '9px 14px',
+                padding: '9px 12px',
                 fontSize: '13px',
                 fontWeight: 600,
                 border: 'none',
@@ -469,11 +474,51 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
             >
               🧭 {t('directions')}
             </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleFavorite(spot);
+              }}
+              title={isFavorite ? 'Đã lưu yêu thích' : 'Lưu yêu thích'}
+              style={{
+                padding: '9px 12px',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: isFavorite ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '12px',
+                background: isFavorite ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.05)',
+                color: isFavorite ? '#fbbf24' : '#a0a0b0',
+                cursor: 'pointer',
+              }}
+            >
+              {isFavorite ? '⭐' : '☆'}
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setShowReportModal(true);
+              }}
+              title="Báo cáo tình trạng còn/hết chỗ, giá, vị trí"
+              style={{
+                padding: '9px 12px',
+                fontSize: '13px',
+                fontWeight: 600,
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: '12px',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#a0a0b0',
+                cursor: 'pointer',
+              }}
+            >
+              ⚠️
+            </button>
             {spot.phone && (
               <button
                 onClick={handleCall}
                 style={{
-                  padding: '9px 14px',
+                  padding: '9px 12px',
                   fontSize: '13px',
                   fontWeight: 600,
                   border: '1px solid rgba(255,255,255,0.12)',
@@ -495,17 +540,24 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
   );
 
   // When onCardClick is provided, use div (stay on page). Otherwise use Link (navigate to detail page).
-  if (onCardClick) {
-    return (
-      <div onClick={() => onCardClick(spot)} style={{ textDecoration: 'none', color: 'inherit' }}>
-        {cardContent}
-      </div>
-    );
-  }
-
   return (
-    <Link href={`/spot/${spot.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-      {cardContent}
-    </Link>
+    <>
+      {onCardClick ? (
+        <div onClick={() => onCardClick(spot)} style={{ textDecoration: 'none', color: 'inherit' }}>
+          {cardContent}
+        </div>
+      ) : (
+        <Link href={`/p/${spot.slug || spot.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          {cardContent}
+        </Link>
+      )}
+
+      {showReportModal && (
+        <CommunityReportModal
+          spot={spot}
+          onClose={() => setShowReportModal(false)}
+        />
+      )}
+    </>
   );
 }

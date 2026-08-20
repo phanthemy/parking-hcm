@@ -15,7 +15,10 @@ import { haversine } from '@/lib/haversine';
 import type { Spot, SpotType } from '@/lib/types';
 import type { MapHandle } from '@/components/Map';
 import SmartNearbyWidget from '@/components/SmartNearbyWidget';
-import PwaInstallPrompt from '@/components/PwaInstallPrompt';
+import PwaInstallBanner from '@/components/PwaInstallBanner';
+import UserRetentionDrawer from '@/components/UserRetentionDrawer';
+import CommunityReportModal from '@/components/CommunityReportModal';
+import { useUserRetention } from '@/contexts/UserRetentionContext';
 import { trackEvent } from '@/lib/analytics';
 
 const MapComponent = dynamic(() => import('@/components/Map'), { ssr: false });
@@ -24,6 +27,7 @@ export default function HomePage() {
   const { locale, setLocale, t } = useLocale();
   const { user, isAuthenticated } = useAuth();
   const { latitude, longitude } = useGeolocation();
+  const { toggleFavorite, checkIsFavorite, saveRecentPlace, saveRecentlyViewed } = useUserRetention();
   const [spots, setSpots] = useState<Spot[]>([]);
 
   // Telemetry: track home opened and GPS
@@ -45,6 +49,8 @@ export default function HomePage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isRouting, setIsRouting] = useState(false);
   const [showBanReport, setShowBanReport] = useState(false);
+  const [showRetentionDrawer, setShowRetentionDrawer] = useState(false);
+  const [showSpotReportModal, setShowSpotReportModal] = useState(false);
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const [streetViewFullscreen, setStreetViewFullscreen] = useState(false);
   const mapComponentRef = useRef<MapHandle>(null);
@@ -223,6 +229,7 @@ export default function HomePage() {
 
   const handleMarkerClick = useCallback((spot: Spot) => {
     setSelectedSpot(spot);
+    saveRecentlyViewed(spot);
     setBottomSheetState('detail');
     if (mapComponentRef.current) {
       mapComponentRef.current.panTo([spot.latitude, spot.longitude]);
@@ -230,13 +237,14 @@ export default function HomePage() {
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
       setSidebarCollapsed(false);
     }
-  }, []);
+  }, [saveRecentlyViewed]);
 
   const [routingDest, setRoutingDest] = useState<Spot | null>(null);
 
   const handleDirections = useCallback((spot: Spot) => {
     const startLat = latitude || 10.7769;
     const startLng = longitude || 106.7009;
+    saveRecentPlace(spot);
     if (mapComponentRef.current) {
       mapComponentRef.current.showRoute(
         [startLat, startLng],
@@ -250,7 +258,7 @@ export default function HomePage() {
         setBottomSheetState('peek');
       }
     }
-  }, [latitude, longitude]);
+  }, [latitude, longitude, saveRecentPlace]);
 
   const handleSelectQuickService = useCallback((service: any) => {
     const startLat = latitude || 10.7769;
@@ -502,6 +510,30 @@ export default function HomePage() {
                 👑
               </Link>
             )}
+
+            {/* Nút Địa điểm đã lưu / Yêu thích / Nhà / Cơ quan */}
+            <button
+              onClick={() => setShowRetentionDrawer(true)}
+              title="Địa điểm đã lưu & Yêu thích"
+              style={{
+                height: '28px',
+                padding: '0 10px',
+                borderRadius: '14px',
+                background: 'rgba(30, 41, 59, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(245, 158, 11, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                color: '#fbbf24',
+                fontSize: '12px',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              <span>⭐</span> Đã lưu
+            </button>
 
             {/* Nút báo cấm đỗ icon tròn 28px */}
             <button
@@ -1127,6 +1159,75 @@ export default function HomePage() {
                     )}
                   </div>
 
+                  {/* Secondary Retentions & Community Actions */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', marginTop: '10px' }}>
+                    <button
+                      onClick={() => toggleFavorite(selectedSpot)}
+                      style={{
+                        padding: '9px',
+                        borderRadius: '10px',
+                        background: checkIsFavorite(selectedSpot.id) ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                        border: `1px solid ${checkIsFavorite(selectedSpot.id) ? '#f59e0b' : 'rgba(255, 255, 255, 0.1)'}`,
+                        color: checkIsFavorite(selectedSpot.id) ? '#fbbf24' : '#cbd5e1',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      ⭐ {checkIsFavorite(selectedSpot.id) ? 'Đã lưu' : 'Lưu lại'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/p/${selectedSpot.slug || selectedSpot.id}`;
+                        if (navigator.share) {
+                          navigator.share({ title: selectedSpot.name, url }).catch(() => {});
+                        } else {
+                          navigator.clipboard.writeText(url);
+                          alert('Đã sao chép liên kết chia sẻ!');
+                        }
+                      }}
+                      style={{
+                        padding: '9px',
+                        borderRadius: '10px',
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        color: '#cbd5e1',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      📤 Chia sẻ
+                    </button>
+                    <button
+                      onClick={() => setShowSpotReportModal(true)}
+                      style={{
+                        padding: '9px',
+                        borderRadius: '10px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.3)',
+                        color: '#f87171',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      ⚠️ Báo cáo
+                    </button>
+                  </div>
+
 
                   <div className="streetview-section">
 
@@ -1406,6 +1507,61 @@ export default function HomePage() {
           }}
         />
       )}
+
+      {/* User Retention Drawer (Favorites, Home, Work, Recent Places) */}
+      <UserRetentionDrawer
+        isOpen={showRetentionDrawer}
+        onClose={() => setShowRetentionDrawer(false)}
+        onSelectSpot={(spotSummary) => {
+          const fullSpot: Spot = {
+            id: spotSummary.id,
+            slug: spotSummary.slug || `spot-${spotSummary.id}`,
+            name: spotSummary.name,
+            address: spotSummary.address,
+            type: spotSummary.type as any,
+            latitude: spotSummary.latitude,
+            longitude: spotSummary.longitude,
+            carSlots: spotSummary.carSlots || 0,
+            bikeSlots: 0,
+            basePricePerHour: spotSummary.pricePerHourCar || 0,
+            pricePerHourCar: spotSummary.pricePerHourCar,
+            openTime: '06:00',
+            closeTime: '22:00',
+            rating: spotSummary.rating || 5.0,
+            reviewCount: 0,
+            images: [],
+            isPremium: false,
+            status: 'ACTIVE',
+          };
+          setSelectedSpot(fullSpot);
+          setBottomSheetState('detail');
+          if (mapComponentRef.current) {
+            mapComponentRef.current.panTo([spotSummary.latitude, spotSummary.longitude]);
+          }
+        }}
+        onNavigateLocation={(lat, lng, name) => {
+          const startLat = latitude || 10.7769;
+          const startLng = longitude || 106.7009;
+          if (mapComponentRef.current) {
+            mapComponentRef.current.showRoute([startLat, startLng], [lat, lng], name);
+            setIsRouting(true);
+          }
+        }}
+      />
+
+      {/* Community Data Report Modal (5 loại báo cáo) */}
+      {showSpotReportModal && selectedSpot && (
+        <CommunityReportModal
+          spot={selectedSpot}
+          onClose={() => setShowSpotReportModal(false)}
+          onSuccess={() => {
+            setShowSpotReportModal(false);
+          }}
+        />
+      )}
+
+      {/* PWA Install Banner (Visit >= 2, Session >= 30s, <= 1 time/week) */}
+      <PwaInstallBanner />
     </div>
   );
 }
