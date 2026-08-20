@@ -1,0 +1,23 @@
+[
+  {
+    "dataset": "100,000 POIs",
+    "query": "Spatial Radius 3km (ST_DWithin + ST_Distance)",
+    "planningTimeMs": 0.533,
+    "executionTimeMs": 429.912,
+    "qpsPerCore": 2
+  },
+  {
+    "dataset": "100,000 POIs",
+    "query": "Bounding Box Viewport (&& Operator)",
+    "planningTimeMs": 0.174,
+    "executionTimeMs": 0.684,
+    "qpsPerCore": 1462
+  },
+  {
+    "dataset": "100,000 POIs",
+    "query": "Multi-Factor Search Ranking Engine",
+    "planningTimeMs": 0.226,
+    "executionTimeMs": 83.948,
+    "qpsPerCore": 12
+  }
+]

@@ -23,9 +23,12 @@ async function capture() {
   await mobPage.screenshot({ path: path.join(artifactsDir, 'homepage-clean-mobile.png') });
 
   // 3. Mobile with selected spot / route
-  await mobPage.click('button:has-text("Bãi xe")');
-  await mobPage.waitForTimeout(2000);
-  await mobPage.screenshot({ path: path.join(artifactsDir, 'homepage-clean-mobile-route.png') });
+  const chipBtn = await mobPage.$('button[title*="Bãi xe"], button:has-text("🅿️")');
+  if (chipBtn) {
+    await chipBtn.click();
+    await mobPage.waitForTimeout(2000);
+    await mobPage.screenshot({ path: path.join(artifactsDir, 'homepage-clean-mobile-route.png') });
+  }
 
   console.log('✅ Clean UI screenshots captured successfully!');
   await browser.close();
