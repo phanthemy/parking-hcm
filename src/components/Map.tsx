@@ -292,7 +292,7 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
 
     panTo: (pos: [number, number], zoom?: number) => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.flyTo(pos, zoom || 16, { animate: true, duration: 0.8 });
+        mapInstanceRef.current.flyTo(pos, zoom || 16, { animate: true, duration: 0.35 });
       }
     },
   }));

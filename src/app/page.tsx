@@ -459,7 +459,7 @@ export default function HomePage() {
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         width: 'calc(100% - 20px)',
         maxWidth: '460px',
-        zIndex: 100,
+        zIndex: 500,
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
