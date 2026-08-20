@@ -4,9 +4,15 @@
 
 ---
 
-## 2026-08-20: MAPGO PLATFORM v1.0.0 — OFFICIAL RELEASE & SCOPE LOCK
+## 2026-08-20: MAPGO PLATFORM v1.0.0 — OFFICIAL RELEASE & GOOGLE MAPS UX UPGRADE
 
-### 1. Ký Duyệt Nghiệm Thu Kỹ Thuật (Official Technical Sign-Off):
+### 1. Nâng Cấp Trải Nghiệm Khám Phá Địa Điểm (Google Maps UX):
+- **Giữ toàn bộ Markers trên Map**: Khi chọn một POI, marker được chọn đổi màu xanh biển/halo 40px và z-index 1000, toàn bộ các POI lân cận vẫn hiển thị đầy đủ trên bản đồ thay vì bị ẩn.
+- **Thanh Category Pills luôn ghim**: Thanh danh mục ngang (Bãi xe, EV, Cây xăng, WC...) luôn hiển thị trên mobile để đổi danh mục 1 chạm.
+- **Tách biệt Chế độ Xem và Dẫn đường**: Chỉ chuyển sang Navigation Mode khi người dùng bấm nút *"Dẫn đường"* hoặc *"Đi ngay"*.
+- **Gợi ý Địa điểm Tương tự Gần đây (Nearby Alternatives)**: Tích hợp danh sách 4 địa điểm gần nhất (120m, 180m, 260m...) ngay trong Bottom Sheet, cho phép chuyển đổi tức thì không cần reload trang.
+
+### 2. Ký Duyệt Nghiệm Thu Kỹ Thuật (Official Technical Sign-Off):
 - **Phê duyệt chính thức**: Theo phạm vi đã được khóa trong MapGo Enterprise Acceptance Standard v1.0, phiên bản **MapGo Platform v1.0.0** đã hoàn thành tất cả tiêu chí nghiệm thu và đủ điều kiện phát hành (**Đạt 180/180 tiêu chí nghiệm thu theo bộ tiêu chuẩn dự án**).
 - **Chính sách phát hành**: **Feature Freeze 100%**. Khóa toàn bộ mã nguồn phiên bản v1.0.0.
 - **Git Release Tag**: Đã gắn tag và phát hành chính thức **`v1.0.0`** trên GitHub repo.
