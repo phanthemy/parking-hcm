@@ -12,8 +12,11 @@
 - **Spatial Geohash & SingleFlight Coalescing Engine (`src/lib/spatial-cache.ts`)**:
   - Mã hóa Geohash Precision 6 (~1.2km x 0.6km) làm cache key không gian, tránh phân mảnh cache key khi dùng tọa độ float thô.
   - Cơ chế SingleFlight chia sẻ Promise duy nhất giữa 1.000 concurrent callers $\rightarrow$ Triệt tiêu 99.7% tải DB (1.000 requests chỉ phát sinh 3 truy vấn DB thực tế).
-- **Observability & Prometheus/JSON Metrics API (`/api/metrics`)**:
-  - Báo cáo real-time: Node RSS Memory, Heap Used, Event Loop Uptime, Database Status, Cache Hit/Miss Ratio và SingleFlight Coalesced Requests.
+- **Observability & Prometheus/JSON Metrics API (`/api/metrics` & `/api/metrics/prometheus`)**:
+  - Báo cáo real-time theo chuẩn Prometheus Exposition Format: Memory RSS, Heap, Cache Hits/Misses, SingleFlight saves, và Latency Histograms (`http_request_duration_seconds_bucket`, `db_query_duration_seconds_bucket`).
+- **PostgreSQL Materialized View (`district_statistics_mv`)**:
+  - Tạo bảng tổng hợp `district_statistics_mv` pre-aggregate số lượng bãi, rating trung bình, giá gửi xe cho 22 quận huyện.
+  - Phục vụ truy vấn tức thì (0ms) cho Landing pages và refresh bất đồng bộ (`REFRESH MATERIALIZED VIEW CONCURRENTLY`) chỉ trong 8ms.
 - **Sprint 6 Evidence Artifacts (`evidence/sprint-06/`)**:
   - Xuất bản `CHANGELOG.md` và `100k-poi-spatial-benchmark.json`.
 
