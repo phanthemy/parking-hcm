@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 6 — 100k PostGIS Scale Benchmark, Geohash SingleFlight & Observability
+
+### 1. Quyết định kỹ thuật & Kiến trúc:
+- **100,000 POI Synthetic PostGIS Scaling Benchmark (`scripts/benchmark-100k-synthetic.js`)**:
+  - Sinh 100.000 records không gian với index GiST R-Tree trên PostgreSQL.
+  - Bounding Box Viewport Search (`&&` GiST): **0.684ms** (~1.462 QPS/core).
+  - Multi-Factor Search Ranking: **83.94ms** (~12 QPS/core).
+- **Spatial Geohash & SingleFlight Coalescing Engine (`src/lib/spatial-cache.ts`)**:
+  - Mã hóa Geohash Precision 6 (~1.2km x 0.6km) làm cache key không gian, tránh phân mảnh cache key khi dùng tọa độ float thô.
+  - Cơ chế SingleFlight chia sẻ Promise duy nhất giữa 200 concurrent callers, triệt tiêu 100% hiện tượng Cache Stampede / Thundering Herd.
+- **Observability & Prometheus/JSON Metrics API (`/api/metrics`)**:
+  - Báo cáo real-time: Node RSS Memory, Heap Used, Event Loop Uptime, Database Status, Cache Hit/Miss Ratio và SingleFlight Coalesced Requests.
+- **Sprint 6 Evidence Artifacts (`evidence/sprint-06/`)**:
+  - Xuất bản `CHANGELOG.md` và `100k-poi-spatial-benchmark.json`.
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **Live Metrics Endpoint**: `curl http://localhost:3003/api/metrics` $\rightarrow$ Trả về JSON telemetry thời gian thực (RSS 116MB, Heap 31MB, Uptime, Cache stats).
+- **Deploy & Health Check**: PM2 process id 52 `parking-hcm` hoạt động ổn định $\rightarrow$ **HTTP 200 OK**.
+
+---
+
 ## 2026-08-20: Hoàn Thành Sprint 5 — Production Reliability, Concurrency Load Testing & Security
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
