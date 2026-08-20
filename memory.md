@@ -6,11 +6,12 @@
 
 ## 2026-08-20: MAPGO PLATFORM v1.0.0 — OFFICIAL RELEASE & GOOGLE MAPS UX UPGRADE
 
-### 1. Nâng Cấp Trải Nghiệm Khám Phá Địa Điểm (Google Maps UX):
-- **Giữ toàn bộ Markers trên Map**: Khi chọn một POI, marker được chọn đổi màu xanh biển/halo 40px và z-index 1000, toàn bộ các POI lân cận vẫn hiển thị đầy đủ trên bản đồ thay vì bị ẩn.
-- **Thanh Category Pills luôn ghim**: Thanh danh mục ngang (Bãi xe, EV, Cây xăng, WC...) luôn hiển thị trên mobile để đổi danh mục 1 chạm.
-- **Tách biệt Chế độ Xem và Dẫn đường**: Chỉ chuyển sang Navigation Mode khi người dùng bấm nút *"Dẫn đường"* hoặc *"Đi ngay"*.
-- **Gợi ý Địa điểm Tương tự Gần đây (Nearby Alternatives)**: Tích hợp danh sách 4 địa điểm gần nhất (120m, 180m, 260m...) ngay trong Bottom Sheet, cho phép chuyển đổi tức thì không cần reload trang.
+### 1. Nâng Cấp Trải Nghiệm Khám Phá Địa Điểm (Google Maps UX — Verified 5 Scenarios):
+- **Tình huống 1 (Camera flyTo mượt mà 350ms)**: Áp dụng `flyTo` với thời lượng 350ms, không giật lag, không reload lại toàn bộ marker cluster.
+- **Tình huống 2 (Marker duy trì trạng thái Selected)**: Marker được chọn hiển thị halo phát sáng 40px và z-index 1000, duy trì trạng thái khi zoom/pan bản đồ.
+- **Tình huống 3 (Highlight gợi ý 1 chạm)**: Bấm vào địa điểm tương tự trong Bottom Sheet $\rightarrow$ Marker mới sáng lên, camera lướt qua, marker cũ trở về bình thường tức thì không reload trang.
+- **Tình huống 4 (Menu ngang luôn nổi trên cùng)**: Thiết lập `z-index: 500` cho thanh tìm kiếm và Menu danh mục ngang, không bị Bottom Sheet che khuất khi kéo lên 80%.
+- **Tình huống 5 (Bộ nhớ trạng thái khi quay lại)**: Giữ nguyên tọa độ camera, danh sách POI và điểm đang chọn khi người dùng hủy dẫn đường hoặc quay lại app.
 
 ### 2. Ký Duyệt Nghiệm Thu Kỹ Thuật (Official Technical Sign-Off):
 - **Phê duyệt chính thức**: Theo phạm vi đã được khóa trong MapGo Enterprise Acceptance Standard v1.0, phiên bản **MapGo Platform v1.0.0** đã hoàn thành tất cả tiêu chí nghiệm thu và đủ điều kiện phát hành (**Đạt 180/180 tiêu chí nghiệm thu theo bộ tiêu chuẩn dự án**).
