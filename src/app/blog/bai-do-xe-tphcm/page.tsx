@@ -15,11 +15,23 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Top 50+ Bãi Đỗ Xe Ô Tô TP.HCM 2026 – Địa Chỉ, Giá, Bản Đồ GPS",
+  "image": ["https://mapgo.vn/logo.png"],
   "datePublished": "2026-08-17T00:00:00+07:00",
+  "dateModified": "2026-08-18T00:00:00+07:00",
   "author": {
     "@type": "Organization",
-    "name": "MapGo.vn"
-  }
+    "name": "MapGo.vn",
+    "url": "https://mapgo.vn"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MapGo.vn",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://mapgo.vn/logo.png"
+    }
+  },
+  "description": "Khám phá danh sách hơn 50 bãi đỗ xe ô tô tại TP.HCM kèm bảng giá và bản đồ GPS chỉ đường."
 };
 
 export default async function Page() {

@@ -12,6 +12,7 @@ import api from '@/lib/api';
 import { formatCurrency, formatHours, formatRelativeTime, formatPhone } from '@/lib/format';
 import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
 import { useLocale } from '@/contexts/LocaleContext';
+import { isFavorite, toggleFavorite } from '@/lib/favorites';
 import type { Spot, Review } from '@/lib/types';
 
 const MapComponent = dynamic(() => import('@/components/Map'), {
@@ -26,20 +27,31 @@ export default function SpotDetailPage() {
   const id = params.id as string;
   const { t } = useLocale();
 
-  const [spot, setSpot] = useState<Spot | null>(null);
+  const [spot, setSpot] = useState<any | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isFav, setIsFav] = useState(false);
+
+  useEffect(() => {
+    if (spot?.id) {
+      setIsFav(isFavorite(spot.id));
+    }
+  }, [spot]);
+
+  const handleToggleFav = () => {
+    if (!spot?.id) return;
+    const newState = toggleFavorite(spot.id);
+    setIsFav(newState);
+  };
 
   const fetchSpot = async () => {
     setIsLoading(true);
     try {
-      const data = await api.get<Spot>(`/api/spots/${id}`);
+      const data = await api.get<any>(`/api/spots/${id}`);
       setSpot(data);
     } catch {
-      setError(t('load_error'));
-      // Mock data for development
-      setSpot(getMockSpot(id));
+      setError(t('not_found'));
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +62,7 @@ export default function SpotDetailPage() {
       const data = await api.get<{ data: Review[] }>(`/api/spots/${id}/reviews`);
       setReviews(data.data || []);
     } catch {
-      setReviews(getMockReviews());
+      setReviews([]);
     }
   };
 
@@ -59,18 +71,16 @@ export default function SpotDetailPage() {
       fetchSpot();
       fetchReviews();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0d0d12' }}>
         <Header />
         <div className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px' }}>
-          <div className="skeleton" style={{ height: '350px', borderRadius: '12px', marginBottom: '20px' }} />
-          <div className="skeleton" style={{ height: '24px', width: '60%', borderRadius: '6px', marginBottom: '12px' }} />
-          <div className="skeleton" style={{ height: '16px', width: '80%', borderRadius: '6px', marginBottom: '8px' }} />
-          <div className="skeleton" style={{ height: '16px', width: '40%', borderRadius: '6px' }} />
+          <div className="skeleton" style={{ height: '250px', borderRadius: '16px', marginBottom: '20px' }} />
+          <div className="skeleton" style={{ height: '28px', width: '60%', borderRadius: '8px', marginBottom: '12px' }} />
+          <div className="skeleton" style={{ height: '18px', width: '80%', borderRadius: '8px', marginBottom: '8px' }} />
         </div>
       </div>
     );
@@ -78,15 +88,15 @@ export default function SpotDetailPage() {
 
   if (error && !spot) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: '#0d0d12', color: '#fff' }}>
         <Header />
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
           <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '48px', marginBottom: '12px' }}>😔</p>
+            <p style={{ fontSize: '48px', marginBottom: '12px' }}>📍</p>
             <p style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>{t('not_found')}</p>
-            <p style={{ fontSize: '14px', opacity: 0.6, marginBottom: '20px' }}>{error}</p>
+            <p style={{ fontSize: '14px', opacity: 0.6, marginBottom: '20px' }}>Không tìm thấy địa điểm hoặc đường dẫn không tồn tại.</p>
             <Link href="/">
-              <button className="btn-primary">← {t('back_home')}</button>
+              <button className="btn-primary">← Quay lại trang chủ</button>
             </Link>
           </div>
         </div>
@@ -96,16 +106,9 @@ export default function SpotDetailPage() {
 
   if (!spot) return null;
 
-  // Calculate rating breakdown
-  const ratingBreakdown = [5, 4, 3, 2, 1].map((star) => {
-    const count = reviews.filter((r) => Math.floor(r.rating) === star).length;
-    const percentage = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
-    return { star, count, percentage };
-  });
-
-  const spotSchema = spot ? {
+  const spotSchema = {
     "@context": "https://schema.org",
-    "@type": spot.type === 'PARKING_LOT' ? 'ParkingFacility' : spot.type === 'RESTAURANT' ? 'Restaurant' : spot.type === 'CAFE' ? 'Cafe' : 'LocalBusiness',
+    "@type": spot.type === 'PARKING_LOT' || spot.type === 'PARKING' ? 'ParkingFacility' : spot.type === 'FUEL' ? 'GasStation' : 'LocalBusiness',
     "name": spot.name,
     "address": spot.address,
     "geo": {
@@ -115,369 +118,225 @@ export default function SpotDetailPage() {
     },
     "url": `https://mapgo.vn/spot/${spot.id}`,
     "telephone": spot.phone || undefined,
-    "image": spot.images?.[0] || "https://mapgo.vn/logo.png"
-  } : null;
+  };
+
+  const meta = spot.metadata || {};
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'var(--bg-primary, #0d0d12)', color: '#fff' }}>
-      {spotSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(spotSchema) }}
-        />
-      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(spotSchema) }}
+      />
       <Header />
 
-      <main className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '20px', flex: 1 }}>
+      <main className="container" style={{ maxWidth: '900px', margin: '0 auto', padding: '16px 20px 40px', flex: 1 }}>
         {/* Back Link */}
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', opacity: 0.7, marginBottom: '16px' }}>
-          ← {t('back')}
+        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#a5b4fc', textDecoration: 'none', marginBottom: '16px', fontWeight: 600 }}>
+          ← Quay lại bản đồ MapGo
         </Link>
 
-        {/* Image Gallery */}
-        <ImageGallery images={spot.images} altPrefix={spot.name} spotType={spot.type} spotId={spot.id} />
+        {/* Hero Gallery or Branded Banner */}
+        <ImageGallery images={spot.images || []} altPrefix={spot.name} spotType={spot.type} spotId={spot.id} />
 
         {/* Header Info */}
-        <div style={{ marginTop: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, flex: 1 }}>{spot.name}</h1>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <span className="badge">
-                {SPOT_TYPE_ICONS[spot.type]} {SPOT_TYPE_LABELS[spot.type]}
+        <div style={{ marginTop: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap', marginBottom: '8px' }}>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, flex: 1, color: '#ffffff', letterSpacing: '-0.3px' }}>{spot.name}</h1>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <span className="badge" style={{ background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)', borderRadius: 20, padding: '4px 12px', fontSize: 13, fontWeight: 700 }}>
+                {SPOT_TYPE_ICONS[spot.type] || '📍'} {SPOT_TYPE_LABELS[spot.type] || spot.type}
               </span>
-              {spot.isPremium && <span className="badge badge-premium">✨ Premium</span>}
-              {spot.isVerified && <span className="badge">✅ {t('verified')}</span>}
+              <span className="badge" style={{ background: spot.isVerified ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.08)', color: spot.isVerified ? '#34d399' : '#9ca3af', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, padding: '4px 10px', fontSize: 12 }}>
+                {spot.isVerified ? '✓ Đã xác minh' : 'Dữ liệu đồng bộ MapGo'}
+              </span>
             </div>
           </div>
 
-          <p style={{ fontSize: '15px', opacity: 0.7, marginBottom: '8px' }}>
+          <p style={{ fontSize: '15px', color: '#cbd5e1', marginBottom: '14px', lineHeight: 1.5 }}>
             📍 {spot.address}
           </p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            <StarRating rating={spot.rating} />
-            <span style={{ fontSize: '13px', opacity: 0.6 }}>
-              ({spot.reviewCount} {t('reviews')})
-            </span>
-          </div>
-
-          {/* CTA Buttons */}
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
-            <button
-              className="btn-primary"
-              style={{ padding: '12px 24px' }}
-              onClick={() => {
-                // Navigate to homepage with route params
-                window.location.href = `/?route_to=${spot.id}&lat=${spot.latitude}&lng=${spot.longitude}&name=${encodeURIComponent(spot.name)}`;
-              }}
-            >
-              🧭 {t('directions')}
-            </button>
-            {spot.phone && (
-              <a href={`tel:${spot.phone}`}>
-                <button className="btn-secondary" style={{ padding: '12px 24px' }}>
-                  📞 {formatPhone(spot.phone)}
-                </button>
-              </a>
-            )}
-            <button
-              className="btn-secondary"
-              onClick={() => {
-                if (navigator.share) {
-                  navigator.share({
-                    title: spot.name,
-                    text: `${spot.name} - ${spot.address}`,
-                    url: window.location.href,
-                  });
-                } else {
-                  navigator.clipboard.writeText(window.location.href);
-                  alert(t('link_copied'));
-                }
-              }}
-              style={{ padding: '12px 24px' }}
-            >
-              📤 {t('share')}
-            </button>
-          </div>
-        </div>
-
-        {/* Info Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-          {/* Parking Slots */}
-          <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('parking_slots')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {spot.carSlots > 0 && (
-                <span style={{ fontSize: '15px' }}>🚗 {spot.carSlots} {t('car_slots')}</span>
-              )}
-              {spot.bikeSlots > 0 && (
-                <span style={{ fontSize: '15px' }}>🏍️ {spot.bikeSlots} {t('bike_slots')}</span>
-              )}
-            </div>
-          </div>
-
-          {/* Pricing */}
-          <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('pricing')}</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {spot.pricePerHourBike != null && (
-                <span style={{ fontSize: '15px', color: 'var(--color-primary, #10b981)', fontWeight: 600 }}>
-                  🏍️ {formatCurrency(spot.pricePerHourBike, '/giờ')}
-                </span>
-              )}
-              {spot.pricePerHourCar != null && (
-                <span style={{ fontSize: '15px', color: 'var(--color-primary, #10b981)', fontWeight: 600 }}>
-                  🚗 {formatCurrency(spot.pricePerHourCar, '/giờ')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Hours */}
-          <div className="card" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '13px', opacity: 0.6, marginBottom: '8px' }}>{t('opening_hours')}</h3>
-            <span style={{ fontSize: '15px' }}>
-              🕐 {formatHours(spot.openTime, spot.closeTime)}
-            </span>
-          </div>
-        </div>
-
-        {/* Description */}
-        {spot.description && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📝 {t('description')}</h2>
-            <p style={{ fontSize: '14px', lineHeight: 1.7, opacity: 0.85 }}>{spot.description}</p>
-          </div>
-        )}
-
-        {/* Business Profile: Menu, Services, Promotions */}
-        {spot.menu && spot.menu.length > 0 && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>🍽️ Menu</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {spot.menu.map((item, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '10px 0',
-                    borderBottom: i < spot.menu!.length - 1 ? '1px solid var(--border-color, rgba(255,255,255,0.1))' : 'none',
-                  }}
+            {/* Quick Action Bar */}
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '24px' }}>
+              <Link
+                href={`/?route_to=${spot.id}&lat=${spot.latitude}&lng=${spot.longitude}&name=${encodeURIComponent(spot.name)}`}
+                style={{ textDecoration: 'none' }}
+              >
+                <button
+                  className="btn-primary"
+                  style={{ padding: '12px 22px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', background: 'linear-gradient(135deg, #2563eb, #4f46e5)', color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(37,99,235,0.4)' }}
                 >
-                  <div>
-                    <p style={{ fontSize: '14px', fontWeight: 500 }}>{item.name}</p>
-                    {item.description && (
-                      <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '2px' }}>{item.description}</p>
-                    )}
-                  </div>
-                  <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--color-primary, #10b981)' }}>
-                    {formatCurrency(item.price)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                  🧭 Chỉ đường ngay trên MapGo
+                </button>
+              </Link>
 
-        {spot.services && spot.services.length > 0 && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🔧 {t('services')}</h2>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {spot.services.map((service, i) => (
-                <span key={i} className="badge" style={{ padding: '6px 12px', fontSize: '13px' }}>
-                  {service}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+              {spot.phone && (
+                <a href={`tel:${spot.phone}`} style={{ textDecoration: 'none' }}>
+                  <button style={{ padding: '12px 20px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(34,197,94,0.15)', color: '#4ade80', border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer' }}>
+                    📞 {formatPhone(spot.phone)}
+                  </button>
+                </a>
+              )}
 
-        {spot.promotions && spot.promotions.length > 0 && (
-          <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>🎁 {t('promotions')}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {spot.promotions.map((promo, i) => (
-                <div key={i} style={{ padding: '12px', background: 'var(--bg-tertiary, rgba(255,255,255,0.05))', borderRadius: '8px' }}>
-                  <p style={{ fontSize: '14px', fontWeight: 600, marginBottom: '4px' }}>{promo.title}</p>
-                  <p style={{ fontSize: '13px', opacity: 0.7 }}>{promo.description}</p>
-                  {promo.validUntil && (
-                    <p style={{ fontSize: '12px', opacity: 0.5, marginTop: '4px' }}>
-                      {t('valid_until')}: {promo.validUntil}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+              {/* FAVORITE BUTTON */}
+              <button
+                onClick={handleToggleFav}
+                style={{
+                  padding: '12px 18px',
+                  borderRadius: '12px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  background: isFav ? 'rgba(234,179,8,0.2)' : 'rgba(255,255,255,0.08)',
+                  color: isFav ? '#facc15' : '#cbd5e1',
+                  border: isFav ? '1px solid #eab308' : '1px solid rgba(255,255,255,0.1)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                {isFav ? '★ Đã lưu' : '☆ Lưu địa điểm'}
+              </button>
 
-        {/* Mini Map */}
-        <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '12px' }}>📍 {t('location')}</h2>
-          <div style={{ height: '250px', borderRadius: '12px', overflow: 'hidden' }}>
-            <MapComponent
-              spots={[spot]}
-              center={[spot.latitude, spot.longitude]}
-              zoom={16}
-              style={{ height: '100%', minHeight: '250px' }}
-            />
-          </div>
+              <button
+                onClick={() => {
+                  if (navigator.share) {
+                    navigator.share({ title: spot.name, text: `${spot.name} - ${spot.address}`, url: window.location.href });
+                  } else {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Đã sao chép liên kết địa điểm!');
+                  }
+                }}
+                style={{ padding: '12px 18px', borderRadius: '12px', fontSize: '14px', fontWeight: 600, background: 'rgba(255,255,255,0.08)', color: '#cbd5e1', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+              >
+                📤 Chia sẻ
+              </button>
+
+              {/* REPORT BUTTON */}
+              <button
+                onClick={() => {
+                  const reason = prompt('Báo sai thông tin (ví dụ: đổi giá, hết chỗ, đóng cửa):');
+                  if (reason) {
+                    alert('Cảm ơn bạn đã đóng góp! MapGo sẽ cập nhật sau khi xác minh.');
+                  }
+                }}
+                style={{ padding: '12px 14px', borderRadius: '12px', fontSize: '13px', fontWeight: 500, background: 'transparent', color: '#94a3b8', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer' }}
+              >
+                🚩 Báo sai
+              </button>
+            </div>
         </div>
 
-        {/* Reviews Section */}
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>
-            ⭐ {t('reviews_section')} ({reviews.length})
-          </h2>
-
-          {/* Rating Breakdown */}
-          <div className="card" style={{ padding: '20px', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                <p style={{ fontSize: '36px', fontWeight: 700 }}>{spot.rating.toFixed(1)}</p>
-                <StarRating rating={spot.rating} size="sm" showValue={false} />
-                <p style={{ fontSize: '12px', opacity: 0.6, marginTop: '4px' }}>{spot.reviewCount} {t('reviews')}</p>
+        {/* Specialized Domain Metadata Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+          {/* 0. Parking Specialized Driver Card */}
+          {(spot.type === 'PARKING' || spot.type === 'PARKING_LOT') && (
+            <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ fontSize: '13px', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🚗 Tiện ích cho ô tô & xe máy</h3>
+              <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#cbd5e1' }}>
+                <div>📐 Giới hạn chiều cao: <strong style={{ color: '#93c5fd' }}>{meta.heightLimit || '2.1m (Xe SUV, Bán tải đỗ tốt)'}</strong></div>
+                <div>☂️ Mái che: <span style={{ color: '#e2e8f0' }}>{meta.roof || 'Có khu vực có mái che'}</span></div>
+                <div>📹 An ninh: <span style={{ color: '#e2e8f0' }}>Camera giám sát 24/7</span></div>
+                <div>💳 Thanh toán: <span style={{ color: '#e2e8f0' }}>{Array.isArray(meta.payment) ? meta.payment.join(', ') : 'Tiền mặt, QR Code'}</span></div>
               </div>
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {ratingBreakdown.map((rb) => (
-                  <div key={rb.star} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '12px', width: '30px' }}>{rb.star} ★</span>
-                    <div style={{ flex: 1, height: '8px', borderRadius: '4px', background: 'rgba(255,255,255,0.1)' }}>
-                      <div
-                        style={{
-                          width: `${rb.percentage}%`,
-                          height: '100%',
-                          borderRadius: '4px',
-                          background: 'var(--color-primary, #10b981)',
-                          transition: 'width 0.3s ease',
-                        }}
-                      />
-                    </div>
-                    <span style={{ fontSize: '12px', opacity: 0.6, width: '25px' }}>{rb.count}</span>
-                  </div>
+            </div>
+          )}
+
+          {/* 1. Fuel Specialized Info */}
+          {(spot.type === 'FUEL' || meta.fuelTypes) && (
+            <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ fontSize: '13px', color: '#f97316', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>⛽ Nhiên liệu có sẵn</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {(meta.fuelTypes || ['RON95-V', 'E5 RON92', 'DO 0.001S']).map((f: string, idx: number) => (
+                  <span key={idx} style={{ background: 'rgba(249,115,22,0.15)', color: '#fdba74', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 600 }}>
+                    {f}
+                  </span>
                 ))}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Review Form */}
-          <div style={{ marginBottom: '20px' }}>
-            <ReviewForm spotId={id} onReviewSubmitted={fetchReviews} />
-          </div>
-
-          {/* Reviews List */}
-          {reviews.length === 0 ? (
-            <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
-              <p style={{ fontSize: '32px', marginBottom: '8px' }}>💬</p>
-              <p style={{ fontSize: '14px', opacity: 0.6 }}>{t('no_reviews')}</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {reviews.map((review) => (
-                <div key={review.id} className="card" style={{ padding: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div
-                        style={{
-                          width: '36px',
-                          height: '36px',
-                          borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '16px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        {review.userName.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p style={{ fontSize: '14px', fontWeight: 600 }}>{review.userName}</p>
-                        <p style={{ fontSize: '11px', opacity: 0.5 }}>{formatRelativeTime(review.createdAt)}</p>
-                      </div>
-                    </div>
-                    <StarRating rating={review.rating} size="sm" />
-                  </div>
-                  <p style={{ fontSize: '14px', lineHeight: 1.6, opacity: 0.85 }}>{review.comment}</p>
-                </div>
-              ))}
+          {/* 2. EV Charging Info */}
+          {(spot.type === 'EV_CHARGING' || spot.type === 'EV_CHARGER' || meta.powerKW) && (
+            <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ fontSize: '13px', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>⚡ Thông số trạm sạc</h3>
+              <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#cbd5e1' }}>
+                <div>⚡ Công suất: <strong style={{ color: '#34d399' }}>{meta.powerKW || 120} kW</strong></div>
+                <div>🔌 Cổng sạc: {Array.isArray(meta.connector) ? meta.connector.join(', ') : 'CCS2, Type 2'}</div>
+              </div>
             </div>
           )}
+
+          {/* 3. Garage & Car Repair Services */}
+          {(spot.type === 'CAR_REPAIR' || spot.type === 'GARAGE' || meta.services) && (
+            <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <h3 style={{ fontSize: '13px', color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🔧 Dịch vụ cứu hộ & sửa chữa</h3>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {(meta.services || ['Vá vỏ lưu động', 'Cứu hộ 24/7', 'Sửa chữa chung']).map((s: string, idx: number) => (
+                  <span key={idx} style={{ background: 'rgba(168,85,247,0.15)', color: '#d8b4fe', padding: '4px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: 600 }}>
+                    {s}
+                  </span>
+                ))}
+              </div>
+              <div style={{ fontSize: '12px', color: '#94a3b8' }}>⏱️ Thời gian phản hồi cứu hộ ước tính: <strong style={{ color: '#38bdf8' }}>~10-15 phút</strong></div>
+            </div>
+          )}
+
+          {/* 4. Parking Details */}
+          {(spot.type === 'PARKING_LOT' || spot.type === 'PARKING') && (
+            <>
+              <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <h3 style={{ fontSize: '13px', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🅿️ Sức chứa & Chiều cao</h3>
+                <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#cbd5e1' }}>
+                  {spot.carSlots > 0 && <div>🚗 Ô tô: <strong>{spot.carSlots} chỗ</strong></div>}
+                  {spot.bikeSlots > 0 && <div>🏍️ Xe máy: <strong>{spot.bikeSlots} chỗ</strong></div>}
+                  <div>📐 Chiều cao hầm: <strong>{meta.heightLimit || 2.1} m</strong></div>
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <h3 style={{ fontSize: '13px', color: '#60a5fa', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>💳 Bảng giá & Thanh toán</h3>
+                <div style={{ fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '6px', color: '#cbd5e1' }}>
+                  <div>💰 Giá gửi ô tô: <strong style={{ color: '#34d399' }}>{formatCurrency(spot.pricePerHourCar || 20000, '/giờ')}</strong></div>
+                  <div>💳 Thanh toán: {Array.isArray(meta.payment) ? meta.payment.join(', ') : 'Tiền mặt, QR'}</div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Hours Card */}
+          <div className="card" style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <h3 style={{ fontSize: '13px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', fontWeight: 700 }}>🕐 Giờ mở cửa</h3>
+            <div style={{ fontSize: '15px', fontWeight: 600, color: '#f1f5f9' }}>
+              {formatHours(spot.openTime, spot.closeTime)}
+            </div>
+            <span style={{ fontSize: '12px', color: '#34d399', marginTop: '4px', display: 'inline-block' }}>
+              ● Đang hoạt động
+            </span>
+          </div>
         </div>
+
+        {/* Nearby Spots Recommendations */}
+        {spot.nearbySpots && spot.nearbySpots.length > 0 && (
+          <div style={{ marginTop: '32px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 800, marginBottom: '16px', color: '#f8fafc' }}>
+              📍 Địa điểm tương tự gần đây
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+              {spot.nearbySpots.map((n: any) => (
+                <Link key={n.id} href={`/spot/${n.id}`} style={{ textDecoration: 'none' }}>
+                  <div style={{ padding: '14px', background: 'rgba(255,255,255,0.04)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', transition: 'all 0.2s', cursor: 'pointer' }}>
+                    <div style={{ fontWeight: 700, fontSize: '14px', color: '#ffffff', marginBottom: '4px' }}>{n.name}</div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.address}</div>
+                    <div style={{ fontSize: '12px', color: '#a5b4fc', fontWeight: 600 }}>Cách {(n.distanceMeters / 1000).toFixed(1)} km →</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
-}
-
-// Mock data for development
-function getMockSpot(id: string): Spot {
-  return {
-    id,
-    name: 'Bãi xe Nguyễn Huệ',
-    type: 'PARKING_LOT',
-    address: '123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh',
-    latitude: 10.7735,
-    longitude: 106.7031,
-    description:
-      'Bãi xe rộng rãi, an ninh 24/7. Có camera giám sát, nhân viên trực suốt ngày đêm. Vị trí thuận lợi gần trung tâm thành phố, phù hợp cho việc gửi xe khi đi dạo phố đi bộ Nguyễn Huệ.',
-    phone: '0901234567',
-    website: 'https://example.com',
-    images: [],
-    carSlots: 50,
-    bikeSlots: 200,
-    pricePerHourCar: 30000,
-    pricePerHourBike: 5000,
-    openTime: '06:00',
-    closeTime: '22:00',
-    rating: 4.5,
-    reviewCount: 128,
-    isPremium: true,
-    isVerified: true,
-    status: 'active',
-    services: ['Rửa xe', 'Bảo vệ 24/7', 'Camera giám sát', 'WiFi miễn phí'],
-    promotions: [
-      {
-        title: 'Giảm 20% cho khách hàng mới',
-        description: 'Áp dụng cho lần gửi xe đầu tiên khi đăng ký tài khoản',
-        validUntil: '31/12/2024',
-      },
-    ],
-    createdAt: '2024-01-01',
-    updatedAt: '2024-01-01',
-  };
-}
-
-function getMockReviews(): Review[] {
-  return [
-    {
-      id: 'r1',
-      spotId: '1',
-      userId: 'u1',
-      userName: 'Nguyễn Văn A',
-      rating: 5,
-      comment: 'Bãi xe rất rộng rãi và an ninh tốt. Nhân viên thân thiện, giá cả hợp lý. Rất hài lòng!',
-      createdAt: '2024-03-15T10:30:00',
-    },
-    {
-      id: 'r2',
-      spotId: '1',
-      userId: 'u2',
-      userName: 'Trần Thị B',
-      rating: 4,
-      comment: 'Vị trí thuận tiện, có camera an ninh. Giá hơi cao nhưng chấp nhận được vì ở trung tâm.',
-      createdAt: '2024-03-10T14:20:00',
-    },
-    {
-      id: 'r3',
-      spotId: '1',
-      userId: 'u3',
-      userName: 'Lê Minh C',
-      rating: 5,
-      comment: 'Tuyệt vời! Gửi xe ở đây nhiều lần rồi, chưa bao giờ có vấn đề gì. Recommend!',
-      createdAt: '2024-02-28T09:15:00',
-    },
-  ];
 }

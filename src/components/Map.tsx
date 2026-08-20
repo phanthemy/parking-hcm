@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
 import type { Spot } from '@/lib/types';
-import { SPOT_TYPE_ICONS } from '@/lib/types';
+import { SPOT_TYPE_ICONS, SPOT_TYPE_COLORS } from '@/lib/types';
 
 interface MapComponentProps {
   spots: Spot[];
@@ -409,7 +409,8 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const L2 = L as any;
       const cluster = L2.markerClusterGroup({
-        maxClusterRadius: 48,
+        maxClusterRadius: 36,
+        disableClusteringAtZoom: 15,
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
         zoomToBoundsOnClick: true,
@@ -417,33 +418,42 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
           const cnt = c.getChildCount();
           return L.divIcon({
             html: `<div style="
-              width:36px;height:36px;
-              background:linear-gradient(135deg,rgba(99,102,241,0.92),rgba(139,92,246,0.92));
-              border:2px solid rgba(255,255,255,0.7);
+              width:34px;height:34px;
+              background:linear-gradient(135deg,#2563eb,#4f46e5);
+              border:2px solid rgba(255,255,255,0.85);
               border-radius:50%;
               display:flex;align-items:center;justify-content:center;
-              font-size:13px;font-weight:700;color:#fff;
-              box-shadow:0 2px 12px rgba(99,102,241,0.6);
-              backdrop-filter:blur(4px);
+              font-size:12px;font-weight:700;color:#fff;
+              box-shadow:0 3px 12px rgba(37,99,235,0.5);
             ">${cnt}</div>`,
-            iconSize: [36, 36],
-            iconAnchor: [18, 18],
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
             className: '',
           });
         },
       });
 
+      const markersToAdd: any[] = [];
       spots.forEach((spot) => {
         const isSelected = selectedSpotId === spot.id;
         const typeIcon = SPOT_TYPE_ICONS[spot.type] || '📍';
+        const typeColor = SPOT_TYPE_COLORS[spot.type] || '#3B82F6';
 
         const icon = L.divIcon({
           html: `<div style="
-            font-size: ${isSelected ? '28px' : '22px'};
-            filter: ${isSelected ? 'drop-shadow(0 0 10px rgba(16,185,129,0.9))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.4))'};
-            transition: transform 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: ${isSelected ? '36px' : '28px'};
+            height: ${isSelected ? '36px' : '28px'};
+            background: ${typeColor};
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4), ${isSelected ? `0 0 14px ${typeColor}` : 'none'};
             transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'};
+            transition: all 0.2s ease;
             cursor: pointer;
+            font-size: ${isSelected ? '16px' : '13px'};
           ">${typeIcon}</div>`,
           iconSize: [32, 32],
           iconAnchor: [16, 16],
@@ -452,14 +462,14 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
 
         const marker = L.marker([spot.latitude, spot.longitude], { icon });
         marker.on('click', () => { if (onSpotClick) onSpotClick(spot); });
-        cluster.addLayer(marker);
+        markersToAdd.push(marker);
         spotMarkersRef.current.push(marker);
       });
 
+      // Batch add all markers in one single operation for 60fps performance
+      cluster.addLayers(markersToAdd);
       cluster.addTo(map);
       clusterGroupRef.current = cluster;
-
-      void MCluster; // suppress unused warning
     };
 
     updateSpotMarkers();

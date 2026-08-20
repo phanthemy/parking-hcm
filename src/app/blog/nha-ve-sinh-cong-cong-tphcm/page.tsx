@@ -14,12 +14,24 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "Nhà Vệ Sinh Công Cộng TP.HCM 2026 – Bản Đồ WC Gần Đây Nhất",
+  "headline": "Bản Đồ Nhà Vệ Sinh Công Cộng TP.HCM – Sạch Sẽ, Miễn Phí Gần Nhất",
+  "image": ["https://mapgo.vn/logo.png"],
   "datePublished": "2026-08-14T00:00:00+07:00",
+  "dateModified": "2026-08-18T00:00:00+07:00",
   "author": {
     "@type": "Organization",
-    "name": "MapGo.vn"
-  }
+    "name": "MapGo.vn",
+    "url": "https://mapgo.vn"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MapGo.vn",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://mapgo.vn/logo.png"
+    }
+  },
+  "description": "Tìm nhà vệ sinh công cộng sạch sẽ, miễn phí tại trung tâm TP.HCM và các quận lân cận qua bản đồ GPS."
 };
 
 export default async function Page() {

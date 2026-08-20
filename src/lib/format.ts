@@ -20,8 +20,10 @@ export function formatPriceRange(min: number, max: number): string {
  * Format a date in Vietnamese locale
  * @example formatDate('2024-01-15') => "15/01/2024"
  */
-export function formatDate(date: string | Date): string {
+export function formatDate(date?: string | Date | null): string {
+  if (!date) return '';
   const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -33,8 +35,10 @@ export function formatDate(date: string | Date): string {
  * Format a date with time in Vietnamese locale
  * @example formatDateTime('2024-01-15T10:30:00') => "15/01/2024, 10:30"
  */
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date?: string | Date | null): string {
+  if (!date) return '';
   const d = new Date(date);
+  if (isNaN(d.getTime())) return '';
   return new Intl.DateTimeFormat('vi-VN', {
     day: '2-digit',
     month: '2-digit',

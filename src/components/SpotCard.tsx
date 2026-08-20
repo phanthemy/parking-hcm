@@ -6,7 +6,7 @@ import type { Spot } from '@/lib/types';
 import { formatCurrency, formatHours } from '@/lib/format';
 import { SPOT_TYPE_LABELS, SPOT_TYPE_ICONS } from '@/lib/types';
 import { useLocale } from '@/contexts/LocaleContext';
-import { getDefaultImageForSpot } from '@/lib/images';
+import { getCategoryBrand } from '@/lib/images';
 
 interface SpotCardProps {
   spot: Spot;
@@ -115,7 +115,9 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
   const typeLabel = TYPE_KEY_MAP[spot.type] ? t(TYPE_KEY_MAP[spot.type]) : (SPOT_TYPE_LABELS[spot.type] || spot.type);
   const hasImage = spot.images && spot.images.length > 0;
   const rating = (spot.rating || 0).toFixed(1);
-  const distanceText = spot.distance != null ? `${spot.distance.toFixed(1)} km` : null;
+  const distanceText = spot.distance != null
+    ? (typeof spot.distance === 'number' ? `${(spot.distance as number).toFixed(1)} km` : String(spot.distance))
+    : null;
 
   const cardContent = (
     <div ref={cardRef} style={{
@@ -309,26 +311,31 @@ export default function SpotCard({ spot, onDirections, onCardClick }: SpotCardPr
                 </div>
               )}
             </>
-          ) : (
-            <div style={{
-              position: 'absolute', top: 0, left: 0,
-              width: '100%', height: '100%',
-              background: '#1a1a24'
-            }}>
-              <img 
-                src={getDefaultImageForSpot(spot.type, spot.id)} 
-                alt={`${spot.name}`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+          ) : (() => {
+            const brand = getCategoryBrand(spot.type);
+            return (
               <div style={{
-                position: 'absolute', bottom: '8px', right: '8px',
-                background: 'rgba(0,0,0,0.6)', color: '#fff',
-                padding: '2px 8px', borderRadius: '10px', fontSize: '10px',
+                position: 'absolute', top: 0, left: 0,
+                width: '100%', height: '100%',
+                background: brand.bg,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '16px',
+                textAlign: 'center',
+                boxShadow: 'inset 0 0 30px rgba(0,0,0,0.3)',
               }}>
-                Ảnh minh họa
+                <span style={{ fontSize: '38px', marginBottom: '2px', filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.35))' }}>{brand.icon}</span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#ffffff', letterSpacing: '0.2px', textShadow: '0 2px 4px rgba(0,0,0,0.6)' }}>
+                  {brand.label}
+                </span>
+                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.75)', marginTop: '2px' }}>
+                  {spot.source === 'MANUAL' ? '✓ Đã xác thực' : 'MapGo Verified'}
+                </span>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
 
 

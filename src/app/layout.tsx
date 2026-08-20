@@ -66,6 +66,12 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://mapgo.vn",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MapGo",
+  },
   openGraph: {
     title: "Bãi giữ xe TP.HCM – Tìm bãi gửi xe, chỗ đậu xe ô tô gần đây | MapGo.vn",
     description: "Bãi giữ xe TP.HCM ❱ Tìm 408+ bãi giữ xe ô tô xe máy, chỗ đậu xe ô tô gần đây, bãi gửi xe qua đêm, quán ăn có bãi xe, WC công cộng. Bản đồ GPS Sài Gòn miễn phí 24/7.",
@@ -100,63 +106,92 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLdWebsite = {
+const jsonLdGraph = {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "MapGo.vn",
-  "url": "https://mapgo.vn",
-  "description": "Bản đồ tiện ích tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng gần nhất tại TP.HCM",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://mapgo.vn/?q={search_term_string}",
-    "query-input": "required name=search_term_string"
-  }
-};
-
-const jsonLdOrganization = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "MapGo.vn",
-  "url": "https://mapgo.vn",
-  "logo": "https://mapgo.vn/logo.png",
-  "sameAs": []
-};
-
-const jsonLdFAQ = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
+  "@graph": [
     {
-      "@type": "Question",
-      "name": "Làm sao tìm bãi đỗ xe gần nhất trên MapGo?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Bạn chỉ cần mở bản đồ MapGo.vn, cho phép truy cập vị trí, hệ thống sẽ hiển thị các bãi đỗ xe ô tô, xe máy gần bạn nhất kèm chỉ đường GPS trực tiếp."
+      "@type": "WebSite",
+      "@id": "https://mapgo.vn/#website",
+      "url": "https://mapgo.vn",
+      "name": "MapGo.vn",
+      "description": "Bản đồ tiện ích tìm bãi đỗ xe quanh đây, quán ăn có bãi đỗ xe, quán cafe đỗ xe ô tô, nhà vệ sinh công cộng gần nhất tại TP.HCM",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://mapgo.vn/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     },
     {
-      "@type": "Question",
-      "name": "MapGo có cung cấp giá gửi xe không?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Một số bãi xe có giá tham khảo do cộng đồng cập nhật. Giá thực tế có thể thay đổi tùy thời điểm, vui lòng xác nhận tại điểm đỗ."
+      "@type": "Organization",
+      "@id": "https://mapgo.vn/#organization",
+      "name": "MapGo.vn",
+      "url": "https://mapgo.vn",
+      "logo": "https://mapgo.vn/logo.png"
+    },
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://mapgo.vn/#localbusiness",
+      "name": "MapGo.vn - Bản đồ bãi giữ xe & Tiện ích TP.HCM",
+      "image": "https://mapgo.vn/logo.png",
+      "url": "https://mapgo.vn",
+      "telephone": "+84900000000",
+      "priceRange": "5.000đ - 50.000đ",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "TP. Hồ Chí Minh",
+        "addressLocality": "Hồ Chí Minh",
+        "addressRegion": "Hồ Chí Minh",
+        "addressCountry": "VN"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 10.7769,
+        "longitude": 106.7009
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "opens": "00:00",
+        "closes": "23:59"
       }
     },
     {
-      "@type": "Question",
-      "name": "Làm sao tìm nhà vệ sinh công cộng gần nhất TP.HCM?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Trên MapGo.vn, chọn bộ lọc 'Nhà vệ sinh công cộng' để xem các vị trí gần bạn nhất, kèm khoảng cách và chỉ đường."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Bãi giữ xe ô tô qua đêm ở TP.HCM tìm ở đâu?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Bạn có thể lọc các bãi giữ xe mở cửa 24/7 trên MapGo.vn hoặc xem danh mục bãi giữ xe qua đêm để tìm vị trí có bảo vệ an toàn."
-      }
+      "@type": "FAQPage",
+      "@id": "https://mapgo.vn/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Làm sao tìm bãi đỗ xe gần nhất trên MapGo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Bạn chỉ cần mở bản đồ MapGo.vn, cho phép truy cập vị trí, hệ thống sẽ hiển thị các bãi đỗ xe ô tô, xe máy gần bạn nhất kèm chỉ đường GPS trực tiếp."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "MapGo có cung cấp giá gửi xe không?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Một số bãi xe có giá tham khảo do cộng đồng cập nhật. Giá thực tế có thể thay đổi tùy thời điểm, vui lòng xác nhận tại điểm đỗ."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Làm sao tìm nhà vệ sinh công cộng gần nhất TP.HCM?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Trên MapGo.vn, chọn bộ lọc 'Nhà vệ sinh công cộng' để xem các vị trí gần bạn nhất, kèm khoảng cách và chỉ đường."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Bãi giữ xe ô tô qua đêm ở TP.HCM tìm ở đâu?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Bạn có thể lọc các bãi giữ xe mở cửa 24/7 trên MapGo.vn hoặc xem danh mục bãi giữ xe qua đêm để tìm vị trí có bảo vệ an toàn."
+          }
+        }
+      ]
     }
   ]
 };
@@ -164,21 +199,11 @@ const jsonLdFAQ = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdWebsite) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdOrganization) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdFAQ) }}
-        />
-      </head>
       <body>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdGraph) }}
+        />
         <AuthProvider>
           <LocaleProvider>
             {children}

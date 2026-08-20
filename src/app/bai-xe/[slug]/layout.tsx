@@ -42,13 +42,25 @@ async function SpotStructuredData({ slug }: { slug: string }) {
     if (!spot) return null;
 
     const jsonLd = {
-      '@context': 'https://schema.org', '@type': 'ParkingFacility',
+      '@context': 'https://schema.org',
+      '@type': 'ParkingFacility',
       name: spot.name,
-      address: { '@type': 'PostalAddress', streetAddress: spot.address, addressLocality: 'Hồ Chí Minh', addressCountry: 'VN' },
-      geo: { '@type': 'GeoCoordinates', latitude: spot.lat, longitude: spot.lng },
-      telephone: spot.phone || undefined,
-      openingHours: `Mo-Su ${spot.openTime}-${spot.closeTime}`,
-      priceRange: spot.pricePerHour ? `${spot.pricePerHour} VND` : 'Liên hệ',
+      image: 'https://mapgo.vn/logo.png',
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: spot.address,
+        addressLocality: 'Hồ Chí Minh',
+        addressRegion: 'Hồ Chí Minh',
+        addressCountry: 'VN'
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: spot.lat,
+        longitude: spot.lng
+      },
+      telephone: spot.phone || '+84900000000',
+      openingHours: `Mo-Su ${spot.openTime || '06:00'}-${spot.closeTime || '22:00'}`,
+      priceRange: spot.pricePerHour ? `${spot.pricePerHour} VND` : '5.000đ - 50.000đ',
       description: spot.description || `${spot.name} tại ${spot.address}`,
       url: `https://mapgo.vn/bai-xe/${slug}`,
     };

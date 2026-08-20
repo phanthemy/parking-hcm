@@ -15,11 +15,23 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Quán Ăn Có Bãi Đỗ Xe Ô Tô TP.HCM 2026 – Danh Sách Đầy Đủ Theo Quận",
+  "image": ["https://mapgo.vn/logo.png"],
   "datePublished": "2026-08-13T00:00:00+07:00",
+  "dateModified": "2026-08-18T00:00:00+07:00",
   "author": {
     "@type": "Organization",
-    "name": "MapGo.vn"
-  }
+    "name": "MapGo.vn",
+    "url": "https://mapgo.vn"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MapGo.vn",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://mapgo.vn/logo.png"
+    }
+  },
+  "description": "Danh sách quán ăn, nhà hàng có bãi đậu xe ô tô rộng rãi, bảo vệ trông coi tại các quận TP.HCM."
 };
 
 export default async function Page() {

@@ -15,11 +15,23 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Bãi Giữ Xe Ô Tô Qua Đêm TP.HCM 2026 – An Toàn, Uy Tín, Giá Rẻ",
+  "image": ["https://mapgo.vn/logo.png"],
   "datePublished": "2026-08-16T00:00:00+07:00",
+  "dateModified": "2026-08-18T00:00:00+07:00",
   "author": {
     "@type": "Organization",
-    "name": "MapGo.vn"
-  }
+    "name": "MapGo.vn",
+    "url": "https://mapgo.vn"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MapGo.vn",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://mapgo.vn/logo.png"
+    }
+  },
+  "description": "Tổng hợp các bãi giữ xe ô tô qua đêm tại TP.HCM an ninh 24/7, có mái che, giá hợp lý."
 };
 
 export default async function Page() {

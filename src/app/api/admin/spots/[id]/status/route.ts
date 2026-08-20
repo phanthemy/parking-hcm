@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import pool from '@/lib/pg';
 import { requireRole } from '@/lib/auth';
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -12,18 +12,33 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const { status } = await req.json();
 
-    if (!['ACTIVE', 'PENDING', 'HIDDEN', 'REJECTED'].includes(status)) {
+    const normalizedStatus = (status || '').toUpperCase();
+    if (!['ACTIVE', 'PENDING', 'HIDDEN', 'REJECTED', 'DUPLICATE'].includes(normalizedStatus)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    const updatedSpot = await prisma.parkingSpot.update({
-      where: { id },
-      data: { status }
-    });
+    const res = await pool.query(
+      `UPDATE places 
+       SET status = $1, updated_at = NOW() 
+       WHERE id = $2 
+       RETURNING id, name, status`,
+      [normalizedStatus, id]
+    );
 
-    return NextResponse.json(updatedSpot);
+    if (res.rows.length === 0) {
+      return NextResponse.json({ error: 'Spot not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      spot: res.rows[0]
+    });
   } catch (error: any) {
     console.error('Update spot status error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
+}
+
+export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+  return PUT(req, ctx);
 }
