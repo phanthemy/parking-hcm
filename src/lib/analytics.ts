@@ -21,7 +21,12 @@ export function trackEvent(
     | 'spot_called'
     | 'spot_favorited'
     | 'spot_reported'
-    | 'pwa_installed',
+    | 'pwa_installed'
+    | 'pwa_banner_shown'
+    | 'pwa_install_click'
+    | 'pwa_install_accepted'
+    | 'pwa_banner_dismissed'
+    | 'pwa_direct_launch',
   payload: {
     spot_id?: string;
     category?: string;
