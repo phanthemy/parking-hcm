@@ -4,12 +4,13 @@
 
 ---
 
-## 2026-08-20: MAPGO ENTERPRISE ACCEPTANCE STANDARD v1.0 — PASSED (180/180)
+## 2026-08-20: MAPGO ENTERPRISE v1.0.0 — OFFICIAL RELEASE & SCOPE LOCK
 
-### 1. Ký Duyệt Nghiệm Thu Kỹ Thuật (Final Technical Sign-Off):
-- **Phê duyệt chính thức**: Toàn bộ **180/180 tiêu chí kỹ thuật doanh nghiệp** trên 9 nhóm hạng mục (Architecture, Database PostGIS, Performance Caching, SEO, Security, Observability, Reliability SRE, DevOps, Documentation) đã hoàn thành và kiểm chứng thành công 100%.
-- **Văn kiện tiêu chuẩn chính thức**: [`project-docs/mapgo-enterprise-acceptance-standard-v1.0.md`](project-docs/mapgo-enterprise-acceptance-standard-v1.0.md).
-- **Trạng thái**: **FEATURE FREEZE & SPRINT CLOSED** | Toàn bộ các yêu cầu nâng cấp tiếp theo sẽ được chuyển sang Milestone v2.0.
+### 1. Ký Duyệt Nghiệm Thu Kỹ Thuật (Official Technical Sign-Off):
+- **Phê duyệt chính thức**: **`MapGo Enterprise Acceptance Standard v1.0: PASSED (180/180)`**.
+- **Chính sách phát hành**: **Feature Freeze 100%**. Khóa toàn bộ mã nguồn phiên bản v1.0.0.
+- **Git Release Tag**: Đã gắn tag và phát hành chính thức **`v1.0.0`** trên GitHub repo.
+- **Phân tách Backlog Milestone v2.0**: Toàn bộ các hạng mục mở rộng (Redis Cluster, OpenTelemetry Tracing, Chaos Mesh, Canary Deployment, Multi-Region) được chuyển sang Backlog Milestone v2.0.
 
 ---
 
