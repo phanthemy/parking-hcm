@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import api from '@/lib/api';
+import { haversine } from '@/lib/haversine';
 import type { Spot, SpotType } from '@/lib/types';
 import type { MapHandle } from '@/components/Map';
 import SmartNearbyWidget from '@/components/SmartNearbyWidget';
@@ -204,9 +205,25 @@ export default function HomePage() {
     [latitude, longitude]
   );
 
+  // Tính toán 4 bãi xe / địa điểm tương tự gần nhất khi chọn 1 POI
+  const nearbyAlternatives = useMemo(() => {
+    if (!selectedSpot || !spots || spots.length <= 1) return [];
+    const others = spots.filter(s => s.id !== selectedSpot.id);
+    return others
+      .map(s => {
+        const d = haversine(selectedSpot.latitude, selectedSpot.longitude, s.latitude, s.longitude);
+        return { ...s, distanceMeters: Math.round(d * 1000) };
+      })
+      .sort((a, b) => a.distanceMeters - b.distanceMeters)
+      .slice(0, 4);
+  }, [selectedSpot, spots]);
+
   const handleMarkerClick = useCallback((spot: Spot) => {
     setSelectedSpot(spot);
     setBottomSheetState('detail');
+    if (mapComponentRef.current) {
+      mapComponentRef.current.panTo([spot.latitude, spot.longitude]);
+    }
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
       setSidebarCollapsed(false);
     }
@@ -753,6 +770,76 @@ export default function HomePage() {
                   </button>
                 </div>
 
+                {/* BÃI XE / ĐỊA ĐIỂM TƯƠNG TỰ GẦN ĐÂY CHO DESKTOP SIDEBAR */}
+                {nearbyAlternatives.length > 0 && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '16px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    borderRadius: '16px',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                  }}>
+                    <div style={{
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      color: '#f8fafc',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}>
+                      <span>🏢</span> Địa điểm tương tự gần đây
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {nearbyAlternatives.map((alt) => (
+                        <button
+                          key={alt.id}
+                          onClick={() => {
+                            setSelectedSpot(alt);
+                            if (mapComponentRef.current) {
+                              mapComponentRef.current.panTo([alt.latitude, alt.longitude]);
+                            }
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 14px',
+                            borderRadius: '12px',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.06)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            color: '#ffffff',
+                            transition: 'all 0.2s ease',
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 0, paddingRight: '10px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {alt.name}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {alt.address}
+                            </div>
+                          </div>
+                          <div style={{
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            color: '#38bdf8',
+                            background: 'rgba(56, 189, 248, 0.1)',
+                            padding: '4px 8px',
+                            borderRadius: '8px',
+                            flexShrink: 0,
+                          }}>
+                            📍 {alt.distanceMeters < 1000 ? `${alt.distanceMeters}m` : `${(alt.distanceMeters / 1000).toFixed(1)}km`}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
             </div>
           ) : (
             <>
@@ -796,7 +883,7 @@ export default function HomePage() {
       >
         <MapComponent
           ref={mapComponentRef}
-          spots={isRouting && routingDest ? [routingDest] : (isRouting && selectedSpot ? [selectedSpot] : spots)}
+          spots={spots}
           center={mapCenter}
           selectedSpotId={selectedSpot?.id}
           onSpotClick={handleMarkerClick}
@@ -1039,6 +1126,79 @@ export default function HomePage() {
                         <span>⛶</span> Xem toàn màn hình
                       </button>
                     </div>
+
+                    {/* BÃI XE / ĐỊA ĐIỂM TƯƠNG TỰ GẦN ĐÂY (GOOGLE MAPS UX) */}
+                    {nearbyAlternatives.length > 0 && (
+                      <div style={{
+                        marginTop: '16px',
+                        padding: '14px',
+                        background: 'rgba(30, 41, 59, 0.6)',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                      }}>
+                        <div style={{
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: '#f8fafc',
+                          marginBottom: '10px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span>🏢</span> Địa điểm tương tự gần đây
+                          </span>
+                          <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 500 }}>Chạm để xem</span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {nearbyAlternatives.map((alt) => (
+                            <button
+                              key={alt.id}
+                              onClick={() => {
+                                setSelectedSpot(alt);
+                                if (mapComponentRef.current) {
+                                  mapComponentRef.current.panTo([alt.latitude, alt.longitude]);
+                                }
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 12px',
+                                borderRadius: '12px',
+                                background: 'rgba(15, 23, 42, 0.8)',
+                                border: '1px solid rgba(255, 255, 255, 0.06)',
+                                cursor: 'pointer',
+                                textAlign: 'left',
+                                color: '#ffffff',
+                                transition: 'all 0.15s ease',
+                              }}
+                            >
+                              <div style={{ flex: 1, minWidth: 0, paddingRight: '8px' }}>
+                                <div style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {alt.name}
+                                </div>
+                                <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {alt.address}
+                                </div>
+                              </div>
+                              <div style={{
+                                fontSize: '12px',
+                                fontWeight: 800,
+                                color: '#38bdf8',
+                                background: 'rgba(56, 189, 248, 0.1)',
+                                padding: '4px 8px',
+                                borderRadius: '8px',
+                                flexShrink: 0,
+                              }}>
+                                📍 {alt.distanceMeters < 1000 ? `${alt.distanceMeters}m` : `${(alt.distanceMeters / 1000).toFixed(1)}km`}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                 </div>
               </div>

@@ -21,6 +21,7 @@ export interface MapHandle {
   clearRoute: () => void;
   startNavigation: (dest: [number, number], destName: string) => void;
   stopNavigation: () => void;
+  panTo: (pos: [number, number], zoom?: number) => void;
 }
 
 function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -288,6 +289,12 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
       }
       lastNavPosRef.current = null;
     },
+
+    panTo: (pos: [number, number], zoom?: number) => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.flyTo(pos, zoom || 16, { animate: true, duration: 0.8 });
+      }
+    },
   }));
 
   // Handle clearRoute DOM event
@@ -444,23 +451,27 @@ const MapComponent = forwardRef<MapHandle, MapComponentProps>(({
             display: flex;
             align-items: center;
             justify-content: center;
-            width: ${isSelected ? '36px' : '26px'};
-            height: ${isSelected ? '36px' : '26px'};
-            background: ${typeColor};
-            border: 2.5px solid #ffffff;
+            width: ${isSelected ? '40px' : '26px'};
+            height: ${isSelected ? '40px' : '26px'};
+            background: ${isSelected ? '#2563eb' : typeColor};
+            border: ${isSelected ? '3px solid #ffffff' : '2px solid rgba(255,255,255,0.9)'};
             border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.5), ${isSelected ? `0 0 16px ${typeColor}` : 'none'};
-            transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+            box-shadow: ${isSelected ? `0 0 20px #38bdf8, 0 4px 12px rgba(0,0,0,0.6)` : '0 2px 6px rgba(0,0,0,0.35)'};
+            transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'};
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            font-size: ${isSelected ? '16px' : '12px'};
+            font-size: ${isSelected ? '18px' : '12px'};
+            opacity: ${!selectedSpotId || isSelected ? '1' : '0.85'};
           ">${typeIcon}</div>`,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
           className: '',
         });
 
-        const marker = L.marker([spot.latitude, spot.longitude], { icon });
+        const marker = L.marker([spot.latitude, spot.longitude], {
+          icon,
+          zIndexOffset: isSelected ? 1000 : 0
+        });
         marker.on('click', () => { if (onSpotClick) onSpotClick(spot); });
         markersToAdd.push(marker);
         spotMarkersRef.current.push(marker);
