@@ -17,11 +17,15 @@
 - **PostgreSQL Materialized View (`district_statistics_mv`)**:
   - Tạo bảng tổng hợp `district_statistics_mv` pre-aggregate số lượng bãi, rating trung bình, giá gửi xe cho 22 quận huyện.
   - Phục vụ truy vấn tức thì (0ms) cho Landing pages và refresh bất đồng bộ (`REFRESH MATERIALIZED VIEW CONCURRENTLY`) chỉ trong 8ms.
+- **Chuẩn hóa SRE Specs & Alerts (`project-docs/`)**:
+  - `slo-sli-spec.md`: Định nghĩa 5 chỉ số SLI/SLO (P95 < 150ms, P99 < 300ms, Availability 99.9%) và chính sách Error Budget Burn Rate.
+  - `prometheus-alerts.yaml`: 6 quy tắc cảnh báo Prometheus (HighP99Latency, DbPoolSaturated, HighHttpErrorRate, LowCacheHitRatio, EventLoopLagHigh).
+  - `chaos-engineering-plan.md`: 3 kịch bản Chaos Engineering (Database outage, Redis failure, Spike load shedding).
 - **Sprint 6 Evidence Artifacts (`evidence/sprint-06/`)**:
   - Xuất bản `CHANGELOG.md` và `100k-poi-spatial-benchmark.json`.
 
 ### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
-- **Live Metrics Endpoint**: `curl http://localhost:3003/api/metrics` $\rightarrow$ Trả về JSON telemetry thời gian thực (RSS 116MB, Heap 31MB, Uptime, Cache stats).
+- **Live Metrics Endpoint**: `curl http://localhost:3003/api/metrics` & `/api/metrics/prometheus` $\rightarrow$ Trả về JSON & Prometheus format thời gian thực.
 - **Traffic Simulator**: `scripts/simulate-cache-traffic.js` chạy 1.000 requests $\rightarrow$ **SingleFlight gộp thành công 997 requests**, bảo vệ database tuyệt đối.
 - **Deploy & Health Check**: PM2 process id 52 `parking-hcm` hoạt động ổn định $\rightarrow$ **HTTP 200 OK**.
 
