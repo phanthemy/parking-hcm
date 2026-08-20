@@ -1,3 +1,6 @@
+// Re-export Domain Layer (Single Source of Truth)
+export * from '@/domain';
+
 export type SpotType =
   | 'PARKING_LOT'
   | 'PARKING'

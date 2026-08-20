@@ -20,53 +20,160 @@ model User {
 }
 
 model ParkingSpot {
-  id           String           @id @default(cuid())
-  slug         String?          @unique // SEO-friendly URL slug
-  name         String
-  address      String
-  description  String?
-  lat          Float
-  lng          Float
-  type         String // PARKING_LOT, RESTAURANT, CAFE, SERVICE, OTHER
-  carSlots     Int              @default(0)
-  bikeSlots    Int              @default(0)
-  pricePerHour Float
-  openTime     String
-  closeTime    String
-  phone        String?
-  website      String?
-  isPremium    Boolean          @default(false)
-  status       String           @default("ACTIVE") // ACTIVE, PENDING, HIDDEN
-  ownerId      String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  id            String    @id @default(cuid())
+  slug          String?   @unique // SEO-friendly URL slug
+  name          String
+  address       String
+  ward          String?   // Phường / Xã
+  district      String?   // Quận / Huyện
+  province      String?   @default("TP. Hồ Chí Minh")
+  description   String?
+  lat           Float
+  lng           Float
+  type          String    // PARKING_LOT, RESTAURANT, CAFE, SERVICE, EV_CHARGING, GARAGE, RESTROOM
+  carSlots      Int       @default(0)
+  bikeSlots     Int       @default(0)
+  pricePerHour  Float     @default(0)
+  openTime      String    @default("00:00")
+  closeTime     String    @default("23:59")
+  phone         String?
+  website       String?
+  isPremium     Boolean   @default(false)
+  status        String    @default("ACTIVE") // ACTIVE, PENDING, HIDDEN
+  ownerId       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   sourceId      String?   // ID gốc từ Google Maps hoặc OSM (dùng dedup)
   source        String?   // "GOOGLE_MAPS", "OSM", "MANUAL"
   lastSyncedAt  DateTime? // Lần sync cuối cùng
   googleRating  Float?    // Rating từ Google Maps
   googlePlaceId String?   // Google Place ID (deep link)
-  images       ParkingImage[]
-  reviews      Review[]
-  profile      BusinessProfile?
-  fbPosts      FacebookPost[]
+
+  // ===== Normalized 1-1 Relations =====
+  parkingDetail   SpotParkingDetail?
+  evDetail        SpotEvDetail?
+  garageDetail    SpotGarageDetail?
+  verification    SpotVerification?
+
+  // ===== Normalized 1-N Relations =====
+  pricingList     SpotPricing[]
+  paymentMethods  SpotPaymentMethod[]
+  images          ParkingImage[]
+  reviews         Review[]
+  profile         BusinessProfile?
+  fbPosts         FacebookPost[]
+}
+
+// ===== Normalized Domain Models =====
+
+model SpotParkingDetail {
+  id                String      @id @default(cuid())
+  spotId            String      @unique
+  spot              ParkingSpot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  is247             Boolean     @default(false)
+  openTime          String?
+  closeTime         String?
+  heightLimit       Float?      // Chiều cao giới hạn mét (VD: 2.1)
+  totalCarSlots     Int         @default(0)
+  totalBikeSlots    Int         @default(0)
+  availableCarSlots Int?
+  hasRealtimeSlots  Boolean     @default(false)
+  hasGuard247       Boolean     @default(false)
+  hasCCTV           Boolean     @default(false)
+  hasRoof           Boolean     @default(false)
+  hasFireSafety     Boolean     @default(false)
+  hasEvCharging     Boolean     @default(false)
+  chargerCount      Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model SpotEvDetail {
+  id                 String      @id @default(cuid())
+  spotId             String      @unique
+  spot               ParkingSpot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  operator           String      @default("VinFast") // VinFast, EV_ONE, Porsche, Other
+  is247              Boolean     @default(true)
+  openTime           String?
+  closeTime          String?
+  totalPorts         Int         @default(2)
+  connectorTypes     String?     // JSON hoặc chuỗi cách nhau dấu phẩy (CCS2, Type2)
+  powerMaxKW         Float?      // Công suất sạc kW (VD: 60, 150, 250)
+  pricingPerKwh      Float?      // Giá sạc / kWh
+  parkingFeeIncluded Boolean     @default(false)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+}
+
+model SpotGarageDetail {
+  id              String      @id @default(cuid())
+  spotId          String      @unique
+  spot            ParkingSpot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  is247           Boolean     @default(false)
+  openTime        String?
+  closeTime       String?
+  supportsCar     Boolean     @default(true)
+  supportsBike    Boolean     @default(true)
+  hasMobileRepair Boolean     @default(false) // Sửa chữa lưu động
+  specialties     String?     // TYRE_REPAIR, OIL_CHANGE, ENGINE, ELECTRICAL...
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model SpotPricing {
+  id          String      @id @default(cuid())
+  spotId      String
+  spot        ParkingSpot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  vehicleType String      // CAR, BIKE, TRUCK, EV, BUS
+  priceType   String      // HOUR, NEXT_HOUR, OVERNIGHT, DAY, MONTH, KWH
+  amount      Float       // Số tiền VND
+  currency    String      @default("VND")
+  note        String?     // Ghi chú
+  createdAt   DateTime    @default(now())
+
+  @@index([spotId, vehicleType])
+}
+
+model SpotVerification {
+  id               String      @id @default(cuid())
+  spotId           String      @unique
+  spot             ParkingSpot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  verified         Boolean     @default(false)
+  verifiedBy       String?     // VD: 'MapGo Field Team'
+  verifiedMethod   String      @default("UNVERIFIED") // FIELD_VISIT, BQL_CONFIRMED, COMMUNITY, OFFICIAL_SOURCE
+  verifiedAt       DateTime?
+  source           String?     // VD: 'Ban Quản Lý Tòa Nhà'
+  confidenceScore  Int         @default(0) // 0 - 100
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model SpotPaymentMethod {
+  id            String      @id @default(cuid())
+  spotId        String
+  spot          ParkingSpot @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  paymentMethod String      // CASH, VIETQR, CARD, VETC_EPASS, MOMO, ZALOPAY
+  createdAt     DateTime    @default(now())
+
+  @@unique([spotId, paymentMethod])
 }
 
 // ===== Facebook Group Crawler =====
 
 model FacebookPost {
-  id            String         @id @default(cuid())
-  fbPostId      String         @unique       // ID bài viết trên FB (tránh trùng)
-  groupUrl      String                       // Link nhóm FB
-  content       String?                      // Nội dung bài viết
-  authorName    String?                      // Tên người đăng
-  postDate      DateTime?                    // Ngày đăng bài
-  isComment     Boolean        @default(false) // true = từ comment, false = bài chính
-  parentPostId  String?                      // Link tới bài gốc nếu là comment
-  status        String         @default("pending") // pending/approved/rejected
-  matchedSpotId String?                      // Spot đã match
-  matchedSpot   ParkingSpot?   @relation(fields: [matchedSpotId], references: [id])
+  id            String          @id @default(cuid())
+  fbPostId      String          @unique // ID bài viết trên FB (tránh trùng)
+  groupUrl      String                  // Link nhóm FB
+  content       String?                 // Nội dung bài viết
+  authorName    String?                 // Tên người đăng
+  postDate      DateTime?               // Ngày đăng bài
+  isComment     Boolean         @default(false) // true = từ comment, false = bài chính
+  parentPostId  String?                 // Link tới bài gốc nếu là comment
+  status        String          @default("pending") // pending/approved/rejected
+  matchedSpotId String?                 // Spot đã match
+  matchedSpot   ParkingSpot?    @relation(fields: [matchedSpotId], references: [id])
   images        FacebookImage[]
-  createdAt     DateTime       @default(now())
+  createdAt     DateTime        @default(now())
 }
 
 model FacebookImage {
@@ -95,7 +202,7 @@ model ParkingImage {
 
 model Review {
   id            String      @id @default(cuid())
-  rating        Int // 1-5
+  rating        Int         // 1-5
   comment       String?
   userId        String
   user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -114,30 +221,21 @@ model BusinessProfile {
 }
 
 // Biển cấm đậu/dừng xe — crowdsource từ tài xế
-// Dữ liệu CHỈ MANG TÍNH THAM KHẢO, tài xế tự chịu trách nhiệm xác minh
 model ParkingBan {
-  id          String   @id @default(cuid())
-  lat         Float    // Tọa độ trung tâm biển báo
-  lng         Float
-  radius      Int      @default(50) // Bán kính ảnh hưởng (mét)
-  street      String   // Tên đường / địa chỉ gần nhất
-  district    String?  // Quận
-  
-  // Khung giờ cấm (dạng "06:00-09:00,16:00-19:00")
-  banTimeRanges String  
-  // Loại cấm: NO_PARKING (cấm đậu), NO_STOPPING (cấm dừng), TIME_LIMITED (giới hạn thời gian)
-  banType     String   @default("NO_PARKING")
-  // Ngày áp dụng: ALL (tất cả), WEEKDAY (thứ 2-6), WEEKEND (T7-CN)
-  banDays     String   @default("ALL")
-  
-  note        String?  // Ghi chú thêm từ người báo
-  imageUrl    String?  // Ảnh chụp biển báo thực tế
-  
-  // Workflow: PENDING → VERIFIED (admin duyệt) | REJECTED
-  status      String   @default("PENDING")
-  reportCount Int      @default(1) // Số người xác nhận thấy biển này
-  
-  reporterId  String?  // User báo cáo (optional, có thể ẩn danh)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  lat           Float    // Tọa độ trung tâm biển báo
+  lng           Float
+  radius        Int      @default(50) // Bán kính ảnh hưởng (mét)
+  street        String   // Tên đường / địa chỉ gần nhất
+  district      String?  // Quận
+  banTimeRanges String   // Khung giờ cấm (dạng "06:00-09:00,16:00-19:00")
+  banType       String   @default("NO_PARKING") // NO_PARKING, NO_STOPPING, TIME_LIMITED
+  banDays       String   @default("ALL")        // ALL, WEEKDAY, WEEKEND
+  note          String?  // Ghi chú thêm từ người báo
+  imageUrl      String?  // Ảnh chụp biển báo thực tế
+  status        String   @default("PENDING")    // PENDING → VERIFIED | REJECTED
+  reportCount   Int      @default(1)            // Số người xác nhận thấy biển này
+  reporterId    String?  // User báo cáo
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
