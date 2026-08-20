@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 5 — Production Reliability, Concurrency Load Testing & Security
+
+### 1. Quyết định kỹ thuật & Kiến trúc:
+- **High-Performance Caching Layer (`src/lib/cache.ts`)**:
+  - Xây dựng In-memory LRU Cache với cơ chế TTL tự động giải phóng bộ nhớ và wrapper `withCache()` cho spatial queries.
+- **Security & Rate Limiting Middleware (`src/middleware.ts`)**:
+  - Áp dụng bộ Security Headers chuẩn Helmet: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Strict-Transport-Security` (HSTS), `Permissions-Policy`.
+  - Thiết lập API rate limiting headers (`X-RateLimit-Limit`, `X-RateLimit-Remaining`).
+- **CI/CD Quality Gate Pipeline (`project-docs/ci-cd-spec.yaml`)**:
+  - Chuẩn hóa quy trình kiểm thử tự động trước khi merge (TypeScript strict typecheck, Domain tests, SEO tests, Turbopack build).
+- **High-Concurrency Load Testing Suite (`scripts/load-test.js`)**:
+  - Giả lập k6/wrk đo đạc P50, P95, P99, Throughput và tỷ lệ lỗi trên các mức 50, 100, 200 concurrent users.
+- **Sprint 5 Evidence Artifacts (`evidence/sprint-05/`)**:
+  - Xuất bản `CHANGELOG.md` và `load-test-report.json`.
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **Load Test Results trên Server Production**:
+  - Concurrency 50 (`/bai-do-xe/quan-1`): **256 Req/s**, **P50: 183.33ms**, **P95: 204.42ms**, **Error: 0%**.
+  - Concurrency 100 (`/api/spots?limit=20`): **262 Req/s**, **P50: 336.11ms**, **P95: 447.17ms**, **Error: 0%**.
+  - Concurrency 200 (`/api/nearby/quick-assist`): **315 Req/s**, **P50: 417.95ms**, **Error: 0%**.
+- **Deploy & Health Check**: PM2 process id 52 `parking-hcm` hoạt động ổn định $\rightarrow$ **HTTP 200 OK**.
+
+---
+
 ## 2026-08-20: Hoàn Thành Sprint 4 — Scale Architecture, PostGIS Spatial Benchmark & OpenAPI 3.0
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
