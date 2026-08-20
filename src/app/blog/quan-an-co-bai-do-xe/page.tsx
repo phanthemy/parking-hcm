@@ -40,7 +40,8 @@ export default async function Page() {
       status: { in: ['active', 'ACTIVE'] }, 
       type: 'RESTAURANT', 
       carSlots: { gt: 0 } 
-    } 
+    },
+    select: { id: true, slug: true, name: true, address: true, carSlots: true, bikeSlots: true, type: true, pricePerHour: true, openTime: true, closeTime: true, phone: true },
   });
 
   return (

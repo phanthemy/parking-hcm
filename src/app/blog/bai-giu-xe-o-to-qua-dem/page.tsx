@@ -39,7 +39,8 @@ export default async function Page() {
     where: { 
       status: { in: ['active', 'ACTIVE'] }, 
       closeTime: { in: ['23:30', '23:59', '24:00', '00:00'] } 
-    } 
+    },
+    select: { id: true, slug: true, name: true, address: true, carSlots: true, bikeSlots: true, type: true, pricePerHour: true, openTime: true, closeTime: true, phone: true },
   });
 
   return (

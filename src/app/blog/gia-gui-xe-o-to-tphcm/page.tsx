@@ -37,6 +37,7 @@ const jsonLd = {
 export default async function Page() {
   const spots = await prisma.parkingSpot.findMany({ 
     where: { status: { in: ['active', 'ACTIVE'] } },
+    select: { id: true, slug: true, name: true, address: true, carSlots: true, bikeSlots: true, type: true, pricePerHour: true, openTime: true, closeTime: true, phone: true },
     orderBy: { pricePerHour: 'asc' }
   });
 

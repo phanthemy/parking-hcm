@@ -35,7 +35,10 @@ const jsonLd = {
 };
 
 export default async function Page() {
-  const spots = await prisma.parkingSpot.findMany({ where: { status: { in: ['active', 'ACTIVE'] }, type: 'PARKING_LOT' } });
+  const spots = await prisma.parkingSpot.findMany({
+    where: { status: { in: ['active', 'ACTIVE'] }, type: 'PARKING_LOT' },
+    select: { id: true, slug: true, name: true, address: true, carSlots: true, bikeSlots: true, type: true, pricePerHour: true, openTime: true, closeTime: true, phone: true },
+  });
   
       const grouped = spots.reduce((acc, spot) => {
         const districtMatch = spot.address?.match(/Quận [\w\d]+|Q\.[\w\d]+|Bình Thạnh|Thủ Đức|Gò Vấp|Tân Bình|Tân Phú|Phú Nhuận|Bình Tân/i);
