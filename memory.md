@@ -4,6 +4,34 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 7.1 — User Acquisition & PWA Adoption
+
+### 1. Quyết định kỹ thuật & Kiến trúc (5 Epics):
+- **Epic 1 – Progressive Web App (PWA Standalone & Offline Shell)**:
+  - `public/manifest.webmanifest` & `public/manifest.json`: Thiết lập chuẩn PWA với `display: "standalone"`, `id: "/"`, `start_url: "/?source=pwa"`, icons 192px và 512px (any & maskable), shortcuts điều hướng nhanh (Bãi xe, Cây xăng, Trạm sạc EV).
+  - Service Worker (`public/sw.js`) & Offline Shell: Chiến lược **Cache First** cho toàn bộ static assets, icons, fonts và **Network First with Cache Fallback** cho HTML / API endpoints (`/api/spots`, `/api/stats`), trang ngoại tuyến `public/offline.html`.
+  - Component `src/components/ServiceWorkerRegister.tsx` tự động đăng ký và quản trị vòng đời Service Worker.
+- **Epic 2 – Deep Linking (`/p/[slug]`)**:
+  - Xây dựng Dynamic Route `src/app/p/[slug]/page.tsx` hỗ trợ mọi định dạng slug bãi xe (e.g. `mapgo.vn/p/parking-vincom-q1`).
+  - Server Metadata: Đầy đủ Open Graph (`og:title`, `og:description`, `og:image`, `og:url`), Twitter Card (`summary_large_image`), Canonical URL và Schema.org JSON-LD `ParkingFacility`.
+  - Client Actions (`DeepLinkClientActions.tsx`): Tích hợp Web Share API (`navigator.share`), Fallback Copy Link vào Clipboard kèm Toast, nút 1-chạm "Mở trong MapGo" và "Chỉ đường Google Maps".
+- **Epic 3 – User Retention Engine (`src/lib/user-retention.ts` & `src/contexts/UserRetentionContext.tsx`)**:
+  - Quản trị toàn vẹn: **Favorite** (danh sách bãi xe yêu thích), **Recent Places** (lịch sử di chuyển), **Home** (nhà riêng), **Work** (cơ quan), **Recently Viewed** (địa điểm vừa xem).
+  - Drawer tiện ích `src/components/UserRetentionDrawer.tsx` và nút truy cập nhanh ⭐ trên Header/Map.
+- **Epic 4 – Community Data Reporting (`src/components/CommunityReportModal.tsx`)**:
+  - Cho phép tài xế báo cáo 5 tình trạng thực tế: **Còn chỗ** (`AVAILABLE`), **Hết chỗ** (`FULL`), **Giá thay đổi** (`PRICE_CHANGED`), **Đóng cửa** (`CLOSED`), **Sai vị trí** (`WRONG_LOCATION`).
+  - Đồng bộ trực tiếp vào bảng `user_reports` trên PostgreSQL PostGIS.
+- **Epic 5 – Distribution Engine (PWA Install Banner)**:
+  - Component `src/components/PwaInstallBanner.tsx`: Kiểm soát điều kiện hiển thị nghiêm ngặt: `Visit ≥ 2`, `Session ≥ 30s`, không hiển thị quá `1 lần/tuần`, tự động ẩn khi đang mở từ màn hình chính (`display-mode: standalone`).
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **Automated Quality Gate**: `scripts/test_sprint_7_1_pwa.js` $\rightarrow$ **26/26 tests PASSED (100%)**.
+- **Master Production Verification Suite**: `scripts/production_master_verification.js` $\rightarrow$ **17/17 deep verification pillars PASSED (100%)**.
+- **Next.js Turbopack Build**: `npm run build` thành công 100% (76 routes, không lỗi TypeScript).
+- **Production Server**: PM2 process id 52 `parking-hcm` hoạt động ổn định trên port 3003.
+
+---
+
 ## 2026-08-20: MAPGO PLATFORM v1.0.0 — OFFICIAL RELEASE & GOOGLE MAPS UX UPGRADE
 
 ### 1. Nâng Cấp Trải Nghiệm Khám Phá Địa Điểm (Google Maps UX — Verified 5 Scenarios):
