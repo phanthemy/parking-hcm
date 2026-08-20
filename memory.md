@@ -4,6 +4,35 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 2 — SEO Engine, Schema Graph & Dynamic Sitemap
+
+### 1. Quyết định kỹ thuật & Kiến trúc:
+- **Slug Engine (`src/lib/slug/`)**:
+  - `slugifyVietnamese`: Chuyển đổi tiếng Việt không dấu chuẩn SEO (Đ -> d, bỏ dấu thanh, chuẩn hóa URL).
+  - `generateUniqueSlug`: Thuật ngữ disambiguation chống trùng lặp theo quận (`-quan-1`) và counter (`-2`).
+- **Modular JSON-LD Schema.org Engine (`src/lib/seo/`)**:
+  - `buildEntityGraph`: Ghép nối các schema nodes thành khối `@graph` chuẩn Google Rich Results.
+  - `buildWebSiteSchema`: WebSite + SearchAction.
+  - `buildOrganizationSchema`: Organization MapGo + Logo ImageObject + SameAs.
+  - `buildBreadcrumbSchema`: BreadcrumbList đa cấp vị trí chuẩn 1..N.
+  - `buildParkingFacilitySchema`: Thực thể `ParkingFacility` + `priceRange` + `LocationFeatureSpecification` (Bảo vệ, CCTV, Mái che, Chiều cao hầm) + `GeoCoordinates`.
+  - `buildDistrictHubSchema`: CollectionPage + ItemList cho 22 quận huyện.
+  - `buildFaqSchema`: FAQPage schema.
+- **Dynamic Sitemap Engine (`src/app/sitemap.ts`)**:
+  - Phân tầng sitemap động: Homepage (1.0 daily), Category hubs (0.95 weekly), 22 Quận/Huyện TP.HCM (0.9 weekly), Blog guides (0.85 weekly), POIs (0.8 weekly).
+- **SEO Evidence Artifacts (`evidence/sprint-02/`)**:
+  - Xuất bản `CHANGELOG.md`, `jsonld-preview.json`, `sitemap-sample.xml`.
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **Automated Unit Tests**: `scripts/test-seo-engine.js` (5 test suites) $\rightarrow$ **100% Passed**.
+- **Next.js 16 Turbopack Build**: `npm run build` thành công 100% (76 routes).
+- **Production Verification**:
+  - `curl http://localhost:3003/robots.txt` $\rightarrow$ Trả về Host, Sitemap, Disallow chuẩn.
+  - `curl http://localhost:3003/sitemap.xml` $\rightarrow$ Trả về XML Sitemap đầy đủ các cấp độ priority và lastmod.
+  - PM2 process id 52 `parking-hcm` restart thành công $\rightarrow$ **HTTP 200 OK**.
+
+---
+
 ## 2026-08-20: Hoàn Thành Sprint 1 — Domain Layer & Normalized Entity Models
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
