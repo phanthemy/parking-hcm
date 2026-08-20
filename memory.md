@@ -4,6 +4,26 @@
 
 ---
 
+## 2026-08-20: Hoàn Thành Sprint 1 — Domain Layer & Normalized Entity Models
+
+### 1. Quyết định kỹ thuật & Kiến trúc:
+- **Chuẩn hóa Domain Layer (Single Source of Truth)**:
+  1. `src/domain/enums.ts`: Tập trung các Enums `SpotCategory`, `VehicleType`, `PriceType`, `PaymentMethod`, `VerificationMethod`, `ImageType`, `EvConnectorType`.
+  2. `src/domain/spot.base.ts`: Khởi tạo `SpotEntity` làm thực thể gốc (Geo, Address, Verification, Media, ReviewStats).
+  3. `src/domain/spot.parking.ts`: Thực thể kế thừa `ParkingSpot` với `heightLimit`, `capacity`, `security`, `pricing` (Dynamic Matrix).
+  4. `src/domain/spot.ev.ts`, `spot.garage.ts`, `spot.utility.ts`: Thực thể kế thừa `EVChargingSpot`, `GarageSpot`, `RescueSpot`, `GasStationSpot`, `RestroomSpot`.
+  5. `src/domain/index.ts`: Type guards chuyên dụng (`isParkingSpot`, `isEVChargingSpot`, `isGarageSpot`...).
+- **Cơ sở dữ liệu Normalized đa bảng (Prisma Schema)**:
+  - Bổ sung các bảng mở rộng 1-1 và 1-N: `SpotParkingDetail`, `SpotEvDetail`, `SpotGarageDetail`, `SpotPricing`, `SpotVerification`, `SpotPaymentMethod`.
+  - Migration & Seed tự động: Đồng bộ schema 100%, backfill dữ liệu cho 428 địa điểm (202 parking details, 684 pricing records, 428 verification records).
+
+### 2. Kết quả Kiểm thử & Triển khai (QA Gate):
+- **Automated Unit Tests**: `scripts/test-domain-layer.js` (5 test suites) $\rightarrow$ **100% Passed**.
+- **Next.js Turbopack Build**: `npm run build` thành công 100% (76 routes).
+- **Deploy & Health Check**: PM2 process id 52 `parking-hcm` restart thành công $\rightarrow$ `curl http://localhost:3003` trả về **HTTP 200 OK**.
+
+---
+
 ## 2026-08-20: Hoàn Thành Sprint 1 — Admin Data Operations Dashboard (5 Modules)
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
