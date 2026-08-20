@@ -23,14 +23,12 @@ interface SmartNearbyWidgetProps {
 
 export default function SmartNearbyWidget({ latitude, longitude, onSelectService }: SmartNearbyWidgetProps) {
   const [services, setServices] = useState<Record<string, QuickService> | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const lat = latitude || 10.7769;
     const lng = longitude || 106.7009;
 
     const fetchQuickAssist = async () => {
-      setIsLoading(true);
       try {
         const res = await api.get<{ success: boolean; services: Record<string, QuickService> }>(
           `/api/nearby/quick-assist?lat=${lat}&lng=${lng}`
@@ -40,8 +38,6 @@ export default function SmartNearbyWidget({ latitude, longitude, onSelectService
         }
       } catch (err) {
         console.error('Failed to load quick assist:', err);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -54,38 +50,38 @@ export default function SmartNearbyWidget({ latitude, longitude, onSelectService
     {
       key: 'parking',
       icon: '🅿️',
-      title: 'Bãi đỗ xe',
+      title: 'Bãi xe',
       data: services.parking,
-      color: '#3b82f6',
-      bg: 'rgba(59, 130, 246, 0.15)',
-      border: 'rgba(59, 130, 246, 0.35)',
+      color: '#60a5fa',
+      bg: 'rgba(30, 41, 59, 0.85)',
+      border: 'rgba(96, 165, 250, 0.3)',
     },
     {
       key: 'fuel',
       icon: '⛽',
       title: 'Cây xăng',
       data: services.fuel,
-      color: '#f97316',
-      bg: 'rgba(249, 115, 22, 0.15)',
-      border: 'rgba(249, 115, 22, 0.35)',
+      color: '#fb923c',
+      bg: 'rgba(30, 41, 59, 0.85)',
+      border: 'rgba(251, 146, 60, 0.3)',
     },
     {
       key: 'ev_charging',
       icon: '⚡',
-      title: 'Trạm sạc EV',
+      title: 'Trạm sạc',
       data: services.ev_charging,
-      color: '#10b981',
-      bg: 'rgba(16, 185, 129, 0.15)',
-      border: 'rgba(16, 185, 129, 0.35)',
+      color: '#34d399',
+      bg: 'rgba(30, 41, 59, 0.85)',
+      border: 'rgba(52, 211, 153, 0.3)',
     },
     {
       key: 'car_repair',
       icon: '🔧',
-      title: 'Vá vỏ / Cứu hộ',
+      title: 'Cứu hộ',
       data: services.car_repair,
-      color: '#a855f7',
-      bg: 'rgba(168, 85, 247, 0.15)',
-      border: 'rgba(168, 85, 247, 0.35)',
+      color: '#c084fc',
+      bg: 'rgba(30, 41, 59, 0.85)',
+      border: 'rgba(192, 132, 252, 0.3)',
     },
   ];
 
@@ -94,9 +90,10 @@ export default function SmartNearbyWidget({ latitude, longitude, onSelectService
       display: 'flex',
       gap: '8px',
       overflowX: 'auto',
-      padding: '4px 2px 10px',
+      padding: '2px 0 4px',
       scrollbarWidth: 'none',
       msOverflowStyle: 'none',
+      WebkitOverflowScrolling: 'touch',
     }}>
       {items.map((item) => {
         if (!item.data) return null;
@@ -107,31 +104,25 @@ export default function SmartNearbyWidget({ latitude, longitude, onSelectService
             style={{
               flex: '0 0 auto',
               background: item.bg,
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
               border: `1px solid ${item.border}`,
-              borderRadius: '16px',
-              padding: '8px 12px',
+              borderRadius: '20px',
+              padding: '6px 12px',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '6px',
               cursor: 'pointer',
               color: '#ffffff',
-              textAlign: 'left',
-              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'all 0.15s ease',
               boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
             }}
           >
-            <span style={{ fontSize: '20px' }}>{item.icon}</span>
-            <div>
-              <div style={{ fontSize: '11px', color: item.color, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                {item.title}
-              </div>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap' }}>
-                {item.data.distanceText}
-                <span style={{ fontSize: '11px', fontWeight: 500, color: '#94a3b8', marginLeft: '4px' }}>
-                  → Đi ngay
-                </span>
-              </div>
-            </div>
+            <span style={{ fontSize: '15px' }}>{item.icon}</span>
+            <span style={{ fontSize: '12px', fontWeight: 600, color: '#f1f5f9' }}>{item.title}</span>
+            <span style={{ fontSize: '11px', fontWeight: 700, color: item.color, background: 'rgba(255,255,255,0.08)', padding: '1px 6px', borderRadius: '10px' }}>
+              {item.data.distanceText}
+            </span>
           </button>
         );
       })}

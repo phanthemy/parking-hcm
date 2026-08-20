@@ -428,129 +428,137 @@ export default function HomePage() {
       )}
 
 
-      {/* MOBILE HEADER / SEARCH */}
-      <div className="floating-search">
-        <div className="mobile-brand-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '0 2px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <img src="/logo.png" alt="MapGo" style={{ width: '26px', height: '26px', borderRadius: '50%', boxShadow: '0 2px 6px rgba(0,0,0,0.3)' }} />
-            <span style={{ fontSize: '15px', fontWeight: 700, color: '#ffffff', textShadow: '0 2px 6px rgba(0,0,0,0.8)', letterSpacing: '-0.3px' }}>MapGo.vn</span>
+      {/* MOBILE FLOATING HEADER (3 TẦNG TỐI GIẢN CHUẨN GOOGLE MAPS / WAZE) */}
+      <div className="floating-search" style={{
+        position: 'fixed',
+        top: '12px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: 'calc(100% - 24px)',
+        maxWidth: '460px',
+        zIndex: 100,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        pointerEvents: 'auto',
+      }}>
+        {/* TẦNG 1: BRAND HEADER & TIỆN ÍCH PHỤ (GỌN GÀNG, KHÔNG TRANH THỊ GIÁC) */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '2px 4px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/logo.png" alt="MapGo" style={{ width: '28px', height: '28px', borderRadius: '50%', boxShadow: '0 2px 8px rgba(0,0,0,0.4)' }} />
+            <span style={{ fontSize: '16px', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.3px', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
+              MapGo
+            </span>
           </div>
-          <LanguageSelector compact={true} align="right" />
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Admin icon nhỏ gọn, không lấn át */}
+            {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
+              <Link
+                href="/admin"
+                title="Quản trị MapGo"
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'rgba(30, 41, 59, 0.85)',
+                  backdropFilter: 'blur(8px)',
+                  border: '1px solid rgba(245,158,11,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#f59e0b',
+                  fontSize: '14px',
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                }}
+              >
+                👑
+              </Link>
+            )}
+
+            {/* Nút báo cấm đỗ dạng icon tròn tinh tế thay vì nút đỏ to */}
+            <button
+              onClick={() => setShowBanReport(true)}
+              title="Báo biển cấm đỗ xe"
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                background: 'rgba(30, 41, 59, 0.85)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(239,68,68,0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#f87171',
+                fontSize: '14px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+              }}
+            >
+              🚫
+            </button>
+
+            <LanguageSelector compact={true} align="right" />
+          </div>
         </div>
-        <div className="search-input-wrap">
+
+        {/* TẦNG 2: THANH TÌM KIẾM BO TRÒN (PILL SEARCH BAR) */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          background: 'rgba(15, 23, 42, 0.92)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          borderRadius: '24px',
+          padding: '4px 8px 4px 16px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        }}>
+          <span style={{ fontSize: '15px', color: '#94a3b8', marginRight: '8px' }}>🔍</span>
           <input
-            className="search-field"
             type="text"
-            placeholder={t('search_placeholder')}
+            placeholder={t('search_placeholder') || 'Tìm bãi xe, cây xăng, cứu hộ...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && doSearch()}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: '#f8fafc',
+              fontSize: '14px',
+              padding: '8px 0',
+            }}
           />
-          <div className="filter-btn" onClick={() => doSearch()}>
-            🔍
-          </div>
-        </div>
-      </div>
-
-      {/* MOBILE SERVICE SELECTOR & SMART NEARBY */}
-      <div className="floating-chips">
-        {/* SMART NEARBY 1-TAP ROW */}
-        <SmartNearbyWidget latitude={latitude} longitude={longitude} onSelectService={handleSelectQuickService} />
-        
-        {/* Row 1: Active filter badge + Chon dich vu toggle */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', width: '100%', marginTop: '8px' }}>
-          {/* Toggle button - shows active filter or total count */}
-          <div
-            className={`mobile-service-toggle ${mobileFilterOpen ? 'open' : ''} ${activeFilter !== 'all' ? 'filtered' : ''}`}
-            onClick={() => setMobileFilterOpen(v => !v)}
-            style={{ flex: 1 }}
-          >
-            {activeFilter === 'all' ? (
-              <>
-                <span>{t('choose_service')}</span>
-                <span style={{ opacity: 0.75, fontWeight: 400 }}>({getChipCount('all')})</span>
-              </>
-            ) : (() => {
-              const cat = categories.find(c => c.id === activeFilter);
-              return cat ? (
-                <>
-                  <span>{cat.icon} {cat.name}</span>
-                  <span style={{ opacity: 0.85, fontWeight: 400 }}>({getChipCount(activeFilter)})</span>
-                  <span style={{ marginLeft: 'auto', fontSize: '10px', opacity: 0.7, cursor: 'pointer' }}
-                    onClick={(e) => { e.stopPropagation(); setActiveFilter('all'); setMobileFilterOpen(false); }}
-                  >✕</span>
-                </>
-              ) : null;
-            })()}
-            <span style={{ fontSize: '10px', marginLeft: activeFilter === 'all' ? 'auto' : '4px', transition: 'transform 0.2s', display: 'inline-block', transform: mobileFilterOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
-          </div>
-
-          {/* Admin panel button if logged in as Admin */}
-          {isAuthenticated && user?.role?.toString().toUpperCase() === 'ADMIN' && (
-            <Link
-              href="/admin"
+          {searchQuery ? (
+            <button
+              onClick={() => { setSearchQuery(''); fetchSpots(); }}
               style={{
-                flexShrink: 0,
-                padding: '6px 12px',
-                borderRadius: '20px',
-                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                color: '#fff',
-                fontSize: '12px',
-                fontWeight: 700,
-                textDecoration: 'none',
-                boxShadow: '0 2px 8px rgba(245,158,11,0.4)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                fontSize: '14px',
+                padding: '4px 8px',
+                cursor: 'pointer',
               }}
             >
-              👑 Admin
-            </Link>
-          )}
-
-          {/* Ban report button */}
-          <div className="mobile-ban-btn" onClick={() => setShowBanReport(true)} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 8px', background: 'rgba(0,0,0,0.7)', border: '1px solid #ef4444', borderRadius: '5px', color: '#ef4444', cursor: 'pointer' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-              <circle cx="12" cy="12" r="11" fill="#1565C0"/>
-              <text x="8" y="16" fontSize="12" fontWeight="bold" fill="white" fontFamily="Arial, sans-serif">P</text>
-              <line x1="4" y1="20" x2="20" y2="4" stroke="#EF4444" strokeWidth="2.8" strokeLinecap="round"/>
-            </svg>
-            <span style={{ fontWeight: 600, fontSize: '13px' }}>{t('ban_btn')}</span>
-          </div>
+              ✕
+            </button>
+          ) : null}
         </div>
 
-        {/* Row 2: Dropdown — show when open */}
-        {mobileFilterOpen && (
-          <div className="mobile-service-panel">
-            {categories.filter(c => c.id !== 'all').map((c) => {
-              const isActive = activeFilter === c.id;
-              const count = getChipCount(c.id);
-              return (
-                <div
-                  key={c.id}
-                  className={`mobile-service-item ${isActive ? 'active' : ''}`}
-                  onClick={() => { setActiveFilter(c.id as any); setMobileFilterOpen(false); }}
-                >
-                  <span style={{ fontSize: '18px' }}>{c.icon}</span>
-                  <span style={{ fontSize: '12px', fontWeight: isActive ? 700 : 400 }}>{c.name}</span>
-                  {count > 0 && (
-                    <span className="mobile-service-count">{count}</span>
-                  )}
-                </div>
-              );
-            })}
-            {/* Co bai o to */}
-            <div
-              className={`mobile-service-item ${hasCarParking ? 'active' : ''}`}
-              onClick={() => { setHasCarParking(v => !v); setMobileFilterOpen(false); }}
-              style={hasCarParking ? { borderColor: '#eab308', background: 'rgba(234,179,8,0.15)' } : {}}
-            >
-              <span style={{ fontSize: '18px' }}>🚗</span>
-              <span style={{ fontSize: '12px' }}>Có bãi ô tô</span>
-              {hasCarParking && <span className="mobile-service-count" style={{ background: '#eab308' }}>✓</span>}
-            </div>
-          </div>
-        )}
+        {/* TẦNG 3: TRỢ LÝ 1-CHẠM GẦN BẠN (CHIP BAR 1 DÒNG THANH THOÁT) */}
+        <div style={{ marginTop: '2px' }}>
+          <SmartNearbyWidget latitude={latitude} longitude={longitude} onSelectService={handleSelectQuickService} />
+        </div>
       </div>
 
       {/* DESKTOP SIDEBAR */}
@@ -787,63 +795,81 @@ export default function HomePage() {
         />
       </div>
 
-      {/* ROUTING NAVIGATION BAR */}
+      {/* ROUTING NAVIGATION BAR (TỐI GIẢN CHUẨN GOOGLE MAPS / WAZE: 1 PRIMARY CTA DUY NHẤT) */}
       {isRouting && routingDest && (
         <div style={{
           position: 'fixed',
-          bottom: isNavigating ? '20px' : (typeof window !== 'undefined' && window.innerWidth >= 768 ? '20px' : '170px'),
+          bottom: '24px',
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 250,
-          background: isNavigating ? 'rgba(0,80,20,0.95)' : 'rgba(13,13,18,0.95)',
+          zIndex: 300,
+          background: isNavigating ? 'rgba(6, 78, 59, 0.95)' : 'rgba(15, 23, 42, 0.95)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: `1px solid ${isNavigating ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}`,
-          borderRadius: '16px',
-          padding: '14px 20px',
+          border: `1px solid ${isNavigating ? 'rgba(52, 211, 153, 0.4)' : 'rgba(255,255,255,0.12)'}`,
+          borderRadius: '20px',
+          padding: '12px 16px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          maxWidth: '420px',
+          maxWidth: '440px',
           width: 'calc(100% - 32px)',
-          boxShadow: isNavigating ? '0 8px 32px rgba(34,197,94,0.3)' : '0 8px 32px rgba(0,0,0,0.5)',
+          boxShadow: '0 12px 36px rgba(0,0,0,0.6)',
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isNavigating ? '🧭 ' + t('navigating') : '📍'} {routingDest.name}
+            <div style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {isNavigating ? '🧭 ' + t('navigating') : '📍 ' + routingDest.name}
             </div>
-            <div style={{ fontSize: '12px', color: isNavigating ? '#86efac' : '#8b8b9e', marginTop: '3px', fontWeight: isNavigating ? 600 : 400 }}>
+            <div style={{ fontSize: '12px', color: isNavigating ? '#86efac' : '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {isNavigating && navInfo
-                ? `📏 ${navInfo.dist.toFixed(1)} ${t('km')} · ⏱️ ~${navInfo.dur} ${t('minutes')}`
-                : routingDest.distance
-                  ? (typeof routingDest.distance === 'number' ? `${(routingDest.distance as number).toFixed(1)} km` : String(routingDest.distance))
-                  : routingDest.address?.substring(0, 35)
+                ? `📏 ${navInfo.dist.toFixed(1)} km • ⏱️ ~${navInfo.dur} phút`
+                : (routingDest.address ? routingDest.address.substring(0, 38) : 'Điểm đến đã chọn')
               }
             </div>
           </div>
+
           {!isNavigating ? (
             <button
               onClick={startNavMode}
               style={{
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                border: 'none', borderRadius: '12px', color: '#fff',
-                padding: '10px 18px', fontSize: '13px', fontWeight: 700,
-                cursor: 'pointer', whiteSpace: 'nowrap',
+                background: 'linear-gradient(135deg, #10b981, #059669)',
+                border: 'none',
+                borderRadius: '14px',
+                color: '#fff',
+                padding: '10px 18px',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                boxShadow: '0 4px 12px rgba(16,185,129,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
               }}
             >
-              🚀 {t('go_now')}
+              <span>🟢</span> {t('go_now') || 'Đi ngay'}
             </button>
           ) : null}
+
           <button
             onClick={() => { isNavigating ? stopNavMode() : (() => { handleClearRoute(); setRoutingDest(null); })(); }}
+            title={isNavigating ? t('stop') : t('cancel')}
             style={{
-              background: isNavigating ? 'rgba(239,68,68,0.3)' : 'rgba(255,255,255,0.08)',
-              border: `1px solid ${isNavigating ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`,
-              borderRadius: '12px', color: isNavigating ? '#fca5a5' : '#a0a0b0',
-              padding: '10px 14px', fontSize: '13px', cursor: 'pointer', whiteSpace: 'nowrap',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: '50%',
+              width: '36px',
+              height: '36px',
+              color: '#94a3b8',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
             }}
           >
-            {isNavigating ? '⏹️ ' + t('stop') : '✕ ' + t('cancel')}
+            ✕
           </button>
         </div>
       )}
