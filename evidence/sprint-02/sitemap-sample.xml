@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Homepage -->
+  <url>
+    <loc>https://mapgo.vn</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Category Hubs -->
+  <url>
+    <loc>https://mapgo.vn/bai-do-xe-tphcm</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://mapgo.vn/nha-ve-sinh/gan-day</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- District Hubs (22 Quận/Huyện) -->
+  <url>
+    <loc>https://mapgo.vn/bai-do-xe/quan-1</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://mapgo.vn/bai-do-xe/quan-7</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://mapgo.vn/bai-do-xe/thu-duc</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+
+  <!-- Informational Blog Guides -->
+  <url>
+    <loc>https://mapgo.vn/blog/gia-gui-xe-o-to-tphcm</loc>
+    <lastmod>2026-08-20T11:00:00.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Individual POI Spot -->
+  <url>
+    <loc>https://mapgo.vn/bai-xe/bai-xe-le-loi-q1-quan-1</loc>
+    <lastmod>2026-08-20T04:17:49.000Z</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+  </url>
+</urlset>

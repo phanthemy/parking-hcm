@@ -13,6 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://mapgo.vn';
   const now = new Date();
 
+  // 1. POI URLs
   let spots: { id: string; slug: string | null; updatedAt: Date }[] = [];
   try {
     spots = await prisma.parkingSpot.findMany({
@@ -23,23 +24,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error('Sitemap DB query error:', e);
   }
 
-  const spotUrls = spots.map((spot) => ({
+  const spotUrls: MetadataRoute.Sitemap = spots.map((spot) => ({
     url: `${baseUrl}/bai-xe/${spot.slug || spot.id}`,
     lastModified: spot.updatedAt || now,
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));
 
-  // Landing pages theo Quận
-  const districtUrls = DISTRICT_SLUGS.map((slug) => ({
+  // 2. Landing pages theo 22 Quận/Huyện TP.HCM
+  const districtUrls: MetadataRoute.Sitemap = DISTRICT_SLUGS.map((slug) => ({
     url: `${baseUrl}/bai-do-xe/${slug}`,
     lastModified: now,
     changeFrequency: 'weekly' as const,
     priority: 0.9,
   }));
 
-  // Category landing pages
-  const categoryUrls = [
+  // 3. Category Hub URLs
+  const categoryUrls: MetadataRoute.Sitemap = [
+    { url: `${baseUrl}/bai-do-xe-tphcm`, priority: 0.95 },
     { url: `${baseUrl}/quan-an/co-bai-xe`, priority: 0.9 },
     { url: `${baseUrl}/cafe/co-bai-xe`, priority: 0.9 },
     { url: `${baseUrl}/nha-ve-sinh/gan-day`, priority: 0.9 },
@@ -49,8 +51,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly' as const,
   }));
 
-  const additionalUrls = [
-    { url: `${baseUrl}/bai-do-xe-tphcm`, priority: 0.95 },
+  // 4. Blog Guides (Informational Intent)
+  const blogUrls: MetadataRoute.Sitemap = [
     { url: `${baseUrl}/blog`, priority: 0.7 },
     { url: `${baseUrl}/blog/bai-do-xe-tphcm`, priority: 0.85 },
     { url: `${baseUrl}/blog/bai-giu-xe-o-to-qua-dem`, priority: 0.85 },
@@ -67,17 +69,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: baseUrl,
       lastModified: now,
-      changeFrequency: 'daily',
+      changeFrequency: 'daily' as const,
       priority: 1.0,
     },
-    // Auth pages — low priority
+    ...categoryUrls,
+    ...districtUrls,
+    ...blogUrls,
+    ...spotUrls,
+    // Auth routes (low priority)
     { url: `${baseUrl}/auth/login`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.3 },
     { url: `${baseUrl}/auth/register`, lastModified: now, changeFrequency: 'monthly' as const, priority: 0.3 },
-    // SEO Landing pages — high priority
-    ...additionalUrls,
-    ...districtUrls,
-    ...categoryUrls,
-    // Individual spot pages
-    ...spotUrls,
   ];
 }
