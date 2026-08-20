@@ -4,7 +4,7 @@
  */
 
 import prisma from '@/lib/prisma';
-import { haversineDistance } from '@/lib/haversine';
+import { haversine } from '@/lib/haversine';
 
 export interface NearbySpotSummary {
   id: string;
@@ -42,7 +42,7 @@ export async function getNearbySpotsForPOI(
     });
 
     const withDistance = candidateSpots.map(s => {
-      const dist = haversineDistance(lat, lng, s.lat, s.lng);
+      const dist = haversine(lat, lng, s.lat, s.lng);
       return {
         id: s.id,
         name: s.name,

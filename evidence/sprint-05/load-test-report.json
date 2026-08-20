@@ -1,0 +1,56 @@
+[
+  {
+    "concurrency": 50,
+    "totalRequests": 500,
+    "targetUrl": "/bai-do-xe/quan-1",
+    "totalTimeSeconds": 1.95,
+    "requestsPerSecond": 256,
+    "latencies": {
+      "minMs": 44.81,
+      "p50Ms": 183.33,
+      "p95Ms": 204.42,
+      "p99Ms": 369.87,
+      "maxMs": 384.98,
+      "avgMs": 184.06
+    },
+    "errorRate": "0%",
+    "successCount": 500,
+    "failCount": 0
+  },
+  {
+    "concurrency": 100,
+    "totalRequests": 1000,
+    "targetUrl": "/api/spots?limit=20",
+    "totalTimeSeconds": 3.81,
+    "requestsPerSecond": 262,
+    "latencies": {
+      "minMs": 121.25,
+      "p50Ms": 336.11,
+      "p95Ms": 447.17,
+      "p99Ms": 2013.85,
+      "maxMs": 2374.72,
+      "avgMs": 369.13
+    },
+    "errorRate": "0%",
+    "successCount": 1000,
+    "failCount": 0
+  },
+  {
+    "concurrency": 200,
+    "totalRequests": 1500,
+    "targetUrl": "/api/nearby/quick-assist?lat=10.7769&lng=106.7009&category=PARKING_LOT",
+    "totalTimeSeconds": 4.76,
+    "requestsPerSecond": 315,
+    "latencies": {
+      "minMs": 237.69,
+      "p50Ms": 417.95,
+      "p95Ms": 2291.36,
+      "p99Ms": 4702.56,
+      "maxMs": 4731.05,
+      "avgMs": 611.07
+    },
+    "errorRate": "0%",
+    "successCount": 1500,
+    "failCount": 0
+  }
+]
