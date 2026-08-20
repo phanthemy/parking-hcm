@@ -4,10 +4,10 @@
 
 ---
 
-## 2026-08-20: MAPGO ENTERPRISE v1.0.0 — OFFICIAL RELEASE & SCOPE LOCK
+## 2026-08-20: MAPGO PLATFORM v1.0.0 — OFFICIAL RELEASE & SCOPE LOCK
 
 ### 1. Ký Duyệt Nghiệm Thu Kỹ Thuật (Official Technical Sign-Off):
-- **Phê duyệt chính thức**: **`MapGo Enterprise Acceptance Standard v1.0: PASSED (180/180)`**.
+- **Phê duyệt chính thức**: Theo phạm vi đã được khóa trong MapGo Enterprise Acceptance Standard v1.0, phiên bản **MapGo Platform v1.0.0** đã hoàn thành tất cả tiêu chí nghiệm thu và đủ điều kiện phát hành (**Đạt 180/180 tiêu chí nghiệm thu theo bộ tiêu chuẩn dự án**).
 - **Chính sách phát hành**: **Feature Freeze 100%**. Khóa toàn bộ mã nguồn phiên bản v1.0.0.
 - **Git Release Tag**: Đã gắn tag và phát hành chính thức **`v1.0.0`** trên GitHub repo.
 - **Phân tách Backlog Milestone v2.0**: Toàn bộ các hạng mục mở rộng (Redis Cluster, OpenTelemetry Tracing, Chaos Mesh, Canary Deployment, Multi-Region) được chuyển sang Backlog Milestone v2.0.
