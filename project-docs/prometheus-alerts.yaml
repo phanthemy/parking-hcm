@@ -1,0 +1,70 @@
+# PROMETHEUS ALERTING RULES & REFRESH POLICY FOR MAPGO
+
+groups:
+  - name: mapgo-production-alerts
+    rules:
+      # 1. Latency Alerts
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.3
+        for: 5m
+        labels:
+          severity: critical
+          tier: api
+        annotations:
+          summary: "API P99 Latency is above 300ms (Value: {{ $value }}s)"
+          description: "High P99 latency detected across spatial endpoints for over 5 minutes."
+
+      # 2. Database Connection Pool Saturation
+      - alert: DbPoolSaturated
+        expr: (db_pool_active_connections / (db_pool_active_connections + db_pool_idle_connections)) > 0.90
+        for: 2m
+        labels:
+          severity: critical
+          tier: database
+        annotations:
+          summary: "Database Connection Pool is above 90% utilization"
+          description: "PostgreSQL / PgBouncer pool near exhaustion, queue wait time increasing."
+
+      # 3. High Error Rate (5xx)
+      - alert: HighHttpErrorRate
+        expr: (sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          tier: gateway
+        annotations:
+          summary: "HTTP 5xx Error Rate is above 1%"
+          description: "Server returned 5xx responses for >1% of traffic."
+
+      # 4. Cache Hit Ratio Degradation
+      - alert: LowCacheHitRatio
+        expr: (rate(mapgo_cache_hits_total[15m]) / (rate(mapgo_cache_hits_total[15m]) + rate(mapgo_cache_misses_total[15m]))) < 0.70
+        for: 15m
+        labels:
+          severity: warning
+          tier: cache
+        annotations:
+          summary: "Spatial Cache Hit Ratio is below 70%"
+          description: "Potential cache key fragmentation or unexpected query patterns."
+
+      # 5. Event Loop Lag
+      - alert: EventLoopLagHigh
+        expr: node_event_loop_lag_seconds > 0.100
+        for: 3m
+        labels:
+          severity: warning
+          tier: runtime
+        annotations:
+          summary: "Node.js Event Loop Lag > 100ms"
+          description: "Synchronous blocking operations or high GC pauses detected."
+
+      # 6. Materialized View Staleness
+      - alert: MaterializedViewStale
+        expr: (time() - mapgo_mv_last_refreshed_timestamp) > 7200
+        for: 10m
+        labels:
+          severity: warning
+          tier: database
+        annotations:
+          summary: "district_statistics_mv is older than 2 hours"
+          description: "Materialized view cron refresh failed or delayed."
