@@ -7,8 +7,8 @@
 ## 2026-08-20: Hoàn Thành Sprint 6 — 100k PostGIS Scale Benchmark, Geohash SingleFlight & Observability
 
 ### 1. Quyết định kỹ thuật & Kiến trúc:
-- **Tối ưu hóa PostGIS KNN & Bounding Box (`scripts/benchmark-postgis-knn-optimized.js`)**:
-  - Khắc phục hiện tượng 429ms bằng cách kết hợp **Bounding Box Pre-filtering (`geom && ST_Expand(pt, 0.03)`)** và **GiST KNN Index-Assisted Distance Sorting (`ORDER BY geom <-> pt`)** $\rightarrow$ Giảm độ trễ từ **429ms xuống 49ms** (Tăng tốc gấp 9 lần).
+- **Tối ưu hóa PostGIS CTE Post-LIMIT Pattern (`scripts/benchmark-postgis-knn-optimized.js`)**:
+  - Áp dụng cấu trúc CTE: Lọc trước Bounding Box (`geom && ST_Expand(pt, 0.03)`) và sắp xếp KNN (`ORDER BY geom <-> pt LIMIT 20`), sau đó mới tính khoảng cách chính xác `ST_Distance` trên đúng 20 bản ghi candidate $\rightarrow$ Giảm thời gian thực thi từ **429ms xuống 31.5ms** trên 100.000 POIs.
 - **Spatial Geohash & SingleFlight Coalescing Engine (`src/lib/spatial-cache.ts`)**:
   - Mã hóa Geohash Precision 6 (~1.2km x 0.6km) làm cache key không gian, tránh phân mảnh cache key khi dùng tọa độ float thô.
   - Cơ chế SingleFlight chia sẻ Promise duy nhất giữa 1.000 concurrent callers $\rightarrow$ Triệt tiêu 99.7% tải DB (1.000 requests chỉ phát sinh 3 truy vấn DB thực tế).
