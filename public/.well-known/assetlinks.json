@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "vn.mapgo.driver",
+      "sha256_cert_fingerprints": [
+        "1D:EE:56:79:4C:EB:D3:93:2F:AF:D9:F6:BD:ED:6B:8A:49:53:05:8E:5E:54:87:72:C3:8D:6D:37:05:83:47:7D"
+      ]
+    }
+  }
+]
